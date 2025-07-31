@@ -1,0 +1,27 @@
+package pkg
+
+import (
+	"context"
+	"database/sql"
+)
+
+type Stmt interface {
+	QueryRowContext(ctx context.Context, args ...any) Row
+	QueryContext(ctx context.Context, args ...any) (Rows, error)
+}
+
+type stmt struct {
+	statement *sql.Stmt
+}
+
+func NewStmt(s *sql.Stmt) stmt {
+	return stmt{statement: s}
+}
+
+func (s stmt) QueryRowContext(ctx context.Context, args ...any) Row {
+	return s.statement.QueryRowContext(ctx, args...)
+}
+
+func (s stmt) QueryContext(ctx context.Context, args ...any) (Rows, error) {
+	return s.statement.QueryContext(ctx, args...)
+}

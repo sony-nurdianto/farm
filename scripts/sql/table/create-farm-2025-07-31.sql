@@ -1,5 +1,3 @@
-CREATE TYPE farm_type_enum AS ENUM ('CROPLAND', 'ORCHARD', 'RANCH', 'MIXED', 'OTHER');
-CREATE TYPE farm_status_enum AS ENUM ('ACTIVE', 'INACTIVE', 'SOLD', 'DESERTED');
 
 CREATE TABLE farms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

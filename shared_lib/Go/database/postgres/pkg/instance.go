@@ -1,4 +1,4 @@
-package postgres
+package pkg
 
 import "database/sql"
 
@@ -13,5 +13,10 @@ func NewPostgresInstance() pgi {
 }
 
 func (i pgi) Open(driverName, dataSourceName string) (PostgresDatabase, error) {
-	return sql.Open(driverName, dataSourceName)
+	sql, err := sql.Open(driverName, dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewPostgresDb(sql), nil
 }

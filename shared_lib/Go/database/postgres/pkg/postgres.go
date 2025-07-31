@@ -1,4 +1,4 @@
-package postgres
+package pkg
 
 import (
 	"context"
@@ -7,16 +7,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type postgres struct {
-	db PostgresDatabase
-}
-
 func OpenPostgres(uri string, instance PostgresInstance) (
-	PostgresDatabase, error,
+	pg PostgresDatabase, _ error,
 ) {
 	db, err := instance.Open("postgres", uri)
 	if err != nil {
-		return nil, err
+		return pg, err
 	}
 
 	db.SetMaxOpenConns(30)
@@ -27,7 +23,7 @@ func OpenPostgres(uri string, instance PostgresInstance) (
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+		return pg, err
 	}
 
 	return db, nil

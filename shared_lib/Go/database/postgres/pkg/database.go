@@ -1,0 +1,56 @@
+package pkg
+
+import (
+	"context"
+	"database/sql"
+	"time"
+
+	_ "github.com/lib/pq"
+)
+
+type PostgresDatabase interface {
+	SetMaxOpenConns(n int)
+	SetMaxIdleConns(n int)
+	SetConnMaxLifetime(d time.Duration)
+	PingContext(ctx context.Context) error
+
+	Prepare(query string) (Stmt, error)
+	Close() error
+}
+
+type postgresDatabase struct {
+	db *sql.DB
+}
+
+func NewPostgresDb(db *sql.DB) postgresDatabase {
+	return postgresDatabase{db}
+}
+
+func (pdb postgresDatabase) SetMaxOpenConns(n int) {
+	pdb.db.SetMaxOpenConns(n)
+}
+
+func (pdb postgresDatabase) SetMaxIdleConns(n int) {
+	pdb.db.SetMaxIdleConns(n)
+}
+
+func (pdb postgresDatabase) SetConnMaxLifetime(d time.Duration) {
+	pdb.db.SetConnMaxLifetime(d)
+}
+
+func (pdb postgresDatabase) PingContext(ctx context.Context) error {
+	return pdb.db.PingContext(ctx)
+}
+
+func (pdb postgresDatabase) Prepare(query string) (Stmt, error) {
+	stmt, err := pdb.db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewStmt(stmt), nil
+}
+
+func (pdb postgresDatabase) Close() error {
+	return pdb.db.Close()
+}
