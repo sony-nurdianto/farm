@@ -9,7 +9,7 @@ import (
 func TestOpenPostgres(t *testing.T) {
 	pgi := postgres.NewPostgresInstance()
 
-	db, err := postgres.OpenPostgres("postgres://sony:secret@localhost:5000/farmer?sslmode=disable", pgi)
+	db, err := postgres.OpenPostgres("postgres://sony:secret@localhost:5000/farmer_db?sslmode=disable", pgi)
 	if err != nil {
 		t.Errorf("Failed to opendb: %s", err)
 	}

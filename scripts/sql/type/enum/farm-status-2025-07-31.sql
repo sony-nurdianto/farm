@@ -1,0 +1,1 @@
+CREATE TYPE farm_status_enum AS ENUM ('ACTIVE', 'INACTIVE', 'SOLD', 'DESERTED');

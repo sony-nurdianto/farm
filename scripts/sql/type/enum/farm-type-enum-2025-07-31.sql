@@ -1,0 +1,1 @@
+CREATE TYPE farm_type_enum AS ENUM ('CROPLAND', 'ORCHARD', 'RANCH', 'MIXED', 'OTHER');
