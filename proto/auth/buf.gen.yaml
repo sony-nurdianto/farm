@@ -6,3 +6,9 @@ plugins:
       - Mauth/v1/auth.proto=.;pbgen
     include_imports: true
     include_wkt: false
+  - remote: buf.build/grpc/go
+    out: ../auth/internal/pbgen
+    opt: 
+      - Mauth/v1/auth.proto=.;pbgen
+    include_imports: true
+    include_wkt: false

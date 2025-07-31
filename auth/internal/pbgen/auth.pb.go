@@ -23,7 +23,6 @@ const (
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -58,13 +57,6 @@ func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *RegisterRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
 }
 
 func (x *RegisterRequest) GetEmail() string {
@@ -137,9 +129,8 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\"W\n" +
-	"\x0fRegisterRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x12auth/v1/auth.proto\x12\aauth.v1\"C\n" +
+	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\"<\n" +
 	"\x10RegisterResponse\x12\x10\n" +
