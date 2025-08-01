@@ -8,4 +8,9 @@ const (
 			($1,$2)
 		returning id, email, password_hash, created_at, updated_at 
 	`
+
+	QUERY_GET_USER_BY_EMAIL string = `
+		select * from %s
+		where email = $1
+	`
 )
