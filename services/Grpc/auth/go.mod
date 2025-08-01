@@ -10,7 +10,11 @@ require (
 )
 
 require (
+	github.com/actgardner/gogen-avro/v10 v10.2.1 // indirect
+	github.com/confluentinc/confluent-kafka-go v1.9.2 // indirect
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/heetch/avro v0.4.5 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
@@ -19,6 +23,7 @@ require (
 
 require (
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres v0.0.0
+	github.com/sony-nurdianto/farm/shared_lib/Go/mykafka v0.0.0
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
