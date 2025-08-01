@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sony-nurdianto/farm/auth/internal/constants"
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
@@ -56,7 +57,9 @@ func (rp RepoPostgres) CreateUser(email, passwordHash string) (user entity.Users
 	)
 	defer cancel()
 
-	row := rp.createUserstmt.QueryRowContext(ctx, email, passwordHash)
+	userId := uuid.NewString()
+
+	row := rp.createUserstmt.QueryRowContext(ctx, userId, email, passwordHash)
 
 	err := row.Scan(&user.Id, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {

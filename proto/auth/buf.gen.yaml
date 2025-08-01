@@ -1,13 +1,13 @@
 version: v2
 plugins:
   - remote: buf.build/protocolbuffers/go
-    out: ../auth/internal/pbgen
+    out: ../services/Grpc/auth/internal/pbgen
     opt: 
       - Mauth/v1/auth.proto=.;pbgen
     include_imports: true
     include_wkt: false
   - remote: buf.build/grpc/go
-    out: ../auth/internal/pbgen
+    out: ../services/Grpc/auth/internal/pbgen
     opt: 
       - Mauth/v1/auth.proto=.;pbgen
     include_imports: true

@@ -3,6 +3,7 @@ module github.com/sony-nurdianto/farm/auth
 go 1.24.5
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.40.0
 	google.golang.org/protobuf v1.36.6
@@ -25,4 +26,7 @@ require (
 	google.golang.org/grpc v1.74.2
 )
 
-replace github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres => ../shared_lib/Go/database/postgres
+replace (
+	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres => ../../../shared_lib/Go/database/postgres
+	github.com/sony-nurdianto/farm/shared_lib/Go/mykafka => ../../../shared_lib/Go/mykafka
+)
