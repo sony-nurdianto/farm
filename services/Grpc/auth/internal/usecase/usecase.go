@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/codec"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
@@ -15,6 +16,12 @@ var ErrorUserIsExist error = errors.New("User Is Exist Aborting CreateUser")
 
 type ServiceUsecase struct {
 	RepoPG *repository.RepoPostgres
+}
+
+func NewServiceUsecase(repo *repository.RepoPostgres) ServiceUsecase {
+	return ServiceUsecase{
+		RepoPG: repo,
+	}
 }
 
 func checkUser(rp *repository.RepoPostgres, email string) (bool, error) {
@@ -50,7 +57,9 @@ func (su ServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.Regis
 		return nil, err
 	}
 
-	_, err = su.RepoPG.CreateUser(user.GetEmail(), passwordHash)
+	userId := uuid.NewString()
+
+	err = su.RepoPG.CreateUserAsync(userId, user.GetEmail(), passwordHash, 1)
 	if err != nil {
 		return nil, err
 	}

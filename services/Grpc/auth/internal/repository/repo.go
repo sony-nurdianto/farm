@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,11 +11,11 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
-	schema "github.com/sony-nurdianto/farm/shared_lib/Go/mykafka/pkg"
+	kk "github.com/sony-nurdianto/farm/shared_lib/Go/mykafka/pkg"
 )
 
 type RepoPostgres struct {
-	schemaRegistery    schema.SchemaRegistery
+	schemaRegistery    kk.SchemaRegistery
 	createUserstmt     pkg.Stmt
 	getUserByEmailStmt pkg.Stmt
 }
@@ -31,7 +30,7 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 }
 
 func NewPostgresRepo() (rp RepoPostgres, _ error) {
-	srgs, err := schema.NewSchemaRegistery("http://localhost:8081")
+	srgs, err := kk.NewSchemaRegistery("http://localhost:8081")
 	if err != nil {
 		return rp, err
 	}
@@ -61,45 +60,79 @@ func NewPostgresRepo() (rp RepoPostgres, _ error) {
 	return rp, nil
 }
 
-func createUserSchema(name, sch string) {
+func ensureSchema(
+	subject string,
+	version int,
+	schema string,
+	topic string,
+	msg any,
+	registry kk.SchemaRegistery,
+) error {
+	_, err := registry.GetSchemaRegistery(subject, version)
+	if err == nil {
+		return nil
+	}
+
+	if !errors.Is(err, kk.SchemaIsNotFoundErr) {
+		return err
+	}
+
+	_, regErr := registry.RegisterSchema(subject, schema, false)
+	if regErr != nil {
+		return regErr
+	}
+
+	return publishAvro(registry, topic, msg)
 }
 
-func (rp RepoPostgres) CreateUserAsync(email, passwordHash string, schemaVersion int) error {
+func publishAvro(client kk.SchemaRegistery, topic string, msg any) error {
+	av, err := kk.NewAvroGenericSerde(client.Client())
+	if err != nil {
+		return err
+	}
+
+	payload, err := av.Serialize(topic, msg)
+	if err != nil {
+		return err
+	}
+
+	cfg := map[kk.ConfigKeyKafka]string{
+		kk.BOOTSTRAP_SERVERS:                     "localhost:29092",
+		kk.ACKS:                                  "all",
+		kk.ENABLE_IDEMPOTENCE:                    "true",
+		kk.COMPRESION_TYPE:                       "snappy",
+		kk.RETRIES:                               "5",
+		kk.RETRY_BACKOFF_MS:                      "100",
+		kk.LINGER_MS:                             "5",
+		kk.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+	}
+
+	record := &kk.MessageKafka{
+		TopicPartition: kk.KafkaTopicPartition{
+			Topic:     &topic,
+			Partition: kk.KafkaPartitionAny,
+		},
+		Value: payload,
+	}
+
+	return kk.NewKafkaProducerPool().Produce(cfg, record)
+}
+
+func (rp RepoPostgres) CreateUserAsync(id, email, passwordHash string, schemaVersion int) error {
 	user := &models.InsertUser{
-		Id:       uuid.NewString(),
+		Id:       id,
 		Email:    email,
 		Password: passwordHash,
 	}
 
-	schemaName := "users"
+	topic := "insert-users"
+	subject := topic + "-value"
 
-	_, err := rp.schemaRegistery.GetSchemaRegistery(schemaName, schemaVersion)
-	if err != nil {
-		if errors.Is(err, schema.SchemaIsNotFoundErr) {
-
-			_, err = rp.schemaRegistery.RegisterSchema(schemaName, user.Schema(), false)
-			if err != nil {
-				return err
-			}
-		}
-
+	if err := ensureSchema(subject, schemaVersion, user.Schema(), topic, user, rp.schemaRegistery); err != nil {
 		return err
 	}
 
-	av, err := schema.NewAvroGenericSerde(rp.schemaRegistery.Client())
-	if err != nil {
-		return err
-	}
-
-	_, err = av.Serialize(schemaName, user)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return nil
-
-	// producer := schema.NewKafkaProducer()
-	// producer.Producer()
+	return publishAvro(rp.schemaRegistery, topic, user)
 }
 
 func (rp RepoPostgres) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

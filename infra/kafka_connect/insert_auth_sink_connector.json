@@ -3,16 +3,22 @@
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",
+    "dialect.name": "PostgreSqlDatabaseDialect",
     "connection.url": "jdbc:postgresql://test-postgres:5432/auth?sslmode=disable",
     "connection.user": "sony",
     "connection.password": "secret",
     "topics": "insert-users",
     "table.name.format": "users",
+    "table.types": "PARTITIONED TABLE",
     "insert.mode": "insert",
     "pk.mode": "none",
-    "auto.create": "true",
-    "auto.evolve": "true",
+    "auto.create": "false",
+    "auto.evolve": "false",
     "max.retries": "3",
-    "retry.backoff.ms": "1000"
+    "retry.backoff.ms": "1000",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://test-schema-registry:8081",
+    "value.converter.schemas.enable": "true"
   }
 }

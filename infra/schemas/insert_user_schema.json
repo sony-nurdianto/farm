@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "insert-users",
+  "name": "InsertUser",
   "fields": [
     {
       "name": "id",
