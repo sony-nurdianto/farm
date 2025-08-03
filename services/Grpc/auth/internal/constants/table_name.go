@@ -1,5 +1,5 @@
 package constants
 
 const (
-	USERS_TABLE string = "users"
+	ACCOUNT_TABLE string = "accounts"
 )

@@ -23,7 +23,7 @@ type RepoPostgres struct {
 func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 	facQuery := fmt.Sprintf(
 		query,
-		constants.USERS_TABLE,
+		constants.ACCOUNT_TABLE,
 	)
 
 	return db.Prepare(facQuery)
@@ -62,13 +62,10 @@ func NewPostgresRepo() (rp RepoPostgres, _ error) {
 
 func ensureSchema(
 	subject string,
-	version int,
 	schema string,
-	topic string,
-	msg any,
 	registry kk.SchemaRegistery,
 ) error {
-	_, err := registry.GetSchemaRegistery(subject, version)
+	_, err := registry.GetLatestSchemaRegistery(subject)
 	if err == nil {
 		return nil
 	}
@@ -82,16 +79,27 @@ func ensureSchema(
 		return regErr
 	}
 
-	return publishAvro(registry, topic, msg)
+	return nil
 }
 
-func publishAvro(client kk.SchemaRegistery, topic string, msg any) error {
+func publishAvro(
+	client kk.SchemaRegistery,
+	accountTopic string,
+	userTopic string,
+	account *models.InsertAccount,
+	user *models.InsertFarmerUser,
+) error {
 	av, err := kk.NewAvroGenericSerde(client.Client())
 	if err != nil {
 		return err
 	}
 
-	payload, err := av.Serialize(topic, msg)
+	accountPayload, err := av.Serialize(accountTopic, account)
+	if err != nil {
+		return err
+	}
+
+	userPayload, err := av.Serialize(userTopic, user)
 	if err != nil {
 		return err
 	}
@@ -105,34 +113,93 @@ func publishAvro(client kk.SchemaRegistery, topic string, msg any) error {
 		kk.RETRY_BACKOFF_MS:                      "100",
 		kk.LINGER_MS:                             "5",
 		kk.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+
+		kk.TRANSACTIONAL_ID: "register-user",
 	}
 
-	record := &kk.MessageKafka{
+	accountRecord := kk.MessageKafka{
 		TopicPartition: kk.KafkaTopicPartition{
-			Topic:     &topic,
+			Topic:     &accountTopic,
 			Partition: kk.KafkaPartitionAny,
 		},
-		Value: payload,
+		Value: accountPayload,
+	}.Factory()
+
+	userRecord := kk.MessageKafka{
+		TopicPartition: kk.KafkaTopicPartition{
+			Topic:     &userTopic,
+			Partition: kk.KafkaPartitionAny,
+		},
+		Value: userPayload,
+	}.Factory()
+
+	pool := kk.NewKafkaProducerPool()
+	producer, err := pool.Producer(cfg)
+	if err != nil {
+		return err
 	}
 
-	return kk.NewKafkaProducerPool().Produce(cfg, record)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Millisecond*1000,
+	)
+	defer cancel()
+
+	if err := producer.InitTransactions(ctx); err != nil {
+		return err
+	}
+
+	if err := producer.BeginTransaction(); err != nil {
+		return err
+	}
+
+	if err := producer.Produce(&accountRecord, nil); err != nil {
+		producer.AbortTransaction(ctx)
+		return err
+	}
+
+	if err := producer.Produce(&userRecord, nil); err != nil {
+		producer.AbortTransaction(ctx)
+		return err
+	}
+
+	return producer.CommitTransaction(ctx)
 }
 
-func (rp RepoPostgres) CreateUserAsync(id, email, passwordHash string, schemaVersion int) error {
-	user := &models.InsertUser{
+func (rp RepoPostgres) CreateUserAsync(
+	id, email, fullName, phone, passwordHash string,
+) error {
+	account := &models.InsertAccount{
 		Id:       id,
 		Email:    email,
 		Password: passwordHash,
 	}
 
-	topic := "insert-users"
-	subject := topic + "-value"
+	user := &models.InsertFarmerUser{
+		Id:       id,
+		FullName: fullName,
+		Email:    email,
+		Phone:    phone,
+	}
 
-	if err := ensureSchema(subject, schemaVersion, user.Schema(), topic, user, rp.schemaRegistery); err != nil {
+	valueStr := "-value"
+	accountTopic := "insert-account"
+	accountSubject := fmt.Sprintf("%s-%s", accountTopic, valueStr)
+
+	userTopic := "insert-user"
+	userSubject := fmt.Sprintf("%s-%s", userTopic, valueStr)
+
+	err := ensureSchema(accountSubject, account.Schema(), rp.schemaRegistery)
+	if err != nil {
 		return err
 	}
 
-	return publishAvro(rp.schemaRegistery, topic, user)
+	err = ensureSchema(userSubject, user.Schema(), rp.schemaRegistery)
+	if err != nil {
+		return err
+	}
+
+	return publishAvro(rp.schemaRegistery, accountTopic, userTopic, account, user)
 }
 
 func (rp RepoPostgres) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

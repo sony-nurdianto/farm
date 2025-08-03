@@ -59,7 +59,7 @@ func (su ServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.Regis
 
 	userId := uuid.NewString()
 
-	err = su.RepoPG.CreateUserAsync(userId, user.GetEmail(), passwordHash, 1)
+	err = su.RepoPG.CreateUserAsync(userId, user.GetEmail(), user.GetFullName(), user.GetPhoneNumber(), passwordHash)
 	if err != nil {
 		return nil, err
 	}
