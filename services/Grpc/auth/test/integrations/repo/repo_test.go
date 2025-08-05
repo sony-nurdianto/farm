@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/mykafka/pkg"
 )
 
 func TestRepo_CreateNewRepo(t *testing.T) {
-	repo, err := repository.NewPostgresRepo()
+	registery := pkg.NewRegistery()
+	repo, err := repository.NewPostgresRepo(registery)
 	if err != nil {
 		t.Errorf("Expected NewPostgresRepo Method did not return error but got %s", err)
 	}

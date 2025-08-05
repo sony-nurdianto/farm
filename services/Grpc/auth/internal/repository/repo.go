@@ -15,7 +15,7 @@ import (
 )
 
 type RepoPostgres struct {
-	schemaRegistery    kk.SchemaRegistery
+	schemaRegistery    kk.RegisterySchema
 	createUserstmt     pkg.Stmt
 	getUserByEmailStmt pkg.Stmt
 }
@@ -29,8 +29,8 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 	return db.Prepare(facQuery)
 }
 
-func NewPostgresRepo() (rp RepoPostgres, _ error) {
-	srgs, err := kk.NewSchemaRegistery("http://localhost:8081")
+func NewPostgresRepo(rgs kk.SchemaRegistery) (rp RepoPostgres, _ error) {
+	srgs, err := kk.NewSchemaRegistery("http://localhost:8081", rgs)
 	if err != nil {
 		return rp, err
 	}
@@ -63,7 +63,7 @@ func NewPostgresRepo() (rp RepoPostgres, _ error) {
 func ensureSchema(
 	subject string,
 	schema string,
-	registry kk.SchemaRegistery,
+	registry kk.RegisterySchema,
 ) error {
 	_, err := registry.GetLatestSchemaRegistery(subject)
 	if err == nil {
@@ -74,7 +74,7 @@ func ensureSchema(
 		return err
 	}
 
-	_, regErr := registry.RegisterSchema(subject, schema, false)
+	_, regErr := registry.CreateAvroSchema(subject, schema, false)
 	if regErr != nil {
 		return regErr
 	}
@@ -83,7 +83,7 @@ func ensureSchema(
 }
 
 func publishAvro(
-	client kk.SchemaRegistery,
+	client kk.RegisterySchema,
 	accountTopic string,
 	userTopic string,
 	account *models.InsertAccount,
@@ -154,13 +154,11 @@ func publishAvro(
 	}
 
 	if err := producer.Produce(&accountRecord, nil); err != nil {
-		producer.AbortTransaction(ctx)
-		return err
+		return errors.Join(err, producer.AbortTransaction(ctx))
 	}
 
 	if err := producer.Produce(&userRecord, nil); err != nil {
-		producer.AbortTransaction(ctx)
-		return err
+		return errors.Join(err, producer.AbortTransaction(ctx))
 	}
 
 	return producer.CommitTransaction(ctx)

@@ -6,10 +6,12 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/mykafka/pkg"
 )
 
 func main() {
-	repo, err := repository.NewPostgresRepo()
+	registery := pkg.NewRegistery()
+	repo, err := repository.NewPostgresRepo(registery)
 	if err != nil {
 		log.Fatalln(err)
 	}

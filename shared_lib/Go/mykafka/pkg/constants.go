@@ -37,4 +37,5 @@ const (
 	MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION ConfigKeyKafka = "max.in.flight.requests.per.connection"
 	SEND_BUFFER_BYTES                     ConfigKeyKafka = "send.buffer.bytes"
 	ENABLE_IDEMPOTENCE                    ConfigKeyKafka = "enable.idempotence"
+	TRANSACTIONAL_ID                      ConfigKeyKafka = "transactional.id"
 )

@@ -1,13 +1,13 @@
 {
-  "name": "auth_insert_users_sink_connector",
+  "name": "farmer_insert_users_sink_connector",
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "tasks.max": "1",
     "dialect.name": "PostgreSqlDatabaseDialect",
-    "connection.url": "jdbc:postgresql://test-postgres:5432/auth?sslmode=disable",
+    "connection.url": "jdbc:postgresql://test-postgres:5432/farmer?sslmode=disable",
     "connection.user": "sony",
     "connection.password": "secret",
-    "topics": "insert-users",
+    "topics": "insert-user",
     "table.name.format": "users",
     "table.types": "PARTITIONED TABLE",
     "insert.mode": "insert",

@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "InsertFarmerUser",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "full_name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "phone",
+      "type": "string",
+      "default": ""
+    }
+  ]
+}
