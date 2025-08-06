@@ -1,9 +1,10 @@
-module github.com/sony-nurdianto/farm/shared_lib/Go/mykafka
+module github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev
 
 go 1.24.5
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
+	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.10.0
 )
 
@@ -14,7 +15,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/heetch/avro v0.4.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

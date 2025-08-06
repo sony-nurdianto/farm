@@ -1,4 +1,4 @@
-package pkg
+package schrgs
 
 import (
 	"strings"
@@ -8,32 +8,21 @@ import (
 
 var SchemaIsNotFoundErr error
 
-type RegisterySchema interface {
-	GetLatestSchemaRegistery(subject string) (md schemaregistry.SchemaMetadata, err error)
-	GetLatestSchemaID(subject string) (int, error)
-	CreateAvroSchema(name string, jsonSchema string, normalize bool) (id int, err error)
-	Client() schemaregistry.Client
-}
-
 type registerySchema struct {
-	client schemaregistry.Client
+	client SchemaRegisteryClient
 }
 
-func NewSchemaRegistery(address string, rgs SchemaRegistery) (out registerySchema, _ error) {
-	client, err := rgs.NewClient(
+func NewSchemaRegistery(address string, rgi SchemaRegisteryInstance) (out registerySchema, _ error) {
+	client, err := rgi.NewClient(
 		schemaregistry.NewConfig(address),
 	)
 	if err != nil {
 		return out, err
 	}
 
-	out.client = client
+	out.client = NewSchemaRegisteryClient(client)
 
 	return out, nil
-}
-
-func (rgs registerySchema) Client() schemaregistry.Client {
-	return rgs.client
 }
 
 func (rgs registerySchema) GetLatestSchemaRegistery(subject string) (md schemaregistry.SchemaMetadata, err error) {

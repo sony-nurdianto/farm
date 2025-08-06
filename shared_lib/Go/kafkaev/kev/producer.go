@@ -1,4 +1,4 @@
-package pkg
+package kev
 
 import (
 	"crypto/sha256"
@@ -18,19 +18,32 @@ type KafkaProducerPool struct {
 }
 
 type pooledProducer struct {
-	producer  Producer
+	producer  KevProducer
 	lastUsed  time.Time
 	eventOnce sync.Once
 }
 
-func NewKafkaProducerPool(kk Kafka) *KafkaProducerPool {
+type CleanUpOpts struct {
+	Interval    time.Duration
+	MaxIdleTime time.Duration
+}
+
+func NewKafkaProducerPool(kk Kafka, cleanOpt *CleanUpOpts) *KafkaProducerPool {
 	pool := &KafkaProducerPool{
 		kafka:     kk,
 		producers: make(map[string]*pooledProducer),
 	}
 
+	interval := 5 * time.Minute
+	maxIdleTime := 10 * time.Minute
+
+	if cleanOpt != nil {
+		interval = cleanOpt.Interval
+		maxIdleTime = cleanOpt.MaxIdleTime
+	}
+
 	// Start cleanup goroutine untuk remove idle producers
-	go pool.cleanupRoutine()
+	go pool.cleanupRoutine(interval, maxIdleTime)
 
 	return pool
 }
@@ -96,7 +109,7 @@ func (kp *KafkaProducerPool) getOrCreateProducer(cfg kafka.ConfigMap) (*pooledPr
 	return pooled, nil
 }
 
-func (kp *KafkaProducerPool) handleEvents(producer Producer, key string) {
+func (kp *KafkaProducerPool) handleEvents(producer KevProducer, key string) {
 	defer func() {
 		// Clean up when event loop exits
 		kp.mu.Lock()
@@ -128,12 +141,12 @@ func (kp *KafkaProducerPool) handleEvents(producer Producer, key string) {
 	}
 }
 
-func (kp *KafkaProducerPool) cleanupRoutine() {
-	ticker := time.NewTicker(5 * time.Minute)
+func (kp *KafkaProducerPool) cleanupRoutine(interval, maxIdleTime time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		kp.cleanupIdleProducers(10 * time.Minute)
+		kp.cleanupIdleProducers(maxIdleTime)
 	}
 }
 
@@ -179,22 +192,17 @@ func (kp *KafkaProducerPool) GetPoolStats() map[string]any {
 	}
 }
 
-func setConfigMapKey(cfg map[ConfigKeyKafka]string) (kafka.ConfigMap, error) {
+func (kp *KafkaProducerPool) setConfigMapKey(cfg map[ConfigKeyKafka]string) kafka.ConfigMap {
 	configMap := make(kafka.ConfigMap)
 	for key, value := range cfg {
-		if err := configMap.SetKey(string(key), value); err != nil {
-			return nil, fmt.Errorf("failed to set config key %s: %w", key, err)
-		}
+		configMap.SetKey(string(key), value)
 	}
 
-	return configMap, nil
+	return configMap
 }
 
 func (kp *KafkaProducerPool) Producer(cfg map[ConfigKeyKafka]string) (*kafka.Producer, error) {
-	configMap, err := setConfigMapKey(cfg)
-	if err != nil {
-		return nil, err
-	}
+	configMap := kp.setConfigMapKey(cfg)
 
 	pooled, err := kp.getOrCreateProducer(configMap)
 	if err != nil {
@@ -203,7 +211,7 @@ func (kp *KafkaProducerPool) Producer(cfg map[ConfigKeyKafka]string) (*kafka.Pro
 
 	producer := pooled.producer
 
-	return producer.KKProducer(), nil
+	return producer.KafkaProducer(), nil
 }
 
 func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...*MessageKafka) error {
@@ -211,10 +219,7 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 		return nil
 	}
 
-	configMap, err := setConfigMapKey(cfg)
-	if err != nil {
-		return err
-	}
+	configMap := kp.setConfigMapKey(cfg)
 
 	pooled, err := kp.getOrCreateProducer(configMap)
 	if err != nil {
@@ -224,22 +229,39 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 	producer := pooled.producer
 
 	for _, msg := range msgs {
-		msgFactory := msg.Factory()
+		if msg == nil {
+			continue
+		}
 
-		deliveryChan := make(chan kafka.Event)
+		msgFactory := msg.Factory()
+		deliveryChan := make(chan kafka.Event, 1) // Buffered channel
+
 		err := producer.Produce(&msgFactory, deliveryChan)
 		if err != nil {
 			return fmt.Errorf("failed to produce message: %w", err)
 		}
 
 		go func() {
-			e := <-deliveryChan
+			e, ok := <-deliveryChan
+			if !ok {
+				return // Channel already closed
+			}
+
 			if m, ok := e.(*kafka.Message); ok {
 				if m.TopicPartition.Error != nil {
 					fmt.Printf("❌ Message delivery failed: %v\n", m.TopicPartition)
 				}
 			}
-			close(deliveryChan)
+
+			// Safe channel closing
+			select {
+			case _, ok := <-deliveryChan:
+				if !ok {
+					return // Channel already closed
+				}
+			default:
+				close(deliveryChan)
+			}
 		}()
 	}
 
@@ -250,3 +272,48 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 
 	return nil
 }
+
+// func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...*MessageKafka) error {
+// 	if len(msgs) == 0 {
+// 		return nil
+// 	}
+//
+// 	configMap, err := setConfigMapKey(cfg)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	pooled, err := kp.getOrCreateProducer(configMap)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	producer := pooled.producer
+//
+// 	for _, msg := range msgs {
+// 		msgFactory := msg.Factory()
+//
+// 		deliveryChan := make(chan kafka.Event)
+// 		err := producer.Produce(&msgFactory, deliveryChan)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to produce message: %w", err)
+// 		}
+//
+// 		go func() {
+// 			e := <-deliveryChan
+// 			if m, ok := e.(*kafka.Message); ok {
+// 				if m.TopicPartition.Error != nil {
+// 					fmt.Printf("❌ Message delivery failed: %v\n", m.TopicPartition)
+// 				}
+// 			}
+// 			close(deliveryChan)
+// 		}()
+// 	}
+//
+// 	remaining := producer.Flush(5000)
+// 	if remaining > 0 {
+// 		return fmt.Errorf("failed to flush all messages, %d messages remaining", remaining)
+// 	}
+//
+// 	return nil
+// }

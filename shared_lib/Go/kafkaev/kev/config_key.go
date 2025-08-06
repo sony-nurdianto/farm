@@ -1,4 +1,4 @@
-package pkg
+package kev
 
 type ConfigKeyKafka string
 
