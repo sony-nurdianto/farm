@@ -7,6 +7,7 @@ import "github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 type SchemaRegisteryClient interface {
 	GetLatestSchemaMetadata(subject string) (schemaregistry.SchemaMetadata, error)
 	Register(subject string, schema schemaregistry.SchemaInfo, normalize bool) (id int, err error)
+	Client() schemaregistry.Client
 }
 
 type schemaRegisteryClient struct {

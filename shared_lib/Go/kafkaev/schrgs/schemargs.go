@@ -8,11 +8,11 @@ import (
 
 var SchemaIsNotFoundErr error
 
-type registerySchema struct {
+type SchemaRegistery struct {
 	client SchemaRegisteryClient
 }
 
-func NewSchemaRegistery(address string, rgi SchemaRegisteryInstance) (out registerySchema, _ error) {
+func NewSchemaRegistery(address string, rgi SchemaRegisteryInstance) (out SchemaRegistery, _ error) {
 	client, err := rgi.NewClient(
 		schemaregistry.NewConfig(address),
 	)
@@ -25,7 +25,11 @@ func NewSchemaRegistery(address string, rgi SchemaRegisteryInstance) (out regist
 	return out, nil
 }
 
-func (rgs registerySchema) GetLatestSchemaRegistery(subject string) (md schemaregistry.SchemaMetadata, err error) {
+func (rgs SchemaRegistery) Client() SchemaRegisteryClient {
+	return rgs.client
+}
+
+func (rgs SchemaRegistery) GetLatestSchemaRegistery(subject string) (md schemaregistry.SchemaMetadata, err error) {
 	md, err = rgs.client.GetLatestSchemaMetadata(subject)
 	if err != nil {
 		if strings.Contains(err.Error(), "40401") {
@@ -39,7 +43,7 @@ func (rgs registerySchema) GetLatestSchemaRegistery(subject string) (md schemare
 	return md, nil
 }
 
-func (rgs registerySchema) CreateAvroSchema(name string, jsonSchema string, normalize bool) (id int, err error) {
+func (rgs SchemaRegistery) CreateAvroSchema(name string, jsonSchema string, normalize bool) (id int, err error) {
 	id, err = rgs.client.Register(name, schemaregistry.SchemaInfo{
 		Schema:     jsonSchema,
 		SchemaType: "AVRO",
@@ -51,7 +55,7 @@ func (rgs registerySchema) CreateAvroSchema(name string, jsonSchema string, norm
 	return id, err
 }
 
-func (rgs registerySchema) GetLatestSchemaID(subject string) (int, error) {
+func (rgs SchemaRegistery) GetLatestSchemaID(subject string) (int, error) {
 	schema, err := rgs.client.GetLatestSchemaMetadata(subject)
 	if err != nil {
 		return -1, err

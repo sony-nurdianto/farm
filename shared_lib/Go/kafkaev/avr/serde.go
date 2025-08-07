@@ -7,17 +7,17 @@ import (
 )
 
 type avroGenericSerde struct {
-	serializer  AvrSerializer
-	deserialize AvrDeserializer
+	Serializer  AvrSerializer
+	Deserialize AvrDeserializer
 }
 
 func NewAvroGenericSerde(client schemaregistry.Client, avr AvrSerdeInstance) (ags avroGenericSerde, err error) {
-	ags.serializer, err = avr.NewGenericSerializer(client, serde.ValueSerde, avro.NewSerializerConfig())
+	ags.Serializer, err = avr.NewGenericSerializer(client, serde.ValueSerde, avro.NewSerializerConfig())
 	if err != nil {
 		return ags, err
 	}
 
-	ags.deserialize, err = avr.NewGenericDeserializer(client, serde.ValueSerde, avro.NewDeserializerConfig())
+	ags.Deserialize, err = avr.NewGenericDeserializer(client, serde.ValueSerde, avro.NewDeserializerConfig())
 	if err != nil {
 		return ags, err
 	}

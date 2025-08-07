@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,13 +12,18 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
-	kk "github.com/sony-nurdianto/farm/shared_lib/Go/mykafka/pkg"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
 type RepoPostgres struct {
-	schemaRegistery    kk.RegisterySchema
-	createUserstmt     pkg.Stmt
-	getUserByEmailStmt pkg.Stmt
+	schemaRegistery       *schrgs.SchemaRegistery
+	schemaRegisteryClient schrgs.SchemaRegisteryClient
+	avro                  avr.AvrSerdeInstance
+	kafka                 kev.Kafka
+	createUserstmt        pkg.Stmt
+	getUserByEmailStmt    pkg.Stmt
 }
 
 func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
@@ -29,13 +35,19 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 	return db.Prepare(facQuery)
 }
 
-func NewPostgresRepo(rgs kk.SchemaRegistery) (rp RepoPostgres, _ error) {
-	srgs, err := kk.NewSchemaRegistery("http://localhost:8081", rgs)
+func NewPostgresRepo(sri schrgs.SchemaRegisteryInstance) (rp RepoPostgres, _ error) {
+	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
 	if err != nil {
 		return rp, err
 	}
+	rp.schemaRegistery = &srgs
+	rp.schemaRegisteryClient = srgs.Client()
 
-	rp.schemaRegistery = srgs
+	avr := avr.NewAvrSerdeInstance()
+	rp.avro = avr
+
+	kk := kev.NewKafka()
+	rp.kafka = kk
 
 	pgi := pkg.NewPostgresInstance()
 	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/auth?sslmode=disable", pgi)
@@ -60,21 +72,20 @@ func NewPostgresRepo(rgs kk.SchemaRegistery) (rp RepoPostgres, _ error) {
 	return rp, nil
 }
 
-func ensureSchema(
+func (rp RepoPostgres) ensureSchema(
 	subject string,
 	schema string,
-	registry kk.RegisterySchema,
 ) error {
-	_, err := registry.GetLatestSchemaRegistery(subject)
+	_, err := rp.schemaRegistery.GetLatestSchemaRegistery(subject)
 	if err == nil {
 		return nil
 	}
 
-	if !errors.Is(err, kk.SchemaIsNotFoundErr) {
+	if !errors.Is(err, schrgs.SchemaIsNotFoundErr) {
 		return err
 	}
 
-	_, regErr := registry.CreateAvroSchema(subject, schema, false)
+	_, regErr := rp.schemaRegistery.CreateAvroSchema(subject, schema, false)
 	if regErr != nil {
 		return regErr
 	}
@@ -82,58 +93,57 @@ func ensureSchema(
 	return nil
 }
 
-func publishAvro(
-	client kk.RegisterySchema,
+func (rp RepoPostgres) publishAvro(
 	accountTopic string,
 	userTopic string,
 	account *models.InsertAccount,
 	user *models.InsertFarmerUser,
 ) error {
-	av, err := kk.NewAvroGenericSerde(client.Client())
+	av, err := avr.NewAvroGenericSerde(rp.schemaRegisteryClient.Client(), rp.avro)
 	if err != nil {
 		return err
 	}
 
-	accountPayload, err := av.Serialize(accountTopic, account)
+	accountPayload, err := av.Serializer.Serialize(accountTopic, account)
 	if err != nil {
 		return err
 	}
 
-	userPayload, err := av.Serialize(userTopic, user)
+	userPayload, err := av.Serializer.Serialize(userTopic, user)
 	if err != nil {
 		return err
 	}
 
-	cfg := map[kk.ConfigKeyKafka]string{
-		kk.BOOTSTRAP_SERVERS:                     "localhost:29092",
-		kk.ACKS:                                  "all",
-		kk.ENABLE_IDEMPOTENCE:                    "true",
-		kk.COMPRESION_TYPE:                       "snappy",
-		kk.RETRIES:                               "5",
-		kk.RETRY_BACKOFF_MS:                      "100",
-		kk.LINGER_MS:                             "5",
-		kk.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+	cfg := map[kev.ConfigKeyKafka]string{
+		kev.BOOTSTRAP_SERVERS:  "localhost:29092",
+		kev.ACKS:               "all",
+		kev.ENABLE_IDEMPOTENCE: "true",
+		kev.COMPRESION_TYPE:    "snappy",
+		kev.RETRIES:            "5",
+		kev.RETRY_BACKOFF_MS:   "100",
+		kev.LINGER_MS:          "5",
+		kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
 
-		kk.TRANSACTIONAL_ID: "register-user",
+		kev.TRANSACTIONAL_ID: "register-user",
 	}
 
-	accountRecord := kk.MessageKafka{
-		TopicPartition: kk.KafkaTopicPartition{
+	accountRecord := kev.MessageKafka{
+		TopicPartition: kev.KafkaTopicPartition{
 			Topic:     &accountTopic,
-			Partition: kk.KafkaPartitionAny,
+			Partition: kev.KafkaPartitionAny,
 		},
 		Value: accountPayload,
 	}.Factory()
 
-	userRecord := kk.MessageKafka{
-		TopicPartition: kk.KafkaTopicPartition{
+	userRecord := kev.MessageKafka{
+		TopicPartition: kev.KafkaTopicPartition{
 			Topic:     &userTopic,
-			Partition: kk.KafkaPartitionAny,
+			Partition: kev.KafkaPartitionAny,
 		},
 		Value: userPayload,
 	}.Factory()
 
-	pool := kk.NewKafkaProducerPool()
+	pool := kev.NewKafkaProducerPool(rp.kafka, nil)
 	producer, err := pool.Producer(cfg)
 	if err != nil {
 		return err
@@ -144,6 +154,16 @@ func publishAvro(
 		time.Millisecond*1000,
 	)
 	defer cancel()
+
+	for i := range 5 {
+		err := producer.InitTransactions(ctx)
+		if err == nil {
+			fmt.Printf("✅ Kafka transactional producer ready after %d attempt(s)\n", i)
+			break
+		}
+		log.Println("Waiting Init Transaction Ready")
+		time.Sleep(2 * time.Second)
+	}
 
 	if err := producer.InitTransactions(ctx); err != nil {
 		return err
@@ -187,17 +207,17 @@ func (rp RepoPostgres) CreateUserAsync(
 	userTopic := "insert-user"
 	userSubject := fmt.Sprintf("%s-%s", userTopic, valueStr)
 
-	err := ensureSchema(accountSubject, account.Schema(), rp.schemaRegistery)
+	err := rp.ensureSchema(accountSubject, account.Schema())
 	if err != nil {
 		return err
 	}
 
-	err = ensureSchema(userSubject, user.Schema(), rp.schemaRegistery)
+	err = rp.ensureSchema(userSubject, user.Schema())
 	if err != nil {
 		return err
 	}
 
-	return publishAvro(rp.schemaRegistery, accountTopic, userTopic, account, user)
+	return rp.publishAvro(accountTopic, userTopic, account, user)
 }
 
 func (rp RepoPostgres) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

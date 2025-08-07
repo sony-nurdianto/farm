@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres v0.0.0
-	github.com/sony-nurdianto/farm/shared_lib/Go/mykafka v0.0.0
+	github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev v0.0.0
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
@@ -34,5 +34,5 @@ require (
 
 replace (
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres => ../../../shared_lib/Go/database/postgres
-	github.com/sony-nurdianto/farm/shared_lib/Go/mykafka => ../../../shared_lib/Go/mykafka
+	github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev => ../../../shared_lib/Go/kafkaev
 )
