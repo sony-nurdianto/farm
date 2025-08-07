@@ -18,5 +18,5 @@ func NewAvrDeserializer(gde *avro.GenericDeserializer) *avrDeserializer {
 }
 
 func (s *avrDeserializer) DeserializeInto(topic string, payload []byte, msg any) error {
-	return s.DeserializeInto(topic, payload, msg)
+	return s.genericDeserialize.DeserializeInto(topic, payload, msg)
 }
