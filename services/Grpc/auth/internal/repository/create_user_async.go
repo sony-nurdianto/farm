@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avro"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
@@ -40,17 +40,22 @@ func (rp AuthRepo) publishAvro(
 	account *models.InsertAccount,
 	user *models.InsertFarmerUser,
 ) error {
-	av, err := avr.NewAvroGenericSerde(rp.schemaRegisteryClient.Client(), rp.avro)
+	// TODO:Need To AddAbstraction
+	serializer, err := rp.avro.NewGenericSerializer(
+		rp.schemaRegisteryClient.Client(),
+		serde.ValueSerde,
+		avro.NewSerializerConfig(),
+	)
 	if err != nil {
 		return err
 	}
 
-	accountPayload, err := av.Serializer.Serialize(accountTopic, account)
+	accountPayload, err := serializer.Serialize(accountTopic, account)
 	if err != nil {
 		return err
 	}
 
-	userPayload, err := av.Serializer.Serialize(userTopic, user)
+	userPayload, err := serializer.Serialize(userTopic, user)
 	if err != nil {
 		return err
 	}
@@ -84,8 +89,7 @@ func (rp AuthRepo) publishAvro(
 		Value: userPayload,
 	}.Factory()
 
-	pool := kev.NewKafkaProducerPool(rp.kafka, nil)
-	producer, err := pool.Producer(cfg)
+	producer, err := rp.kafka.Producer(cfg)
 	if err != nil {
 		return err
 	}
@@ -96,15 +100,15 @@ func (rp AuthRepo) publishAvro(
 	)
 	defer cancel()
 
-	for i := range 5 {
-		err := producer.InitTransactions(ctx)
-		if err == nil {
-			fmt.Printf("✅ Kafka transactional producer ready after %d attempt(s)\n", i)
-			break
-		}
-		log.Println("Waiting Init Transaction Ready")
-		time.Sleep(2 * time.Second)
-	}
+	// for i := range 5 {
+	// 	err := producer.InitTransactions(ctx)
+	// 	if err == nil {
+	// 		fmt.Printf("✅ Kafka transactional producer ready after %d attempt(s)\n", i)
+	// 		break
+	// 	}
+	// 	log.Println("Waiting Init Transaction Ready")
+	// 	time.Sleep(2 * time.Second)
+	// }
 
 	if err := producer.InitTransactions(ctx); err != nil {
 		return err

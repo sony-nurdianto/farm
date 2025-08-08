@@ -13,12 +13,14 @@ import (
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_schrgs.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs SchemaRegisteryClient,SchemaRegisteryInstance
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_postgres.go  github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg PostgresInstance,PostgresDatabase,Stmt
 //go:generate mockgen -destination=../../test/mocks/mock_confluent_client.go -package=mocks github.com/confluentinc/confluent-kafka-go/v2/schemaregistry Client
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_avr.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr AvrSerdeInstance,AvrSerializer,AvrDeserializer
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_kev.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev Kafka,KevProducer
 
 type AuthRepo struct {
 	schemaRegistery       *schrgs.SchemaRegistery
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avro                  avr.AvrSerdeInstance
-	kafka                 kev.Kafka
+	kafka                 *kev.KafkaProducerPool
 	createUserstmt        pkg.Stmt
 	getUserByEmailStmt    pkg.Stmt
 }
@@ -35,19 +37,21 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 func NewPostgresRepo(
 	sri schrgs.SchemaRegisteryInstance,
 	pgi pkg.PostgresInstance,
+	avr avr.AvrSerdeInstance,
+	kv kev.Kafka,
 ) (rp AuthRepo, _ error) {
 	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
 	if err != nil {
 		return rp, err
 	}
+
 	rp.schemaRegistery = &srgs
 	rp.schemaRegisteryClient = srgs.Client()
 
-	avr := avr.NewAvrSerdeInstance()
 	rp.avro = avr
 
-	kk := kev.NewKafka()
-	rp.kafka = kk
+	pool := kev.NewKafkaProducerPool(kv, nil)
+	rp.kafka = pool
 
 	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/auth?sslmode=disable", pgi)
 	if err != nil {

@@ -201,7 +201,7 @@ func (kp *KafkaProducerPool) setConfigMapKey(cfg map[ConfigKeyKafka]string) kafk
 	return configMap
 }
 
-func (kp *KafkaProducerPool) Producer(cfg map[ConfigKeyKafka]string) (*kafka.Producer, error) {
+func (kp *KafkaProducerPool) Producer(cfg map[ConfigKeyKafka]string) (KevProducer, error) {
 	configMap := kp.setConfigMapKey(cfg)
 
 	pooled, err := kp.getOrCreateProducer(configMap)
@@ -209,9 +209,7 @@ func (kp *KafkaProducerPool) Producer(cfg map[ConfigKeyKafka]string) (*kafka.Pro
 		return nil, err
 	}
 
-	producer := pooled.producer
-
-	return producer.KafkaProducer(), nil
+	return pooled.producer, nil
 }
 
 func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...*MessageKafka) error {

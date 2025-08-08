@@ -21,6 +21,8 @@ func TestRepo(t *testing.T) {
 
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
 		mockClient := mocks.NewMockClient(ctrl)
+		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
+		mockKev := mocks.NewMockKafka(ctrl)
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
@@ -50,7 +52,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(mockStmt, nil).Times(2)
 
-		rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI)
+		rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.NoError(t, err)
 		assert.IsType(t, rp, repository.AuthRepo{})
 	})
@@ -61,12 +63,14 @@ func TestRepo(t *testing.T) {
 
 		mockPgI := mocks.NewMockPostgresInstance(ctrl)
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
+		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
+		mockKev := mocks.NewMockKafka(ctrl)
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
 			Return(nil, errors.New("Failed To Create NewClient"))
 
-		res, err := repository.NewPostgresRepo(mockSchrgs, mockPgI)
+		res, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.Empty(t, res)
 	})
@@ -78,6 +82,9 @@ func TestRepo(t *testing.T) {
 		mockPgI := mocks.NewMockPostgresInstance(ctrl)
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
 		mockClient := mocks.NewMockClient(ctrl)
+		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
+
+		mockKev := mocks.NewMockKafka(ctrl)
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
@@ -87,7 +94,7 @@ func TestRepo(t *testing.T) {
 			Open(gomock.Any(), gomock.Any()).
 			Return(nil, errors.New("Failed To Open Postgres"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI)
+		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 	})
 
@@ -101,6 +108,8 @@ func TestRepo(t *testing.T) {
 
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
 		mockClient := mocks.NewMockClient(ctrl)
+		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
+		mockKev := mocks.NewMockKafka(ctrl)
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
@@ -130,7 +139,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(nil, errors.New("Failed To Create STMT"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI)
+		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Failed To Create STMT")
 	})
@@ -145,6 +154,8 @@ func TestRepo(t *testing.T) {
 
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
 		mockClient := mocks.NewMockClient(ctrl)
+		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
+		mockKev := mocks.NewMockKafka(ctrl)
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
@@ -178,7 +189,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(nil, errors.New("Failed to Create STMT GetUSerEmail"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI)
+		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Failed to Create STMT GetUSerEmail")
 	})

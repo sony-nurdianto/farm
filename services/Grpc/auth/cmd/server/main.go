@@ -7,13 +7,17 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
 func main() {
 	pgi := pkg.NewPostgresInstance()
-	registery := schrgs.NewRegistery()
-	repo, err := repository.NewPostgresRepo(registery, pgi)
+	rgs := schrgs.NewRegistery()
+	avr := avr.NewAvrSerdeInstance()
+	kv := kev.NewKafka()
+	repo, err := repository.NewPostgresRepo(rgs, pgi, avr, kv)
 	if err != nil {
 		log.Fatalln(err)
 	}
