@@ -2,6 +2,7 @@ package codec
 
 import "encoding/base64"
 
+//go:generate mockgen -source=base64.go -destination=../../../test/mocks/mock_codec.go -package=mocks
 type Base64Encoder interface {
 	EncodeToString(src []byte) string
 	DecodeString(string) ([]byte, error)

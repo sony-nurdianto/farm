@@ -15,16 +15,16 @@ import (
 var ErrorUserIsExist error = errors.New("User Is Exist Aborting CreateUser")
 
 type ServiceUsecase struct {
-	RepoPG *repository.RepoPostgres
+	RepoPG *repository.AuthRepo
 }
 
-func NewServiceUsecase(repo *repository.RepoPostgres) ServiceUsecase {
+func NewServiceUsecase(repo *repository.AuthRepo) ServiceUsecase {
 	return ServiceUsecase{
 		RepoPG: repo,
 	}
 }
 
-func checkUser(rp *repository.RepoPostgres, email string) (bool, error) {
+func checkUser(rp *repository.AuthRepo, email string) (bool, error) {
 	_, err := rp.GetUserByEmail(email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -6,12 +6,14 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
 func main() {
+	pgi := pkg.NewPostgresInstance()
 	registery := schrgs.NewRegistery()
-	repo, err := repository.NewPostgresRepo(registery)
+	repo, err := repository.NewPostgresRepo(registery, pgi)
 	if err != nil {
 		log.Fatalln(err)
 	}
