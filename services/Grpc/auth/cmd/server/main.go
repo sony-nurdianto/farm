@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/rand"
 	"log"
 
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/codec"
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
@@ -13,16 +16,24 @@ import (
 )
 
 func main() {
-	pgi := pkg.NewPostgresInstance()
-	rgs := schrgs.NewRegistery()
-	avr := avr.NewAvrSerdeInstance()
-	kv := kev.NewKafka()
-	repo, err := repository.NewPostgresRepo(rgs, pgi, avr, kv)
+	repo, err := repository.NewPostgresRepo(
+		schrgs.NewRegistery(),
+		pkg.NewPostgresInstance(),
+		avr.NewAvrSerdeInstance(),
+		kev.NewKafka(),
+	)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	uc := usecase.NewServiceUsecase(&repo)
+	uc := usecase.NewServiceUsecase(
+		&repo,
+		passencrypt.NewPassEncrypt(
+			rand.Reader,
+			codec.NewBase64Encoder(),
+		),
+	)
+
 	req := &pbgen.RegisterRequest{
 		FullName:    "Sony Nurdianto",
 		Email:       "sonynurdiant0@gmail.com",

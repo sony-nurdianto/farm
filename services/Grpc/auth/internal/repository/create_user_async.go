@@ -17,10 +17,6 @@ func (rp authRepo) ensureSchema(
 	schema string,
 ) error {
 	_, err := rp.schemaRegistery.GetLatestSchemaRegistery(subject)
-	if err == nil {
-		return nil
-	}
-
 	if !errors.Is(err, schrgs.SchemaIsNotFoundErr) {
 		return err
 	}
@@ -31,6 +27,21 @@ func (rp authRepo) ensureSchema(
 	}
 
 	return nil
+}
+
+func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) error {
+	var err error
+	counter := 0
+	for range 5 {
+		err = producer.InitTransactions(ctx)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Second * 2) // atau exponential backoff bisa dipakai
+
+		counter++
+	}
+	return fmt.Errorf("init transactions failed after %d attempts: %w", counter, err)
 }
 
 func (rp authRepo) publishAvro(
@@ -109,7 +120,7 @@ func (rp authRepo) publishAvro(
 	// 	time.Sleep(2 * time.Second)
 	// }
 
-	if err := producer.InitTransactions(ctx); err != nil {
+	if err := initTransactionWithRetry(ctx, producer); err != nil {
 		return err
 	}
 
