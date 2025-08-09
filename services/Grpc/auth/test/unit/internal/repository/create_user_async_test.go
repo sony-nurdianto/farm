@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/golang/mock/gomock"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/test/mocks"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 	"github.com/stretchr/testify/assert"
 )
@@ -332,8 +332,7 @@ func TestCreateUserAsync_PublishAvro_InitTransactionError(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil).AnyTimes()
 
-	// TODO:Need To Add AbstractionType
-	eventsChan := make(chan kafka.Event, 1) // buffered supaya gak blocking
+	eventsChan := make(chan kev.Event, 1) // buffered supaya gak blocking
 
 	mockProducer.EXPECT().Events().Return(eventsChan).AnyTimes()
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(errors.New("Error InitTransactions")).AnyTimes()
@@ -384,8 +383,7 @@ func TestCreateUserAsync_PublishAvro_BeginTransactionError(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil).AnyTimes()
 
-	// TODO:Need To Add AbstractionType
-	eventsChan := make(chan kafka.Event, 1) // buffered supaya gak blocking
+	eventsChan := make(chan kev.Event, 1) // buffered supaya gak blocking
 
 	mockProducer.EXPECT().Events().Return(eventsChan).AnyTimes()
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(nil).AnyTimes()
@@ -428,8 +426,7 @@ func TestCreateUserAsync_PublishAvro_ProduceAccountError(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil).AnyTimes()
 
-	// TODO:Need To Add AbstractionType
-	eventsChan := make(chan kafka.Event, 1)
+	eventsChan := make(chan kev.Event, 1)
 	mockProducer.EXPECT().Events().Return(eventsChan).AnyTimes()
 
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(nil).AnyTimes()
@@ -481,8 +478,7 @@ func TestCreateUserAsync_PublishAvro_ProduceUserError(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil).AnyTimes()
 
-	// TODO:Need To Add AbstractionType
-	eventsChan := make(chan kafka.Event, 1)
+	eventsChan := make(chan kev.Event, 1)
 	mockProducer.EXPECT().Events().Return(eventsChan).AnyTimes()
 
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(nil).AnyTimes()
@@ -541,8 +537,7 @@ func TestCreateUserAsync_PublishAvro_CommitSuccess(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil).AnyTimes()
 
-	// TODO:Need To Add AbstractionType
-	eventsChan := make(chan kafka.Event, 1)
+	eventsChan := make(chan kev.Event, 1)
 	mockProducer.EXPECT().Events().Return(eventsChan).AnyTimes()
 
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(nil).AnyTimes()

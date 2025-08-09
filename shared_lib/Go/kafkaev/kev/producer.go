@@ -232,7 +232,7 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 		}
 
 		msgFactory := msg.Factory()
-		deliveryChan := make(chan kafka.Event, 1) // Buffered channel
+		deliveryChan := make(chan Event, 1) // Buffered channel
 
 		err := producer.Produce(&msgFactory, deliveryChan)
 		if err != nil {
