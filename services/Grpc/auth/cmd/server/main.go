@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	repo, err := repository.NewPostgresRepo(
+	repo, err := repository.NewAuthRepo(
 		schrgs.NewRegistery(),
 		pkg.NewPostgresInstance(),
 		avr.NewAvrSerdeInstance(),

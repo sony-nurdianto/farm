@@ -86,7 +86,7 @@ func TestCreateUserAsync_ErrorGetLatestSchemaMetadata(t *testing.T) {
 		Return(schrgs.SchemaMetadata{}, errors.New("Error GetLatestSchemaMetadata")).
 		Times(1)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -113,7 +113,7 @@ func TestCreateUserAsync_ErrorSchemaNotFoundCreateAvroSchema(t *testing.T) {
 		Return(0, errors.New("Failed Register Schema")).
 		Times(1)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -145,7 +145,7 @@ func TestCreateUserAsync_ErrorOnUserSchema(t *testing.T) {
 		Return(0, errors.New("Failed Register User Schema")).
 		Times(1)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -174,7 +174,7 @@ func TestCreateUserAsync_PublishAvro_ErrorNewGenericSerializer(t *testing.T) {
 			gomock.Any(),
 		).Return(nil, errors.New("Something Wrong"))
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -210,7 +210,7 @@ func TestCreateUserAsync_PublishAvro_ErrorSerializeAccount(t *testing.T) {
 		Return(nil, errors.New("Failed Serialize Accounts")).
 		Times(1)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -251,7 +251,7 @@ func TestCreateUserAsync_PublishAvro_ErrorSerializeUsers(t *testing.T) {
 		Return(nil, errors.New("Failed To Serialize Users")).
 		Times(1)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -291,7 +291,7 @@ func TestCreateUserAsync_PublishAvro_ProducerError(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(nil, errors.New("Error Create Producer"))
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -339,7 +339,7 @@ func TestCreateUserAsync_PublishAvro_InitTransactionError(t *testing.T) {
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(errors.New("Error InitTransactions")).AnyTimes()
 	// mockProducer.EXPECT().BeginTransaction().Return(errors.New("Error BeginTransaction")).AnyTimes()
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	// Run test
@@ -390,7 +390,7 @@ func TestCreateUserAsync_PublishAvro_BeginTransactionError(t *testing.T) {
 	mockProducer.EXPECT().InitTransactions(gomock.Any()).Return(nil).AnyTimes()
 	mockProducer.EXPECT().BeginTransaction().Return(errors.New("Error BeginTransaction")).AnyTimes()
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	// Run test
@@ -443,7 +443,7 @@ func TestCreateUserAsync_PublishAvro_ProduceAccountError(t *testing.T) {
 		AbortTransaction(gomock.Any()).
 		Return(nil)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -502,7 +502,7 @@ func TestCreateUserAsync_PublishAvro_ProduceUserError(t *testing.T) {
 		AbortTransaction(gomock.Any()).
 		Return(nil)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -555,7 +555,7 @@ func TestCreateUserAsync_PublishAvro_CommitSuccess(t *testing.T) {
 		CommitTransaction(gomock.Any()).
 		Return(nil)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -607,7 +607,7 @@ func TestCreateUserAsync_Success(t *testing.T) {
 		CommitTransaction(gomock.Any()).
 		Return(nil)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("id", "email", "fullname", "phone", "passwordHash")
@@ -683,7 +683,7 @@ func TestCreateUserAsync_Success_EnsureSchemaReturnsNil(t *testing.T) {
 		Return(nil)
 
 	// Create repository instance
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	// Execute the method under test
@@ -750,7 +750,7 @@ func TestCreateUserAsync_Success_SchemaNotFoundThenCreatedSuccessfully(t *testin
 	mockProducer.EXPECT().Produce(gomock.Any(), nil).Return(nil).Times(2)
 	mockProducer.EXPECT().CommitTransaction(gomock.Any()).Return(nil)
 
-	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+	rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 	assert.NoError(t, err)
 
 	err = rp.CreateUserAsync("test-id", "test@email.com", "Test User", "+1234567890", "hashed-password")

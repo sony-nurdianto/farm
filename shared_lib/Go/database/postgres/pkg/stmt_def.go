@@ -5,6 +5,7 @@ import (
 	"database/sql"
 )
 
+//go:generate mockgen -package=mocks -destination=../test/mocks/mock_pgstmt.go -source=stmt_def.go
 type Stmt interface {
 	QueryRowContext(ctx context.Context, args ...any) Row
 	QueryContext(ctx context.Context, args ...any) (Rows, error)

@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+//go:generate mockgen -package=mocks -destination=../test/mocks/mock_postgresdb.go -source=database_def.go
 type PostgresDatabase interface {
 	SetMaxOpenConns(n int)
 	SetMaxIdleConns(n int)
@@ -22,7 +23,7 @@ type postgresDatabase struct {
 	db *sql.DB
 }
 
-func NewPostgresDb(db *sql.DB) postgresDatabase {
+func NewPostgresDb(db *sql.DB) PostgresDatabase {
 	return postgresDatabase{db}
 }
 

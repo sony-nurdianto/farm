@@ -22,7 +22,7 @@ func TestGetUser(t *testing.T) {
 
 		mockRow := mocks.NewMockRow(ctrl)
 
-		rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.NoError(t, err)
 
 		mockStmt.EXPECT().
@@ -48,7 +48,7 @@ func TestGetUser(t *testing.T) {
 
 		mockRow := mocks.NewMockRow(ctrl)
 
-		rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		rp, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.NoError(t, err)
 
 		mockStmt.EXPECT().

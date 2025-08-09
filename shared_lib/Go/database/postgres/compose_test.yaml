@@ -1,0 +1,29 @@
+services: 
+  test-postgres:
+    image: postgres:17.4-bookworm
+    restart: always
+    ports:
+      - 5000:5432
+    container_name: "test-postgres"
+    environment:
+      POSTGRES_USER: sony
+      POSTGRES_PASSWORD: secret 
+      POSTGRES_DB: test
+      PGDATA: /var/libpg_database_test/postgresql/data/pgdata
+      
+    volumes:
+      - pg_database_test:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sony -d testdb"]  # Fix user dan db name
+      interval: 10s  
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9080:8080
+
+volumes:
+  pg_database_test:

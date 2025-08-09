@@ -8,7 +8,7 @@ import (
 
 func TestOpenPostgres(t *testing.T) {
 	instance := pkg.NewPostgresInstance()
-	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/farmer_db?sslmode=disable", instance)
+	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/test?sslmode=disable", instance)
 	if err != nil {
 		t.Fatalf("Expected Success Open Connection To Postgres Database but got %s", err)
 	}

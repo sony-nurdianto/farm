@@ -52,7 +52,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(mockStmt, nil).Times(2)
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.NoError(t, err)
 	})
 
@@ -69,7 +69,7 @@ func TestRepo(t *testing.T) {
 			NewClient(gomock.Any()).
 			Return(nil, errors.New("Failed To Create NewClient"))
 
-		res, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		res, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.Empty(t, res)
 	})
@@ -93,7 +93,7 @@ func TestRepo(t *testing.T) {
 			Open(gomock.Any(), gomock.Any()).
 			Return(nil, errors.New("Failed To Open Postgres"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 	})
 
@@ -138,7 +138,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(nil, errors.New("Failed To Create STMT"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Failed To Create STMT")
 	})
@@ -188,7 +188,7 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(nil, errors.New("Failed to Create STMT GetUSerEmail"))
 
-		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Failed to Create STMT GetUSerEmail")
 	})

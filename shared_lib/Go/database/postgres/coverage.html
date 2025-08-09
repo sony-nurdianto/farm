@@ -55,13 +55,13 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/database.go (50.0%)</option>
+				<option value="file0">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/database_def.go (100.0%)</option>
 				
-				<option value="file1">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/instance.go (80.0%)</option>
+				<option value="file1">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/instance_def.go (100.0%)</option>
 				
-				<option value="file2">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/postgres.go (90.9%)</option>
+				<option value="file2">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/postgres.go (100.0%)</option>
 				
-				<option value="file3">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/stmt.go (0.0%)</option>
+				<option value="file3">github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg/stmt_def.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -85,6 +85,7 @@ import (
         _ "github.com/lib/pq"
 )
 
+//go:generate mockgen -package=mocks -destination=../test/mocks/mock_postgresdb.go -source=database_def.go
 type PostgresDatabase interface {
         SetMaxOpenConns(n int)
         SetMaxIdleConns(n int)
@@ -99,7 +100,7 @@ type postgresDatabase struct {
         db *sql.DB
 }
 
-func NewPostgresDb(db *sql.DB) postgresDatabase <span class="cov8" title="1">{
+func NewPostgresDb(db *sql.DB) PostgresDatabase <span class="cov8" title="1">{
         return postgresDatabase{db}
 }</span>
 
@@ -119,16 +120,16 @@ func (pdb postgresDatabase) PingContext(ctx context.Context) error <span class="
         return pdb.db.PingContext(ctx)
 }</span>
 
-func (pdb postgresDatabase) Prepare(query string) (Stmt, error) <span class="cov0" title="0">{
+func (pdb postgresDatabase) Prepare(query string) (Stmt, error) <span class="cov8" title="1">{
         stmt, err := pdb.db.Prepare(query)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">return NewStmt(stmt), nil</span>
+        <span class="cov8" title="1">return NewStmt(stmt), nil</span>
 }
 
-func (pdb postgresDatabase) Close() error <span class="cov0" title="0">{
+func (pdb postgresDatabase) Close() error <span class="cov8" title="1">{
         return pdb.db.Close()
 }</span>
 </pre>
@@ -137,6 +138,7 @@ func (pdb postgresDatabase) Close() error <span class="cov0" title="0">{
 
 import "database/sql"
 
+//go:generate mockgen -package=mocks -destination=../test/mocks/mock_pginstance.go -source=instance_def.go
 type PostgresInstance interface {
         Open(driverName string, dataSourceName string) (PostgresDatabase, error)
 }
@@ -149,7 +151,7 @@ func NewPostgresInstance() pgi <span class="cov8" title="1">{
 
 func (i pgi) Open(driverName, dataSourceName string) (PostgresDatabase, error) <span class="cov8" title="1">{
         sql, err := sql.Open(driverName, dataSourceName)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
 
@@ -181,7 +183,7 @@ func OpenPostgres(uri string, instance PostgresInstance) (
         ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         defer cancel()
 
-        if err := db.PingContext(ctx); err != nil </span><span class="cov0" title="0">{
+        if err := db.PingContext(ctx); err != nil </span><span class="cov8" title="1">{
                 return pg, err
         }</span>
 
@@ -196,6 +198,7 @@ import (
         "database/sql"
 )
 
+//go:generate mockgen -package=mocks -destination=../test/mocks/mock_pgstmt.go -source=stmt_def.go
 type Stmt interface {
         QueryRowContext(ctx context.Context, args ...any) Row
         QueryContext(ctx context.Context, args ...any) (Rows, error)
@@ -205,15 +208,15 @@ type stmt struct {
         statement *sql.Stmt
 }
 
-func NewStmt(s *sql.Stmt) stmt <span class="cov0" title="0">{
+func NewStmt(s *sql.Stmt) stmt <span class="cov8" title="1">{
         return stmt{statement: s}
 }</span>
 
-func (s stmt) QueryRowContext(ctx context.Context, args ...any) Row <span class="cov0" title="0">{
+func (s stmt) QueryRowContext(ctx context.Context, args ...any) Row <span class="cov8" title="1">{
         return s.statement.QueryRowContext(ctx, args...)
 }</span>
 
-func (s stmt) QueryContext(ctx context.Context, args ...any) (Rows, error) <span class="cov0" title="0">{
+func (s stmt) QueryContext(ctx context.Context, args ...any) (Rows, error) <span class="cov8" title="1">{
         return s.statement.QueryContext(ctx, args...)
 }</span>
 </pre>

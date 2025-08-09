@@ -41,7 +41,7 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 	return db.Prepare(facQuery)
 }
 
-func NewPostgresRepo(
+func NewAuthRepo(
 	sri schrgs.SchemaRegisteryInstance,
 	pgi pkg.PostgresInstance,
 	avr avr.AvrSerdeInstance,
