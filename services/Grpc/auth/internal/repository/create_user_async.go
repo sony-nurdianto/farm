@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avro"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
@@ -40,11 +39,11 @@ func (rp AuthRepo) publishAvro(
 	account *models.InsertAccount,
 	user *models.InsertFarmerUser,
 ) error {
-	// TODO:Need To AddAbstraction
 	serializer, err := rp.avro.NewGenericSerializer(
 		rp.schemaRegisteryClient.Client(),
-		serde.ValueSerde,
-		avro.NewSerializerConfig(),
+		avr.ValueSerde,
+		avr.NewSerializerConfig(),
+		// avro.NewSerializerConfig(),
 	)
 	if err != nil {
 		return err

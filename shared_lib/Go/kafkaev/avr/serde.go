@@ -12,7 +12,7 @@ type avroGenericSerde struct {
 }
 
 func NewAvroGenericSerde(client schemaregistry.Client, avr AvrSerdeInstance) (ags avroGenericSerde, err error) {
-	ags.Serializer, err = avr.NewGenericSerializer(client, serde.ValueSerde, avro.NewSerializerConfig())
+	ags.Serializer, err = avr.NewGenericSerializer(client, serde.ValueSerde, NewSerializerConfig())
 	if err != nil {
 		return ags, err
 	}

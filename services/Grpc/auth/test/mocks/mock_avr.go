@@ -52,7 +52,7 @@ func (mr *MockAvrSerdeInstanceMockRecorder) NewGenericDeserializer(arg0, arg1, a
 }
 
 // NewGenericSerializer mocks base method.
-func (m *MockAvrSerdeInstance) NewGenericSerializer(arg0 schemaregistry.Client, arg1 int, arg2 *avro.SerializerConfig) (avr.AvrSerializer, error) {
+func (m *MockAvrSerdeInstance) NewGenericSerializer(arg0 schemaregistry.Client, arg1 int, arg2 *avr.SerializerConfig) (avr.AvrSerializer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewGenericSerializer", arg0, arg1, arg2)
 	ret0, _ := ret[0].(avr.AvrSerializer)

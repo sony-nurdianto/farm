@@ -17,7 +17,7 @@ func TestNewGenericSerializer_Success(t *testing.T) {
 
 	mockClient := mocksClient.NewMockClient(ctrl)
 	serdeType := serde.ValueSerde
-	conf := &avro.SerializerConfig{}
+	conf := &avr.SerializerConfig{}
 
 	instance := avr.NewAvrSerdeInstance()
 	serializer, err := instance.NewGenericSerializer(mockClient, serdeType, conf)
@@ -32,7 +32,7 @@ func TestNewGenericSerializer_Error(t *testing.T) {
 
 	instance := avr.NewAvrSerdeInstance()
 
-	conf := avro.NewSerializerConfig()
+	conf := avr.NewSerializerConfig()
 	serializer, err := instance.NewGenericSerializer(nil, serde.ValueSerde, conf)
 
 	assert.Error(t, err)

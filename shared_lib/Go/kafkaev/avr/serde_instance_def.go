@@ -11,7 +11,7 @@ type AvrSerdeInstance interface {
 	NewGenericSerializer(
 		client schemaregistry.Client,
 		serdeType serde.Type,
-		conf *avro.SerializerConfig,
+		conf *SerializerConfig,
 	) (AvrSerializer, error)
 
 	NewGenericDeserializer(
@@ -30,9 +30,9 @@ func NewAvrSerdeInstance() avrSerdeInstance {
 func (avrSerdeInstance) NewGenericSerializer(
 	client schemaregistry.Client,
 	serdeType serde.Type,
-	conf *avro.SerializerConfig,
+	conf *SerializerConfig,
 ) (AvrSerializer, error) {
-	gs, err := avro.NewGenericSerializer(client, serdeType, conf)
+	gs, err := avro.NewGenericSerializer(client, serdeType, conf.ToAvroConfig())
 	if err != nil {
 		return nil, err
 	}

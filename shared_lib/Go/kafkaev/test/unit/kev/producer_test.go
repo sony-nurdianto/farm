@@ -56,7 +56,61 @@ func TestKafkaProducer_FatalError(t *testing.T) {
 
 	mockKafka := mocks.NewMockKafka(ctrl)
 	mockProducer := mocks.NewMockKevProducer(ctrl)
+	eventChan := make(chan kafka.Event, 1)
 
+	cfg := map[kev.ConfigKeyKafka]string{
+		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
+	}
+
+	// Set up expectations in order
+	mockKafka.EXPECT().
+		NewProducer(gomock.Any()).
+		Return(mockProducer, nil).
+		Times(1)
+
+	mockProducer.EXPECT().
+		Events().
+		Return(eventChan).
+		Times(1) // Only called once when producer is created
+
+	// Close will be called when fatal error is handled
+	mockProducer.EXPECT().
+		Close().
+		Times(1)
+
+	// Create pool
+	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+
+	// Get producer first to trigger the event handler goroutine
+	producer, err := pool.Producer(cfg)
+	assert.NoError(t, err)
+	assert.NotNil(t, producer)
+
+	// Give a moment for the event handler goroutine to start
+	time.Sleep(10 * time.Millisecond)
+
+	// Now send the fatal error
+	fatalErr := kafka.NewError(kafka.ErrFatal, "Fatal error", true)
+	eventChan <- fatalErr
+
+	// Close the channel to signal end of events
+	close(eventChan)
+
+	// Wait for the event handler to process the fatal error and cleanup
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify pool stats show the producer was removed
+	stats := pool.GetPoolStats()
+	assert.Equal(t, 0, stats["active_producers"])
+}
+
+// Alternative test that verifies the cleanup more explicitly
+func TestKafkaProducer_FatalErrorWithCleanupVerification(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockKafka := mocks.NewMockKafka(ctrl)
+	mockProducer := mocks.NewMockKevProducer(ctrl)
 	eventChan := make(chan kafka.Event, 1)
 
 	cfg := map[kev.ConfigKeyKafka]string{
@@ -69,29 +123,46 @@ func TestKafkaProducer_FatalError(t *testing.T) {
 
 	mockProducer.EXPECT().
 		Events().
-		Return(eventChan).
-		AnyTimes()
+		Return(eventChan)
 
-	mockProducer.EXPECT().
-		KafkaProducer().
-		Return(&kafka.Producer{})
-
+	// Use a channel to signal when Close is called
+	closeCalled := make(chan bool, 1)
 	mockProducer.EXPECT().
 		Close().
-		Times(1)
+		Do(func() {
+			closeCalled <- true
+		})
 
 	pool := kev.NewKafkaProducerPool(mockKafka, nil)
 
+	// Get producer
+	producer, err := pool.Producer(cfg)
+	assert.NoError(t, err)
+	assert.NotNil(t, producer)
+
+	// Verify we have 1 active producer
+	stats := pool.GetPoolStats()
+	assert.Equal(t, 1, stats["active_producers"])
+
+	// Send fatal error
 	fatalErr := kafka.NewError(kafka.ErrFatal, "Fatal error", true)
 	eventChan <- fatalErr
 	close(eventChan)
 
-	producer, err := pool.Producer(cfg)
+	// Wait for Close to be called
+	select {
+	case <-closeCalled:
+		// Close was called as expected
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("Close was not called within timeout")
+	}
 
-	assert.NoError(t, err)
-	assert.NotNil(t, producer)
-
+	// Give a moment for cleanup to complete
 	time.Sleep(50 * time.Millisecond)
+
+	// Verify producer was removed from pool
+	stats = pool.GetPoolStats()
+	assert.Equal(t, 0, stats["active_producers"])
 }
 
 func TestKafkaProducerPool_SendMessage_Success(t *testing.T) {

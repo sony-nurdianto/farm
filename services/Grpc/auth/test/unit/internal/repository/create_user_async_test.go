@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/golang/mock/gomock"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 	"github.com/sony-nurdianto/farm/auth/test/mocks"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,9 +82,7 @@ func TestCreateUserAsync_ErrorGetLatestSchemaMetadata(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata("insert-account--value").
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{}, errors.New("Error GetLatestSchemaMetadata")).
+		Return(schrgs.SchemaMetadata{}, errors.New("Error GetLatestSchemaMetadata")).
 		Times(1)
 
 	rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
@@ -106,9 +104,7 @@ func TestCreateUserAsync_ErrorSchemaNotFoundCreateAvroSchema(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata("insert-account--value").
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{}, errors.New("40401")).
+		Return(schrgs.SchemaMetadata{}, errors.New("40401")).
 		Times(1)
 
 	mockClient.EXPECT().
@@ -135,16 +131,12 @@ func TestCreateUserAsync_ErrorOnUserSchema(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata("insert-account--value").
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(1)
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata("insert-user--value").
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{}, errors.New("40401")).
+		Return(schrgs.SchemaMetadata{}, errors.New("40401")).
 		Times(1)
 
 	mockClient.EXPECT().
@@ -171,9 +163,7 @@ func TestCreateUserAsync_PublishAvro_ErrorNewGenericSerializer(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{}, nil).
 		Times(2)
 
 	mockAvr.EXPECT().
@@ -202,9 +192,7 @@ func TestCreateUserAsync_PublishAvro_ErrorSerializeAccount(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -240,9 +228,7 @@ func TestCreateUserAsync_PublishAvro_ErrorSerializeUsers(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -283,9 +269,7 @@ func TestCreateUserAsync_PublishAvro_ProducerError(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -325,9 +309,7 @@ func TestCreateUserAsync_PublishAvro_InitTransactionError(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -379,9 +361,7 @@ func TestCreateUserAsync_PublishAvro_BeginTransactionError(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -431,9 +411,7 @@ func TestCreateUserAsync_PublishAvro_ProduceAccountError(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -486,9 +464,7 @@ func TestCreateUserAsync_PublishAvro_ProduceUserError(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)
@@ -548,9 +524,7 @@ func TestCreateUserAsync_PublishAvro_CommitSuccess(t *testing.T) {
 
 	mockClient.EXPECT().
 		GetLatestSchemaMetadata(gomock.Any()).
-
-		// TODO:Need To Add AbstractionType
-		Return(schemaregistry.SchemaMetadata{ID: 1}, nil).
+		Return(schrgs.SchemaMetadata{ID: 1}, nil).
 		Times(2)
 
 	mockSerializer := mocks.NewMockAvrSerializer(ctrl)

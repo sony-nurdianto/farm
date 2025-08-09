@@ -276,10 +276,7 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 // 		return nil
 // 	}
 //
-// 	configMap, err := setConfigMapKey(cfg)
-// 	if err != nil {
-// 		return err
-// 	}
+// 	configMap := kp.setConfigMapKey(cfg)
 //
 // 	pooled, err := kp.getOrCreateProducer(configMap)
 // 	if err != nil {
