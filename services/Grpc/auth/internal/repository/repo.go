@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sony-nurdianto/farm/auth/internal/constants"
+	"github.com/sony-nurdianto/farm/auth/internal/entity"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
@@ -15,8 +16,14 @@ import (
 //go:generate mockgen -destination=../../test/mocks/mock_confluent_client.go -package=mocks github.com/confluentinc/confluent-kafka-go/v2/schemaregistry Client
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_avr.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr AvrSerdeInstance,AvrSerializer,AvrDeserializer
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_kev.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev Kafka,KevProducer
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_authrepo.go -source=repo.go
 
-type AuthRepo struct {
+type AuthRepo interface {
+	CreateUserAsync(id, email, fullName, phone, passwordHash string) error
+	GetUserByEmail(email string) (user entity.Users, _ error)
+}
+
+type authRepo struct {
 	schemaRegistery       *schrgs.SchemaRegistery
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avro                  avr.AvrSerdeInstance
@@ -39,7 +46,7 @@ func NewPostgresRepo(
 	pgi pkg.PostgresInstance,
 	avr avr.AvrSerdeInstance,
 	kv kev.Kafka,
-) (rp AuthRepo, _ error) {
+) (rp authRepo, _ error) {
 	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
 	if err != nil {
 		return rp, err

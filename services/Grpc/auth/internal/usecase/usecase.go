@@ -1,12 +1,10 @@
 package usecase
 
 import (
-	"crypto/rand"
 	"database/sql"
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/sony-nurdianto/farm/auth/internal/encryption/codec"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
@@ -15,16 +13,21 @@ import (
 var ErrorUserIsExist error = errors.New("User Is Exist Aborting CreateUser")
 
 type ServiceUsecase struct {
-	RepoPG *repository.AuthRepo
+	authRepo    repository.AuthRepo
+	passEncrypt passencrypt.PassEncrypt
 }
 
-func NewServiceUsecase(repo *repository.AuthRepo) ServiceUsecase {
+func NewServiceUsecase(
+	repo repository.AuthRepo,
+	pass passencrypt.PassEncrypt,
+) ServiceUsecase {
 	return ServiceUsecase{
-		RepoPG: repo,
+		authRepo:    repo,
+		passEncrypt: pass,
 	}
 }
 
-func checkUser(rp *repository.AuthRepo, email string) (bool, error) {
+func checkUser(rp repository.AuthRepo, email string) (bool, error) {
 	_, err := rp.GetUserByEmail(email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -38,7 +41,7 @@ func checkUser(rp *repository.AuthRepo, email string) (bool, error) {
 }
 
 func (su ServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
-	userExsist, err := checkUser(su.RepoPG, user.GetEmail())
+	userExsist, err := checkUser(su.authRepo, user.GetEmail())
 	if err != nil {
 		return nil, err
 	}
@@ -47,19 +50,14 @@ func (su ServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.Regis
 		return nil, ErrorUserIsExist
 	}
 
-	pe := passencrypt.NewPassEncrypt(
-		rand.Reader,
-		codec.NewBase64Encoder(),
-	)
-
-	passwordHash, err := pe.HashPassword(user.GetPassword())
+	passwordHash, err := su.passEncrypt.HashPassword(user.GetPassword())
 	if err != nil {
 		return nil, err
 	}
 
 	userId := uuid.NewString()
 
-	err = su.RepoPG.CreateUserAsync(userId, user.GetEmail(), user.GetFullName(), user.GetPhoneNumber(), passwordHash)
+	err = su.authRepo.CreateUserAsync(userId, user.GetEmail(), user.GetFullName(), user.GetPhoneNumber(), passwordHash)
 	if err != nil {
 		return nil, err
 	}

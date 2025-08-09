@@ -7,7 +7,7 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
 )
 
-func (rp AuthRepo) GetUserByEmail(email string) (user entity.Users, _ error) {
+func (rp authRepo) GetUserByEmail(email string) (user entity.Users, _ error) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		time.Millisecond*500,

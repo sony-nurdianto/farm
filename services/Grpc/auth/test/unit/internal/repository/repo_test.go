@@ -52,9 +52,8 @@ func TestRepo(t *testing.T) {
 			Prepare(gomock.Any()).
 			Return(mockStmt, nil).Times(2)
 
-		rp, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		_, err := repository.NewPostgresRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.NoError(t, err)
-		assert.IsType(t, rp, repository.AuthRepo{})
 	})
 
 	t.Run("NewPostgreRepo Error NewSchemaRegistery", func(t *testing.T) {

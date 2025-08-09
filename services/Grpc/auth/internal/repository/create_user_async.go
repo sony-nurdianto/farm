@@ -12,7 +12,7 @@ import (
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
-func (rp AuthRepo) ensureSchema(
+func (rp authRepo) ensureSchema(
 	subject string,
 	schema string,
 ) error {
@@ -33,7 +33,7 @@ func (rp AuthRepo) ensureSchema(
 	return nil
 }
 
-func (rp AuthRepo) publishAvro(
+func (rp authRepo) publishAvro(
 	accountTopic string,
 	userTopic string,
 	account *models.InsertAccount,
@@ -128,7 +128,7 @@ func (rp AuthRepo) publishAvro(
 	return producer.CommitTransaction(ctx)
 }
 
-func (rp AuthRepo) CreateUserAsync(
+func (rp authRepo) CreateUserAsync(
 	id, email, fullName, phone, passwordHash string,
 ) error {
 	account := &models.InsertAccount{

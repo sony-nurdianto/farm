@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+//go:generate mockgen -source=password_hash.go -destination=../../../test/mocks/mock_passencrypt.go -package=mocks
 const (
 	time    = 1
 	memory  = 64 * 1024
@@ -17,6 +18,11 @@ const (
 )
 
 var ErrorGenSaltReadRand = errors.New("failed to read rand")
+
+type PassEncrypt interface {
+	HashPassword(password string) (passwordHash string, _ error)
+	VerifyPassword(password, passwordHash string) (verify bool, _ error)
+}
 
 type passEncrypt struct {
 	randRead       io.Reader
