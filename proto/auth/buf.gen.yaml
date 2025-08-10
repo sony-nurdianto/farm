@@ -12,3 +12,15 @@ plugins:
       - Mauth/v1/auth.proto=.;pbgen
     include_imports: true
     include_wkt: false
+  - remote: buf.build/protocolbuffers/go
+    out: ../services/Rest/farm_gateway/internal/pbgen
+    opt: 
+      - Mauth/v1/auth.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
+  - remote: buf.build/grpc/go
+    out: ../services/Rest/farm_gateway/internal/pbgen
+    opt: 
+      - Mauth/v1/auth.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
