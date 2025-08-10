@@ -110,16 +110,6 @@ func (rp authRepo) publishAvro(
 	)
 	defer cancel()
 
-	// for i := range 5 {
-	// 	err := producer.InitTransactions(ctx)
-	// 	if err == nil {
-	// 		fmt.Printf("✅ Kafka transactional producer ready after %d attempt(s)\n", i)
-	// 		break
-	// 	}
-	// 	log.Println("Waiting Init Transaction Ready")
-	// 	time.Sleep(2 * time.Second)
-	// }
-
 	if err := initTransactionWithRetry(ctx, producer); err != nil {
 		return err
 	}

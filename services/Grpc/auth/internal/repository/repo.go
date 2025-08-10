@@ -28,6 +28,7 @@ type authRepo struct {
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avro                  avr.AvrSerdeInstance
 	kafka                 *kev.KafkaProducerPool
+	db                    pkg.PostgresDatabase
 	createUserstmt        pkg.Stmt
 	getUserByEmailStmt    pkg.Stmt
 }
@@ -65,6 +66,8 @@ func NewAuthRepo(
 		return rp, err
 	}
 
+	rp.db = db
+
 	crs, err := prepareStmt(constants.QUERY_CREATE_USERS, db)
 	if err != nil {
 		return rp, err
@@ -80,6 +83,12 @@ func NewAuthRepo(
 	rp.getUserByEmailStmt = gue
 
 	return rp, nil
+}
+
+func (rp authRepo) CloseRepo() {
+	rp.db.Close()
+	rp.schemaRegisteryClient.Client().Close()
+	rp.kafka.Close()
 }
 
 // func (rp AuthRepo) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

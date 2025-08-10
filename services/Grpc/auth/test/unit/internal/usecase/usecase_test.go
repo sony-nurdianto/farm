@@ -74,7 +74,7 @@ func TestUserRegister_HashPasswordError(t *testing.T) {
 
 	mocksPassEn.EXPECT().
 		HashPassword(gomock.Any()).
-		Return("", errors.New("Error HashPassword"))
+		Return("", errors.New("Failed To HashPassword"))
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
@@ -87,7 +87,7 @@ func TestUserRegister_HashPasswordError(t *testing.T) {
 
 	_, err := uc.UserRegister(req)
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Error HashPassword")
+	assert.EqualError(t, err, "Failed To HashPassword")
 }
 
 func TestUserRegister_CreateUserAsyncdError(t *testing.T) {
@@ -125,7 +125,7 @@ func TestUserRegister_CreateUserAsyncdError(t *testing.T) {
 
 	_, err := uc.UserRegister(req)
 	assert.Error(t, err)
-	assert.EqualError(t, err, "Failed Create User")
+	assert.EqualError(t, err, "Failed To CreateUserAsync: Failed Create User")
 }
 
 func TestUserRegister_Success(t *testing.T) {

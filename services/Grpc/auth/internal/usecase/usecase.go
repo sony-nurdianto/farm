@@ -3,6 +3,7 @@ package usecase
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
@@ -10,9 +11,18 @@ import (
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
 )
 
-var ErrorUserIsExist error = errors.New("User Is Exist Aborting CreateUser")
+var (
+	ErrorUserIsExist           error = errors.New("User Is Exist Aborting CreateUser")
+	ErrorFailedToHasshPassword error = errors.New("Failed To HashPassword")
+	ErrorRegisterUser          error = errors.New("Failed To CreateUserAsync")
+)
 
-type ServiceUsecase struct {
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_usecase.go -source=usecase.go
+type ServiceUsecase interface {
+	UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error)
+}
+
+type serviceUsecase struct {
 	authRepo    repository.AuthRepo
 	passEncrypt passencrypt.PassEncrypt
 }
@@ -21,7 +31,7 @@ func NewServiceUsecase(
 	repo repository.AuthRepo,
 	pass passencrypt.PassEncrypt,
 ) ServiceUsecase {
-	return ServiceUsecase{
+	return serviceUsecase{
 		authRepo:    repo,
 		passEncrypt: pass,
 	}
@@ -40,26 +50,26 @@ func checkUser(rp repository.AuthRepo, email string) (bool, error) {
 	return true, nil
 }
 
-func (su ServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
+func (su serviceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
 	userExsist, err := checkUser(su.authRepo, user.GetEmail())
 	if err != nil {
 		return nil, err
 	}
 
 	if userExsist {
-		return nil, ErrorUserIsExist
+		return nil, fmt.Errorf("%w: %s", ErrorUserIsExist, err)
 	}
 
 	passwordHash, err := su.passEncrypt.HashPassword(user.GetPassword())
 	if err != nil {
-		return nil, err
+		return nil, ErrorFailedToHasshPassword
 	}
 
 	userId := uuid.NewString()
 
 	err = su.authRepo.CreateUserAsync(userId, user.GetEmail(), user.GetFullName(), user.GetPhoneNumber(), passwordHash)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrorRegisterUser, err)
 	}
 
 	out := &pbgen.RegisterResponse{
