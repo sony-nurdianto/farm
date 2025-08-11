@@ -3,46 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
-
-func (rp authRepo) ensureSchema(
-	subject string,
-	schema string,
-) error {
-	_, err := rp.schemaRegistery.GetLatestSchemaRegistery(subject)
-	if !errors.Is(err, schrgs.SchemaIsNotFoundErr) {
-		return err
-	}
-
-	_, regErr := rp.schemaRegistery.CreateAvroSchema(subject, schema, false)
-	if regErr != nil {
-		return regErr
-	}
-
-	return nil
-}
-
-func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) error {
-	var err error
-	counter := 0
-	for range 5 {
-		err = producer.InitTransactions(ctx)
-		if err == nil {
-			return nil
-		}
-		time.Sleep(time.Second * 2) // atau exponential backoff bisa dipakai
-
-		counter++
-	}
-	return fmt.Errorf("init transactions failed after %d attempts: %w", counter, err)
-}
 
 func (rp authRepo) publishAvro(
 	accountTopic string,
@@ -54,7 +20,6 @@ func (rp authRepo) publishAvro(
 		rp.schemaRegisteryClient.Client(),
 		avr.ValueSerde,
 		avr.NewSerializerConfig(),
-		// avro.NewSerializerConfig(),
 	)
 	if err != nil {
 		return err
@@ -68,19 +33,6 @@ func (rp authRepo) publishAvro(
 	userPayload, err := serializer.Serialize(userTopic, user)
 	if err != nil {
 		return err
-	}
-
-	cfg := map[kev.ConfigKeyKafka]string{
-		kev.BOOTSTRAP_SERVERS:  "localhost:29092",
-		kev.ACKS:               "all",
-		kev.ENABLE_IDEMPOTENCE: "true",
-		kev.COMPRESION_TYPE:    "snappy",
-		kev.RETRIES:            "5",
-		kev.RETRY_BACKOFF_MS:   "100",
-		kev.LINGER_MS:          "5",
-		kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
-
-		kev.TRANSACTIONAL_ID: "register-user",
 	}
 
 	accountRecord := kev.MessageKafka{
@@ -99,34 +51,25 @@ func (rp authRepo) publishAvro(
 		Value: userPayload,
 	}.Factory()
 
-	producer, err := rp.kafka.Producer(cfg)
-	if err != nil {
-		return err
-	}
-
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		time.Millisecond*1000,
 	)
 	defer cancel()
 
-	if err := initTransactionWithRetry(ctx, producer); err != nil {
+	if err := rp.authProducer.BeginTransaction(); err != nil {
 		return err
 	}
 
-	if err := producer.BeginTransaction(); err != nil {
-		return err
+	if err := rp.authProducer.Produce(&accountRecord, nil); err != nil {
+		return errors.Join(err, rp.authProducer.AbortTransaction(ctx))
 	}
 
-	if err := producer.Produce(&accountRecord, nil); err != nil {
-		return errors.Join(err, producer.AbortTransaction(ctx))
+	if err := rp.authProducer.Produce(&userRecord, nil); err != nil {
+		return errors.Join(err, rp.authProducer.AbortTransaction(ctx))
 	}
 
-	if err := producer.Produce(&userRecord, nil); err != nil {
-		return errors.Join(err, producer.AbortTransaction(ctx))
-	}
-
-	return producer.CommitTransaction(ctx)
+	return rp.authProducer.CommitTransaction(ctx)
 }
 
 func (rp authRepo) CreateUserAsync(
@@ -145,22 +88,8 @@ func (rp authRepo) CreateUserAsync(
 		Phone:    phone,
 	}
 
-	valueStr := "-value"
 	accountTopic := "insert-account"
-	accountSubject := fmt.Sprintf("%s-%s", accountTopic, valueStr)
-
 	userTopic := "insert-user"
-	userSubject := fmt.Sprintf("%s-%s", userTopic, valueStr)
-
-	err := rp.ensureSchema(accountSubject, account.Schema())
-	if err != nil {
-		return err
-	}
-
-	err = rp.ensureSchema(userSubject, user.Schema())
-	if err != nil {
-		return err
-	}
 
 	return rp.publishAvro(accountTopic, userTopic, account, user)
 }

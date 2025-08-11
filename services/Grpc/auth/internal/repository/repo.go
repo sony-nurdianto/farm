@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/constants"
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
@@ -24,13 +26,13 @@ type AuthRepo interface {
 }
 
 type authRepo struct {
-	schemaRegistery       *schrgs.SchemaRegistery
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avro                  avr.AvrSerdeInstance
 	kafka                 *kev.KafkaProducerPool
 	db                    pkg.PostgresDatabase
 	createUserstmt        pkg.Stmt
 	getUserByEmailStmt    pkg.Stmt
+	authProducer          kev.KevProducer
 }
 
 func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
@@ -40,6 +42,21 @@ func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) {
 	)
 
 	return db.Prepare(facQuery)
+}
+
+func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) error {
+	var err error
+	counter := 0
+	for range 5 {
+		err = producer.InitTransactions(ctx)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Second * 2) // atau exponential backoff bisa dipakai
+
+		counter++
+	}
+	return fmt.Errorf("init transactions failed after %d attempts: %w", counter, err)
 }
 
 func NewAuthRepo(
@@ -53,7 +70,6 @@ func NewAuthRepo(
 		return rp, err
 	}
 
-	rp.schemaRegistery = &srgs
 	rp.schemaRegisteryClient = srgs.Client()
 
 	rp.avro = avr
@@ -81,6 +97,36 @@ func NewAuthRepo(
 	}
 
 	rp.getUserByEmailStmt = gue
+
+	cfg := map[kev.ConfigKeyKafka]string{
+		kev.BOOTSTRAP_SERVERS:  "localhost:29092",
+		kev.ACKS:               "all",
+		kev.ENABLE_IDEMPOTENCE: "true",
+		kev.COMPRESION_TYPE:    "snappy",
+		kev.RETRIES:            "5",
+		kev.RETRY_BACKOFF_MS:   "100",
+		kev.LINGER_MS:          "5",
+		kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+		kev.TRANSACTIONAL_ID:                      "register-user",
+	}
+
+	producer, err := rp.kafka.Producer(cfg)
+	if err != nil {
+		return rp, err
+	}
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+
+	defer cancel()
+
+	if err := initTransactionWithRetry(ctx, producer); err != nil {
+		return rp, err
+	}
+
+	rp.authProducer = producer
 
 	return rp, nil
 }
