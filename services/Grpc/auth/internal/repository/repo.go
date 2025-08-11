@@ -28,7 +28,6 @@ type AuthRepo interface {
 type authRepo struct {
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avro                  avr.AvrSerdeInstance
-	kafka                 *kev.KafkaProducerPool
 	db                    pkg.PostgresDatabase
 	createUserstmt        pkg.Stmt
 	getUserByEmailStmt    pkg.Stmt
@@ -65,18 +64,6 @@ func NewAuthRepo(
 	avr avr.AvrSerdeInstance,
 	kv kev.Kafka,
 ) (rp authRepo, _ error) {
-	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
-	if err != nil {
-		return rp, err
-	}
-
-	rp.schemaRegisteryClient = srgs.Client()
-
-	rp.avro = avr
-
-	pool := kev.NewKafkaProducerPool(kv, nil)
-	rp.kafka = pool
-
 	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/auth?sslmode=disable", pgi)
 	if err != nil {
 		return rp, err
@@ -110,7 +97,17 @@ func NewAuthRepo(
 		kev.TRANSACTIONAL_ID:                      "register-user",
 	}
 
-	producer, err := rp.kafka.Producer(cfg)
+	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
+	if err != nil {
+		return rp, err
+	}
+
+	rp.schemaRegisteryClient = srgs.Client()
+	rp.avro = avr
+
+	pool := kev.NewKafkaProducerPool(kv, nil)
+
+	producer, err := pool.Producer(cfg)
 	if err != nil {
 		return rp, err
 	}
@@ -134,7 +131,7 @@ func NewAuthRepo(
 func (rp authRepo) CloseRepo() {
 	rp.db.Close()
 	rp.schemaRegisteryClient.Client().Close()
-	rp.kafka.Close()
+	rp.authProducer.Close()
 }
 
 // func (rp AuthRepo) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

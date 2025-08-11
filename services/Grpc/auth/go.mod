@@ -7,6 +7,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.10.0
+	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.40.0
 	google.golang.org/protobuf v1.36.6
 )

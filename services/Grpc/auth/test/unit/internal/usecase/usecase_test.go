@@ -35,7 +35,7 @@ func TestUseCaseUserRegisterUserExsist(t *testing.T) {
 
 	_, err := uc.UserRegister(req)
 	assert.Error(t, err)
-	assert.EqualError(t, err, usecase.ErrorUserIsExist.Error())
+	assert.ErrorIs(t, err, usecase.ErrorUserIsExist)
 }
 
 func TestUserRegister_DatabaseError(t *testing.T) {
