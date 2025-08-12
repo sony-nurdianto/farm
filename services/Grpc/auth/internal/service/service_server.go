@@ -44,9 +44,25 @@ func (ass *AuthServiceServer) RegisterUser(
 	return res, nil
 }
 
+func handleAutUserErr(err error) error {
+	switch {
+	case errors.Is(err, usecase.ErrorUserIsNotExsist):
+		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, usecase.ErrorPasswordIsInvalid):
+		return status.Error(codes.InvalidArgument, err.Error())
+	default:
+		return status.Error(codes.Internal, err.Error())
+	}
+}
+
 func (ass *AuthServiceServer) AuthenticateUser(
 	ctx context.Context,
 	in *pbgen.AuthenticateUserRequest,
 ) (*pbgen.AuthenticateUserResponse, error) {
-	return nil, nil
+	res, err := ass.serviceUsecase.UserSignIn(in)
+	if err != nil {
+		return nil, handleAutUserErr(err)
+	}
+
+	return res, nil
 }
