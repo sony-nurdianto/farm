@@ -9,6 +9,7 @@ import (
 
 type GrpcAuthService interface {
 	AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
+	AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error)
 }
 
 type grpcService struct {
@@ -33,4 +34,19 @@ func (s grpcService) AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.Re
 	}
 
 	return res, err
+}
+
+func (s grpcService) AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+	defer cancel()
+
+	res, err := s.authSvc.AuthenticateUser(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

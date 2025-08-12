@@ -52,5 +52,38 @@ func (h authHandler) SignUp(c *fiber.Ctx) error {
 }
 
 func (h authHandler) SignIn(c *fiber.Ctx) error {
-	return c.SendString("SignIn")
+	var user models.UserSignIn
+
+	err := c.BodyParser(&user)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    user.Email,
+		Password: user.Password,
+	}
+
+	res, err := h.grpcAuthSvc.AuthUserSignIn(req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			fiber.Map{
+				"error": err.Error(),
+			},
+		)
+	}
+
+	return c.JSON(
+		fiber.Map{
+			"data": fiber.Map{
+				"token":       res.Token,
+				"status":      res.Status,
+				"message":     res.Msg,
+				"issued_at":   res.IssuedAt,
+				"experied_at": res.ExpiresAt,
+			},
+		},
+	)
 }
