@@ -130,8 +130,8 @@ func NewAuthRepo(
 
 func (rp authRepo) CloseRepo() {
 	rp.db.Close()
-	rp.schemaRegisteryClient.Client().Close()
 	rp.authProducer.Close()
+	rp.schemaRegisteryClient.Client().Close()
 }
 
 // func (rp AuthRepo) CreateUser(email, passwordHash string) (user entity.Users, _ error) {

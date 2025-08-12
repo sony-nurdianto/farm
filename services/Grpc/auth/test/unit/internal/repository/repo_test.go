@@ -70,7 +70,13 @@ func TestRepo(t *testing.T) {
 			InitTransactions(gomock.Any()).
 			Return(nil)
 
-		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+		mockPgDb.EXPECT().Close().Return(nil)
+		mockProducer.EXPECT().Close().Return()
+		mockClient.EXPECT().Close().Return(nil)
+
+		r, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+
+		r.CloseRepo()
 		assert.NoError(t, err)
 		close(eventsChan)
 	})
@@ -279,6 +285,7 @@ func TestRepo(t *testing.T) {
 		mockSchrgs := mocks.NewMockSchemaRegisteryInstance(ctrl)
 		mockAvr := mocks.NewMockAvrSerdeInstance(ctrl)
 		mockKev := mocks.NewMockKafka(ctrl)
+		mockClient := mocks.NewMockClient(ctrl)
 
 		mockPgI.EXPECT().
 			Open(gomock.Any(), gomock.Any()).
@@ -306,11 +313,15 @@ func TestRepo(t *testing.T) {
 
 		mockSchrgs.EXPECT().
 			NewClient(gomock.Any()).
-			Return(nil, errors.New("Failed Create Producer"))
+			Return(mockClient, nil)
+
+		mockKev.EXPECT().
+			NewProducer(gomock.Any()).
+			Return(nil, errors.New("Failed  Create Producer"))
 
 		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
 		assert.Error(t, err)
-		assert.EqualError(t, err, "Failed Create Producer")
+		assert.EqualError(t, err, "failed to create kafka producer: Failed  Create Producer")
 	})
 
 	t.Run("NewPostgreRepo Error InitTransactions", func(t *testing.T) {
@@ -360,7 +371,7 @@ func TestRepo(t *testing.T) {
 			NewProducer(gomock.Any()).
 			Return(mockProducer, nil)
 
-		eventsChan := make(chan kev.Event, 1) // buffered supaya gak blocking
+		eventsChan := make(chan kev.Event, 1)
 
 		mockProducer.EXPECT().
 			Events().
@@ -372,8 +383,10 @@ func TestRepo(t *testing.T) {
 			Return(errors.New("Error Init Transactions")).AnyTimes()
 
 		_, err := repository.NewAuthRepo(mockSchrgs, mockPgI, mockAvr, mockKev)
+
 		assert.Error(t, err)
 		assert.EqualError(t, err, "init transactions failed after 5 attempts: Error Init Transactions")
+
 		close(eventsChan)
 	})
 }

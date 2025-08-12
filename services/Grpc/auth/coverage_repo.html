@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>repository: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/sony-nurdianto/farm/auth/internal/repository/create_user_async.go (100.0%)</option>
+				
+				<option value="file1">github.com/sony-nurdianto/farm/auth/internal/repository/get_user.go (100.0%)</option>
+				
+				<option value="file2">github.com/sony-nurdianto/farm/auth/internal/repository/repo.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package repository
+
+import (
+        "context"
+        "errors"
+        "time"
+
+        "github.com/sony-nurdianto/farm/auth/internal/models"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+)
+
+func (rp authRepo) publishAvro(
+        accountTopic string,
+        userTopic string,
+        account *models.InsertAccount,
+        user *models.InsertFarmerUser,
+) error <span class="cov8" title="1">{
+        serializer, err := rp.avro.NewGenericSerializer(
+                rp.schemaRegisteryClient.Client(),
+                avr.ValueSerde,
+                avr.NewSerializerConfig(),
+        )
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">accountPayload, err := serializer.Serialize(accountTopic, account)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">userPayload, err := serializer.Serialize(userTopic, user)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">accountRecord := kev.MessageKafka{
+                TopicPartition: kev.KafkaTopicPartition{
+                        Topic:     &amp;accountTopic,
+                        Partition: kev.KafkaPartitionAny,
+                },
+                Value: accountPayload,
+        }.Factory()
+
+        userRecord := kev.MessageKafka{
+                TopicPartition: kev.KafkaTopicPartition{
+                        Topic:     &amp;userTopic,
+                        Partition: kev.KafkaPartitionAny,
+                },
+                Value: userPayload,
+        }.Factory()
+
+        ctx, cancel := context.WithTimeout(
+                context.Background(),
+                time.Millisecond*1000,
+        )
+        defer cancel()
+
+        if err := rp.authProducer.BeginTransaction(); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if err := rp.authProducer.Produce(&amp;accountRecord, nil); err != nil </span><span class="cov8" title="1">{
+                return errors.Join(err, rp.authProducer.AbortTransaction(ctx))
+        }</span>
+
+        <span class="cov8" title="1">if err := rp.authProducer.Produce(&amp;userRecord, nil); err != nil </span><span class="cov8" title="1">{
+                return errors.Join(err, rp.authProducer.AbortTransaction(ctx))
+        }</span>
+
+        <span class="cov8" title="1">return rp.authProducer.CommitTransaction(ctx)</span>
+}
+
+func (rp authRepo) CreateUserAsync(
+        id, email, fullName, phone, passwordHash string,
+) error <span class="cov8" title="1">{
+        account := &amp;models.InsertAccount{
+                Id:       id,
+                Email:    email,
+                Password: passwordHash,
+        }
+
+        user := &amp;models.InsertFarmerUser{
+                Id:       id,
+                FullName: fullName,
+                Email:    email,
+                Phone:    phone,
+        }
+
+        accountTopic := "insert-account"
+        userTopic := "insert-user"
+
+        return rp.publishAvro(accountTopic, userTopic, account, user)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package repository
+
+import (
+        "context"
+        "time"
+
+        "github.com/sony-nurdianto/farm/auth/internal/entity"
+)
+
+func (rp authRepo) GetUserByEmail(email string) (user entity.Users, _ error) <span class="cov8" title="1">{
+        ctx, cancel := context.WithTimeout(
+                context.Background(),
+                time.Millisecond*500,
+        )
+
+        defer cancel()
+
+        row := rp.getUserByEmailStmt.QueryRowContext(ctx, email)
+
+        err := row.Scan(&amp;user.Id, &amp;user.Email, &amp;user.Password, &amp;user.CreatedAt, &amp;user.UpdatedAt)
+        if err != nil </span><span class="cov8" title="1">{
+                return user, err
+        }</span>
+
+        <span class="cov8" title="1">return user, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package repository
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "github.com/sony-nurdianto/farm/auth/internal/constants"
+        "github.com/sony-nurdianto/farm/auth/internal/entity"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+        "github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
+)
+
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_schrgs.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs SchemaRegisteryClient,SchemaRegisteryInstance
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_postgres.go  github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg PostgresInstance,PostgresDatabase,Stmt,Row
+//go:generate mockgen -destination=../../test/mocks/mock_confluent_client.go -package=mocks github.com/confluentinc/confluent-kafka-go/v2/schemaregistry Client
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_avr.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr AvrSerdeInstance,AvrSerializer,AvrDeserializer
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_kev.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev Kafka,KevProducer
+//go:generate mockgen -package=mocks -destination=../../test/mocks/mock_authrepo.go -source=repo.go
+
+type AuthRepo interface {
+        CreateUserAsync(id, email, fullName, phone, passwordHash string) error
+        GetUserByEmail(email string) (user entity.Users, _ error)
+}
+
+type authRepo struct {
+        schemaRegisteryClient schrgs.SchemaRegisteryClient
+        avro                  avr.AvrSerdeInstance
+        db                    pkg.PostgresDatabase
+        createUserstmt        pkg.Stmt
+        getUserByEmailStmt    pkg.Stmt
+        authProducer          kev.KevProducer
+}
+
+func prepareStmt(query string, db pkg.PostgresDatabase) (pkg.Stmt, error) <span class="cov8" title="1">{
+        facQuery := fmt.Sprintf(
+                query,
+                constants.ACCOUNT_TABLE,
+        )
+
+        return db.Prepare(facQuery)
+}</span>
+
+func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) error <span class="cov8" title="1">{
+        var err error
+        counter := 0
+        for range 5 </span><span class="cov8" title="1">{
+                err = producer.InitTransactions(ctx)
+                if err == nil </span><span class="cov8" title="1">{
+                        return nil
+                }</span>
+                <span class="cov8" title="1">time.Sleep(time.Second * 2) // atau exponential backoff bisa dipakai
+
+                counter++</span>
+        }
+        <span class="cov8" title="1">return fmt.Errorf("init transactions failed after %d attempts: %w", counter, err)</span>
+}
+
+func NewAuthRepo(
+        sri schrgs.SchemaRegisteryInstance,
+        pgi pkg.PostgresInstance,
+        avr avr.AvrSerdeInstance,
+        kv kev.Kafka,
+) (rp authRepo, _ error) <span class="cov8" title="1">{
+        db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/auth?sslmode=disable", pgi)
+        if err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">rp.db = db
+
+        crs, err := prepareStmt(constants.QUERY_CREATE_USERS, db)
+        if err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">rp.createUserstmt = crs
+
+        gue, err := prepareStmt(constants.QUERY_GET_USER_BY_EMAIL, db)
+        if err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">rp.getUserByEmailStmt = gue
+
+        cfg := map[kev.ConfigKeyKafka]string{
+                kev.BOOTSTRAP_SERVERS:  "localhost:29092",
+                kev.ACKS:               "all",
+                kev.ENABLE_IDEMPOTENCE: "true",
+                kev.COMPRESION_TYPE:    "snappy",
+                kev.RETRIES:            "5",
+                kev.RETRY_BACKOFF_MS:   "100",
+                kev.LINGER_MS:          "5",
+                kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+                kev.TRANSACTIONAL_ID:                      "register-user",
+        }
+
+        srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
+        if err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">rp.schemaRegisteryClient = srgs.Client()
+        rp.avro = avr
+
+        pool := kev.NewKafkaProducerPool(kv, nil)
+
+        producer, err := pool.Producer(cfg)
+        if err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">ctx, cancel := context.WithTimeout(
+                context.Background(),
+                5*time.Second,
+        )
+
+        defer cancel()
+
+        if err := initTransactionWithRetry(ctx, producer); err != nil </span><span class="cov8" title="1">{
+                return rp, err
+        }</span>
+
+        <span class="cov8" title="1">rp.authProducer = producer
+
+        return rp, nil</span>
+}
+
+func (rp authRepo) CloseRepo() <span class="cov8" title="1">{
+        rp.db.Close()
+        rp.authProducer.Close()
+        rp.schemaRegisteryClient.Client().Close()
+}</span>
+
+// func (rp AuthRepo) CreateUser(email, passwordHash string) (user entity.Users, _ error) {
+//         ctx, cancel := context.WithTimeout(
+//                 context.Background(),
+//                 time.Millisecond*500,
+//         )
+//         defer cancel()
+//
+//         userId := uuid.NewString()
+//
+//         row := rp.createUserstmt.QueryRowContext(ctx, userId, email, passwordHash)
+//
+//         err := row.Scan(&amp;user.Id, &amp;user.Email, &amp;user.Password, &amp;user.CreatedAt, &amp;user.UpdatedAt)
+//         if err != nil {
+//                 return user, err
+//         }
+//
+//         return user, nil
+// }
+//
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
