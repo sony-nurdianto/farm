@@ -1,19 +1,17 @@
 package handlers
 
 import (
-	"context"
-	"time"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/models"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/pbgen"
 )
 
 type authHandler struct {
-	grpcAuthSvc pbgen.AuthServiceClient
+	grpcAuthSvc api.GrpcAuthService
 }
 
-func NewAuthHandler(grpcSvc pbgen.AuthServiceClient) authHandler {
+func NewAuthHandler(grpcSvc api.GrpcAuthService) authHandler {
 	return authHandler{
 		grpcAuthSvc: grpcSvc,
 	}
@@ -29,12 +27,6 @@ func (h authHandler) SignUp(c *fiber.Ctx) error {
 		})
 	}
 
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		5*time.Second,
-	)
-	defer cancel()
-
 	req := &pbgen.RegisterRequest{
 		FullName:    user.FullName,
 		PhoneNumber: user.PhoneNumber,
@@ -42,7 +34,7 @@ func (h authHandler) SignUp(c *fiber.Ctx) error {
 		Password:    user.Password,
 	}
 
-	res, err := h.grpcAuthSvc.Register(ctx, req)
+	res, err := h.grpcAuthSvc.AuthUserRegister(req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{
