@@ -171,3 +171,167 @@ func TestUserRegister_Success(t *testing.T) {
 	assert.Equal(t, out.Msg, "Success Create User")
 	assert.Equal(t, out.Status, "Success")
 }
+
+func TestUserSignIn_ErrorUserNotExsist(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, sql.ErrNoRows)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	_, err := uc.UserSignIn(req)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, usecase.ErrorUserIsNotExsist)
+}
+
+func TestUserSignIn_ErrorGetUserByEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, errors.New("Db is Not Defined"))
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	_, err := uc.UserSignIn(req)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "Db is Not Defined")
+}
+
+func TestUserSignIn_ErrVerifyPassword(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, nil)
+
+	mocksPassEn.EXPECT().
+		VerifyPassword(gomock.Any(), gomock.Any()).
+		Return(false, errors.New("Error VerifyPassword"))
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	_, err := uc.UserSignIn(req)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "Error VerifyPassword")
+}
+
+func TestUserSignIn_ErrPasswordInvalid(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, nil)
+
+	mocksPassEn.EXPECT().
+		VerifyPassword(gomock.Any(), gomock.Any()).
+		Return(false, nil)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	_, err := uc.UserSignIn(req)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, usecase.ErrorPasswordIsInvalid)
+}
+
+func TestUserSignIn_ErrCreateWebToken(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, nil)
+
+	mocksPassEn.EXPECT().
+		VerifyPassword(gomock.Any(), gomock.Any()).
+		Return(true, nil)
+
+	mocksTokhan.EXPECT().
+		CreateWebToken(gomock.Any()).
+		Return("", errors.New("Unexpected Error when create web token"))
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	_, err := uc.UserSignIn(req)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "Unexpected Error when create web token")
+}
+
+func TestUserSignIn_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mockAuthRepo.EXPECT().
+		GetUserByEmail(gomock.Any()).
+		Return(entity.Users{}, nil)
+
+	mocksPassEn.EXPECT().
+		VerifyPassword(gomock.Any(), gomock.Any()).
+		Return(true, nil)
+
+	mocksTokhan.EXPECT().
+		CreateWebToken(gomock.Any()).
+		Return("Token", nil)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "test@gmail.com",
+		Password: "Something",
+	}
+
+	out, err := uc.UserSignIn(req)
+	assert.NoError(t, err)
+	assert.Equal(t, out.Token, "Token")
+	assert.Equal(t, out.Msg, "User Authenticated Success Login. Welcome !")
+	assert.Equal(t, out.Status, "Success")
+}

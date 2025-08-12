@@ -51,6 +51,30 @@ func AuthServiceUnaryInterceptor(
 		}
 
 		log.Printf("[AuthService] Register request - Email: %s, Phone: %s", dataRequest.Email, dataRequest.PhoneNumber)
+	case pbgen.AuthService_AuthenticateUser_FullMethodName:
+		if req == nil {
+			log.Printf("[AuthService] Nil request payload for AuthenticateUser")
+			return nil, status.Error(codes.InvalidArgument, "Expected Request is not nil")
+		}
+
+		dataRequest, ok := req.(*pbgen.AuthenticateUserRequest)
+		if !ok {
+			log.Printf("[AuthService] Invalid request type for AuthenticateUser - got: %T", req)
+			return nil, status.Error(codes.InvalidArgument, "Expected Request have type AuthenticateUserRequest Proto")
+
+		}
+
+		if len(dataRequest.GetEmail()) == 0 {
+			log.Printf("[AuthService] Invalid request type for AuthenticateUser - Email is empty - does not requirements")
+			return nil, status.Error(codes.InvalidArgument, "Email must not be empty")
+		}
+
+		if len(dataRequest.GetPassword()) == 0 {
+			log.Printf("[AuthService] Invalid request type for AuthenticateUser - Password is empty - does not requirements")
+			return nil, status.Error(codes.InvalidArgument, "Password must not be empty")
+		}
+
+		log.Printf("[AuthService] AuthenticateUser request - Email: %s", dataRequest.Email)
 	}
 
 	resp, err = handler(ctx, req)

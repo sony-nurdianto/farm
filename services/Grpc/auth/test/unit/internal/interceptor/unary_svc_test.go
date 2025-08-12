@@ -3,6 +3,7 @@ package unit_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/interceptor"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
@@ -10,9 +11,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestUnaryInterceptorRequestIsNil(t *testing.T) {
+func TestUnaryInterceptorRegisterUserRequestIsNil(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
 		return &pbgen.RegisterUserResponse{
 			Status: "Success",
@@ -37,7 +39,7 @@ func TestUnaryInterceptorRequestIsNil(t *testing.T) {
 	assert.ErrorContains(t, err, "Expected Request is not nil")
 }
 
-func TestUnaryInterceptorRequestIsNotDefine(t *testing.T) {
+func TestUnaryInterceptorRegisterUserRequestIsNotDefine(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
 		return &pbgen.RegisterUserResponse{
 			Status: "Success",
@@ -63,7 +65,7 @@ func TestUnaryInterceptorRequestIsNotDefine(t *testing.T) {
 	assert.ErrorContains(t, err, "Expected Request have type RegisterRequest Proto")
 }
 
-func TestAuthServiceUnaryInterceptor(t *testing.T) {
+func TestAuthServiceUnaryInterceptorRegisterUserValidateRequest(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
 		return &pbgen.RegisterUserResponse{
 			Status: "Success",
@@ -164,7 +166,7 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 	})
 }
 
-func TestUnaryInterceptor(t *testing.T) {
+func TestUnaryInterceptorRegisterUserSucesss(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
 		return &pbgen.RegisterUserResponse{
 			Status: "Success",
@@ -196,5 +198,123 @@ func TestUnaryInterceptor(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, registerResp.Msg, "Success Register Response")
+	assert.Equal(t, registerResp.Status, "Success")
+}
+
+func TestUnaryInterceptorAuthenticateUserErrorRequestNil(t *testing.T) {
+	handler := func(ctx context.Context, req any) (any, error) {
+		return nil, nil
+	}
+
+	ctx := context.Background()
+
+	info := &grpc.UnaryServerInfo{
+		FullMethod: pbgen.AuthService_AuthenticateUser_FullMethodName,
+	}
+
+	resp, err := interceptor.AuthServiceUnaryInterceptor(
+		ctx,
+		nil,
+		info,
+		handler,
+	)
+
+	registerResp, ok := resp.(*pbgen.AuthenticateUserResponse)
+	assert.False(t, ok)
+	assert.Error(t, err)
+	assert.Nil(t, registerResp)
+}
+
+func TestUnaryInterceptorAuthenticateUserErrorEmailEmpty(t *testing.T) {
+	handler := func(ctx context.Context, req any) (any, error) {
+		return nil, nil
+	}
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "Sony@gmail.com",
+		Password: "",
+	}
+
+	ctx := context.Background()
+
+	info := &grpc.UnaryServerInfo{
+		FullMethod: pbgen.AuthService_AuthenticateUser_FullMethodName,
+	}
+
+	resp, err := interceptor.AuthServiceUnaryInterceptor(
+		ctx,
+		req,
+		info,
+		handler,
+	)
+
+	registerResp, ok := resp.(*pbgen.AuthenticateUserResponse)
+	assert.False(t, ok)
+	assert.Error(t, err)
+	assert.Nil(t, registerResp)
+}
+
+func TestUnaryInterceptorAuthenticateUserErrorPasswordEmpty(t *testing.T) {
+	handler := func(ctx context.Context, req any) (any, error) {
+		return nil, nil
+	}
+
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "",
+		Password: "Some@P4assword",
+	}
+
+	ctx := context.Background()
+
+	info := &grpc.UnaryServerInfo{
+		FullMethod: pbgen.AuthService_AuthenticateUser_FullMethodName,
+	}
+
+	resp, err := interceptor.AuthServiceUnaryInterceptor(
+		ctx,
+		req,
+		info,
+		handler,
+	)
+
+	registerResp, ok := resp.(*pbgen.AuthenticateUserResponse)
+	assert.False(t, ok)
+	assert.Error(t, err)
+	assert.Nil(t, registerResp)
+}
+
+func TestUnaryInterceptorAuthenticateUserSucesss(t *testing.T) {
+	handler := func(ctx context.Context, req any) (any, error) {
+		return &pbgen.AuthenticateUserResponse{
+			Token:     "Token",
+			Status:    "Success",
+			Msg:       "Success AuthenticateUser",
+			IssuedAt:  timestamppb.Now(),
+			ExpiresAt: timestamppb.New(time.Now().Add(time.Hour * 1)),
+		}, nil
+	}
+
+	ctx := context.Background()
+	req := &pbgen.AuthenticateUserRequest{
+		Email:    "Sony@gmail.com",
+		Password: "Some@P4assword",
+	}
+
+	info := &grpc.UnaryServerInfo{
+		FullMethod: pbgen.AuthService_AuthenticateUser_FullMethodName,
+	}
+
+	resp, err := interceptor.AuthServiceUnaryInterceptor(
+		ctx,
+		req,
+		info,
+		handler,
+	)
+
+	registerResp, ok := resp.(*pbgen.AuthenticateUserResponse)
+	assert.True(t, ok)
+	assert.NoError(t, err)
+
+	assert.Equal(t, registerResp.Msg, "Success AuthenticateUser")
 	assert.Equal(t, registerResp.Status, "Success")
 }
