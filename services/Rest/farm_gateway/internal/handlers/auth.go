@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/models"
@@ -75,14 +77,22 @@ func (h authHandler) SignIn(c *fiber.Ctx) error {
 		)
 	}
 
+	c.Cookie(&fiber.Cookie{
+		Name:     "auth_token",
+		Value:    res.Token,
+		Expires:  res.ExpiresAt.AsTime(),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+		Path:     "/",
+	})
+
 	return c.JSON(
 		fiber.Map{
 			"data": fiber.Map{
-				"token":       res.Token,
-				"status":      res.Status,
-				"message":     res.Msg,
-				"issued_at":   res.IssuedAt,
-				"experied_at": res.ExpiresAt,
+				"status":    res.Status,
+				"message":   res.Msg,
+				"issued_at": res.IssuedAt.AsTime().Format(time.RFC3339),
 			},
 		},
 	)
