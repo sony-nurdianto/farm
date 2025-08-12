@@ -19,12 +19,13 @@ func TestUseCaseUserRegisterUserExsist(t *testing.T) {
 
 	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
 	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
 
 	mockAuthRepo.EXPECT().
 		GetUserByEmail(gomock.Any()).
 		Return(entity.Users{Email: "test@gmail.com"}, nil)
 
-	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
 
 	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
@@ -43,12 +44,13 @@ func TestUserRegister_DatabaseError(t *testing.T) {
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
 	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
 
 	mockAuthRepo.EXPECT().
 		GetUserByEmail(gomock.Any()).
 		Return(entity.Users{}, sql.ErrConnDone)
 
-	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
 
 	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
@@ -67,6 +69,7 @@ func TestUserRegister_HashPasswordError(t *testing.T) {
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
 	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
 
 	mockAuthRepo.EXPECT().
 		GetUserByEmail(gomock.Any()).
@@ -76,7 +79,7 @@ func TestUserRegister_HashPasswordError(t *testing.T) {
 		HashPassword(gomock.Any()).
 		Return("", errors.New("Failed To HashPassword"))
 
-	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
 
 	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
@@ -95,6 +98,7 @@ func TestUserRegister_CreateUserAsyncdError(t *testing.T) {
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
 	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
 
 	mockAuthRepo.EXPECT().
 		GetUserByEmail(gomock.Any()).
@@ -114,7 +118,7 @@ func TestUserRegister_CreateUserAsyncdError(t *testing.T) {
 		).
 		Return(errors.New("Failed Create User"))
 
-	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
 
 	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
@@ -133,6 +137,7 @@ func TestUserRegister_Success(t *testing.T) {
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
 	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
 
 	mockAuthRepo.EXPECT().
 		GetUserByEmail(gomock.Any()).
@@ -152,7 +157,7 @@ func TestUserRegister_Success(t *testing.T) {
 		).
 		Return(nil)
 
-	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
 
 	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",

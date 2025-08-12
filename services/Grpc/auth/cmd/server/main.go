@@ -13,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/codec"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/token"
 	"github.com/sony-nurdianto/farm/auth/internal/interceptor"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
@@ -47,6 +48,9 @@ func main() {
 		passencrypt.NewPassEncrypt(
 			rand.Reader,
 			codec.NewBase64Encoder(),
+		),
+		token.NewTokhan(
+			token.NewPassetoToken(),
 		),
 	)
 

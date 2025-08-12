@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/token"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/repository"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var (
@@ -22,20 +25,24 @@ var (
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_usecase.go -source=usecase.go
 type ServiceUsecase interface {
 	UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
+	UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error)
 }
 
 type serviceUsecase struct {
 	authRepo    repository.AuthRepo
 	passEncrypt passencrypt.PassEncrypt
+	tokhen      token.Tokhan
 }
 
 func NewServiceUsecase(
 	repo repository.AuthRepo,
 	pass passencrypt.PassEncrypt,
+	tokhen token.Tokhan,
 ) ServiceUsecase {
 	return serviceUsecase{
 		authRepo:    repo,
 		passEncrypt: pass,
+		tokhen:      tokhen,
 	}
 }
 
@@ -101,5 +108,18 @@ func (su serviceUsecase) UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.
 		return nil, ErrorPasswordIsInvalid
 	}
 
-	return nil, nil
+	createToken, err := su.tokhen.CreateWebToken(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pbgen.AuthenticateUserResponse{
+		Token:     createToken,
+		Status:    "Success",
+		Msg:       "User Authenticated Success Login. Welcome !",
+		IssuedAt:  timestamppb.Now(),
+		ExpiresAt: timestamppb.New(time.Now().Add(1 * time.Hour)),
+	}
+
+	return response, nil
 }

@@ -48,3 +48,18 @@ func (mr *MockServiceUsecaseMockRecorder) UserRegister(user interface{}) *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserRegister", reflect.TypeOf((*MockServiceUsecase)(nil).UserRegister), user)
 }
+
+// UserSignIn mocks base method.
+func (m *MockServiceUsecase) UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserSignIn", req)
+	ret0, _ := ret[0].(*pbgen.AuthenticateUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserSignIn indicates an expected call of UserSignIn.
+func (mr *MockServiceUsecaseMockRecorder) UserSignIn(req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserSignIn", reflect.TypeOf((*MockServiceUsecase)(nil).UserSignIn), req)
+}
