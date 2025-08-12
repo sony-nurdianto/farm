@@ -26,7 +26,7 @@ func TestUseCaseUserRegisterUserExsist(t *testing.T) {
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
 		Email:       "test@gmail.com",
 		PhoneNumber: "+47545687898",
@@ -50,7 +50,7 @@ func TestUserRegister_DatabaseError(t *testing.T) {
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
 		Email:       "test@gmail.com",
 		PhoneNumber: "+47545687898",
@@ -78,7 +78,7 @@ func TestUserRegister_HashPasswordError(t *testing.T) {
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
 		Email:       "test@gmail.com",
 		PhoneNumber: "+47545687898",
@@ -116,7 +116,7 @@ func TestUserRegister_CreateUserAsyncdError(t *testing.T) {
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
 		Email:       "test@gmail.com",
 		PhoneNumber: "+47545687898",
@@ -154,7 +154,7 @@ func TestUserRegister_Success(t *testing.T) {
 
 	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn)
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "test",
 		Email:       "test@gmail.com",
 		PhoneNumber: "+47545687898",

@@ -19,7 +19,7 @@ var (
 
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_usecase.go -source=usecase.go
 type ServiceUsecase interface {
-	UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error)
+	UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
 }
 
 type serviceUsecase struct {
@@ -50,7 +50,7 @@ func checkUser(rp repository.AuthRepo, email string) (bool, error) {
 	return true, nil
 }
 
-func (su serviceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
+func (su serviceUsecase) UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
 	userExsist, err := checkUser(su.authRepo, user.GetEmail())
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (su serviceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.Regis
 		return nil, fmt.Errorf("%w: %s", ErrorRegisterUser, err)
 	}
 
-	out := &pbgen.RegisterResponse{
+	out := &pbgen.RegisterUserResponse{
 		Msg:    "Success Create User",
 		Status: "Success",
 	}

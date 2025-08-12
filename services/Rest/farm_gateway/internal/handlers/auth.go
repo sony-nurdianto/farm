@@ -27,7 +27,7 @@ func (h authHandler) SignUp(c *fiber.Ctx) error {
 		})
 	}
 
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    user.FullName,
 		PhoneNumber: user.PhoneNumber,
 		Email:       user.Email,

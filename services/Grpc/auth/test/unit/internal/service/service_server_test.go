@@ -27,7 +27,7 @@ func TestServiceRegisterUserIsExist(t *testing.T) {
 
 	svc := service.NewAuthServiceServer(mockUsecase)
 
-	request := &pbgen.RegisterRequest{
+	request := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",
@@ -55,7 +55,7 @@ func TestServiceRegisterFailedHashPassword(t *testing.T) {
 
 	svc := service.NewAuthServiceServer(mockUsecase)
 
-	request := &pbgen.RegisterRequest{
+	request := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",
@@ -83,7 +83,7 @@ func TestServiceRegisterCreateUserError(t *testing.T) {
 
 	svc := service.NewAuthServiceServer(mockUsecase)
 
-	request := &pbgen.RegisterRequest{
+	request := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",
@@ -111,7 +111,7 @@ func TestServiceRegisterUnknownError(t *testing.T) {
 
 	svc := service.NewAuthServiceServer(mockUsecase)
 
-	request := &pbgen.RegisterRequest{
+	request := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",
@@ -133,7 +133,7 @@ func TestServiceRegister(t *testing.T) {
 	mockUsecase.EXPECT().
 		UserRegister(gomock.Any()).
 		Return(
-			&pbgen.RegisterResponse{
+			&pbgen.RegisterUserResponse{
 				Status: "Success",
 				Msg:    "Success Register User",
 			},
@@ -142,7 +142,7 @@ func TestServiceRegister(t *testing.T) {
 
 	svc := service.NewAuthServiceServer(mockUsecase)
 
-	request := &pbgen.RegisterRequest{
+	request := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",

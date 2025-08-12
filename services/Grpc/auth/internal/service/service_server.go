@@ -34,8 +34,8 @@ func handleRegisterError(err error) error {
 
 func (ass *AuthServiceServer) Register(
 	ctx context.Context,
-	in *pbgen.RegisterRequest,
-) (*pbgen.RegisterResponse, error) {
+	in *pbgen.RegisterUserRequest,
+) (*pbgen.RegisterUserResponse, error) {
 	res, err := ass.serviceUsecase.UserRegister(in)
 	if err != nil {
 		return nil, handleRegisterError(err)

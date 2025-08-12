@@ -35,10 +35,10 @@ func (m *MockServiceUsecase) EXPECT() *MockServiceUsecaseMockRecorder {
 }
 
 // UserRegister mocks base method.
-func (m *MockServiceUsecase) UserRegister(user *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
+func (m *MockServiceUsecase) UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UserRegister", user)
-	ret0, _ := ret[0].(*pbgen.RegisterResponse)
+	ret0, _ := ret[0].(*pbgen.RegisterUserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

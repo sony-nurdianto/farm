@@ -8,7 +8,7 @@ import (
 )
 
 type GrpcAuthService interface {
-	AuthUserRegister(req *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error)
+	AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
 }
 
 type grpcService struct {
@@ -20,14 +20,14 @@ func NewGrpcService(conn *GrpcClientConn) GrpcAuthService {
 	return grpcService{authSvc: authSvc}
 }
 
-func (s grpcService) AuthUserRegister(req *pbgen.RegisterRequest) (*pbgen.RegisterResponse, error) {
+func (s grpcService) AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		5*time.Second,
 	)
 	defer cancel()
 
-	res, err := s.authSvc.Register(ctx, req)
+	res, err := s.authSvc.RegisterUser(ctx, req)
 	if err != nil {
 		return nil, err
 	}

@@ -22,14 +22,14 @@ func AuthServiceUnaryInterceptor(
 
 	log.Printf("[AuthService] Incoming request - Method: %s", info.FullMethod)
 	switch info.FullMethod {
-	case pbgen.AuthService_Register_FullMethodName:
+	case pbgen.AuthService_RegisterUser_FullMethodName:
 		if req == nil {
 			log.Printf("[AuthService] Nil request payload for Register")
 			return nil, status.Error(codes.InvalidArgument, "Expected Request is not nil")
 
 		}
 
-		dataRequest, ok := req.(*pbgen.RegisterRequest)
+		dataRequest, ok := req.(*pbgen.RegisterUserRequest)
 		if !ok {
 			log.Printf("[AuthService] Invalid request type for Register - got: %T", req)
 			return nil, status.Error(codes.InvalidArgument, "Expected Request have type RegisterRequest Proto")

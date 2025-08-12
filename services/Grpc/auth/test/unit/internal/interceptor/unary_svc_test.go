@@ -14,7 +14,7 @@ import (
 
 func TestUnaryInterceptorRequestIsNil(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
-		return &pbgen.RegisterResponse{
+		return &pbgen.RegisterUserResponse{
 			Status: "Success",
 			Msg:    "Success Register Response",
 		}, nil
@@ -23,7 +23,7 @@ func TestUnaryInterceptorRequestIsNil(t *testing.T) {
 	ctx := context.Background()
 
 	info := &grpc.UnaryServerInfo{
-		FullMethod: pbgen.AuthService_Register_FullMethodName,
+		FullMethod: pbgen.AuthService_RegisterUser_FullMethodName,
 	}
 
 	_, err := interceptor.AuthServiceUnaryInterceptor(
@@ -39,7 +39,7 @@ func TestUnaryInterceptorRequestIsNil(t *testing.T) {
 
 func TestUnaryInterceptorRequestIsNotDefine(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
-		return &pbgen.RegisterResponse{
+		return &pbgen.RegisterUserResponse{
 			Status: "Success",
 			Msg:    "Success Register Response",
 		}, nil
@@ -49,7 +49,7 @@ func TestUnaryInterceptorRequestIsNotDefine(t *testing.T) {
 	req := &struct{}{}
 
 	info := &grpc.UnaryServerInfo{
-		FullMethod: pbgen.AuthService_Register_FullMethodName,
+		FullMethod: pbgen.AuthService_RegisterUser_FullMethodName,
 	}
 
 	_, err := interceptor.AuthServiceUnaryInterceptor(
@@ -65,18 +65,18 @@ func TestUnaryInterceptorRequestIsNotDefine(t *testing.T) {
 
 func TestAuthServiceUnaryInterceptor(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
-		return &pbgen.RegisterResponse{
+		return &pbgen.RegisterUserResponse{
 			Status: "Success",
 			Msg:    "Success Register Response",
 		}, nil
 	}
 
 	info := &grpc.UnaryServerInfo{
-		FullMethod: pbgen.AuthService_Register_FullMethodName,
+		FullMethod: pbgen.AuthService_RegisterUser_FullMethodName,
 	}
 
 	t.Run("Success", func(t *testing.T) {
-		req := &pbgen.RegisterRequest{
+		req := &pbgen.RegisterUserRequest{
 			FullName:    "Sony",
 			Email:       "Sony@gmail.com",
 			PhoneNumber: "+62851588206",
@@ -90,7 +90,7 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 			handler,
 		)
 
-		registerResp, ok := resp.(*pbgen.RegisterResponse)
+		registerResp, ok := resp.(*pbgen.RegisterUserResponse)
 		assert.True(t, ok)
 		assert.NoError(t, err)
 		assert.Equal(t, "Success", registerResp.Status)
@@ -98,7 +98,7 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 	})
 
 	t.Run("Invalid Email", func(t *testing.T) {
-		req := &pbgen.RegisterRequest{
+		req := &pbgen.RegisterUserRequest{
 			FullName:    "Sony",
 			Email:       "invalid-email",
 			PhoneNumber: "+62851588206",
@@ -120,7 +120,7 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 	})
 
 	t.Run("Invalid Phone", func(t *testing.T) {
-		req := &pbgen.RegisterRequest{
+		req := &pbgen.RegisterUserRequest{
 			FullName:    "Sony",
 			Email:       "sony@gmail.com",
 			PhoneNumber: "invalid-phone",
@@ -142,7 +142,7 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 	})
 
 	t.Run("Invalid Password", func(t *testing.T) {
-		req := &pbgen.RegisterRequest{
+		req := &pbgen.RegisterUserRequest{
 			FullName:    "Sony",
 			Email:       "sony@gmail.com",
 			PhoneNumber: "+62851588206",
@@ -166,14 +166,14 @@ func TestAuthServiceUnaryInterceptor(t *testing.T) {
 
 func TestUnaryInterceptor(t *testing.T) {
 	handler := func(ctx context.Context, req any) (any, error) {
-		return &pbgen.RegisterResponse{
+		return &pbgen.RegisterUserResponse{
 			Status: "Success",
 			Msg:    "Success Register Response",
 		}, nil
 	}
 
 	ctx := context.Background()
-	req := &pbgen.RegisterRequest{
+	req := &pbgen.RegisterUserRequest{
 		FullName:    "Sony",
 		Email:       "Sony@gmail.com",
 		PhoneNumber: "+62851588206",
@@ -181,7 +181,7 @@ func TestUnaryInterceptor(t *testing.T) {
 	}
 
 	info := &grpc.UnaryServerInfo{
-		FullMethod: pbgen.AuthService_Register_FullMethodName,
+		FullMethod: pbgen.AuthService_RegisterUser_FullMethodName,
 	}
 
 	resp, err := interceptor.AuthServiceUnaryInterceptor(
@@ -191,7 +191,7 @@ func TestUnaryInterceptor(t *testing.T) {
 		handler,
 	)
 
-	registerResp, ok := resp.(*pbgen.RegisterResponse)
+	registerResp, ok := resp.(*pbgen.RegisterUserResponse)
 	assert.True(t, ok)
 	assert.NoError(t, err)
 
