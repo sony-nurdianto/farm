@@ -34,7 +34,7 @@ func TestServiceRegisterUserIsExist(t *testing.T) {
 		Password:    "SomePassword",
 	}
 
-	_, err := svc.Register(
+	_, err := svc.RegisterUser(
 		context.Background(),
 		request,
 	)
@@ -62,7 +62,7 @@ func TestServiceRegisterFailedHashPassword(t *testing.T) {
 		Password:    "SomePassword",
 	}
 
-	_, err := svc.Register(
+	_, err := svc.RegisterUser(
 		context.Background(),
 		request,
 	)
@@ -90,7 +90,7 @@ func TestServiceRegisterCreateUserError(t *testing.T) {
 		Password:    "SomePassword",
 	}
 
-	_, err := svc.Register(
+	_, err := svc.RegisterUser(
 		context.Background(),
 		request,
 	)
@@ -118,7 +118,7 @@ func TestServiceRegisterUnknownError(t *testing.T) {
 		Password:    "SomePassword",
 	}
 
-	_, err := svc.Register(
+	_, err := svc.RegisterUser(
 		context.Background(),
 		request,
 	)
@@ -149,7 +149,7 @@ func TestServiceRegister(t *testing.T) {
 		Password:    "SomePassword",
 	}
 
-	_, err := svc.Register(
+	_, err := svc.RegisterUser(
 		context.Background(),
 		request,
 	)

@@ -15,6 +15,8 @@ var (
 	ErrorUserIsExist           error = errors.New("User Is Exist Aborting CreateUser")
 	ErrorFailedToHasshPassword error = errors.New("Failed To HashPassword")
 	ErrorRegisterUser          error = errors.New("Failed To CreateUserAsync")
+	ErrorUserIsNotExsist       error = errors.New("User Is Not Exist")
+	ErrorPasswordIsInvalid     error = errors.New("Invalid Password Credentials")
 )
 
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_usecase.go -source=usecase.go
@@ -78,4 +80,26 @@ func (su serviceUsecase) UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.R
 	}
 
 	return out, nil
+}
+
+func (su serviceUsecase) UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
+	user, err := su.authRepo.GetUserByEmail(req.GetEmail())
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("%w: user with email %s is not exist", ErrorUserIsNotExsist, req.GetEmail())
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	isPass, err := su.passEncrypt.VerifyPassword(req.Password, user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isPass {
+		return nil, ErrorPasswordIsInvalid
+	}
+
+	return nil, nil
 }

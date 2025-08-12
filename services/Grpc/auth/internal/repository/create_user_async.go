@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/sony-nurdianto/farm/auth/internal/constants"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
@@ -88,8 +89,8 @@ func (rp authRepo) CreateUserAsync(
 		Phone:    phone,
 	}
 
-	accountTopic := "insert-account"
-	userTopic := "insert-user"
+	accountTopic := constants.INSERT_ACCOUNT_TOPIC
+	userTopic := constants.INSERT_USER_TOPIC
 
 	return rp.publishAvro(accountTopic, userTopic, account, user)
 }

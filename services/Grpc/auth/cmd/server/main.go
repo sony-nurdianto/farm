@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/codec"
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
 	"github.com/sony-nurdianto/farm/auth/internal/interceptor"
@@ -25,6 +26,10 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalln(err)
+	}
+
 	repo, err := repository.NewAuthRepo(
 		schrgs.NewRegistery(),
 		pkg.NewPostgresInstance(),

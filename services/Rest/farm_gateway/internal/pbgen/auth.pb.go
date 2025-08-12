@@ -9,6 +9,7 @@ package pbgen
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -141,11 +142,139 @@ func (x *RegisterUserResponse) GetStatus() string {
 	return ""
 }
 
+type AuthenticateUserRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthenticateUserRequest) Reset() {
+	*x = AuthenticateUserRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthenticateUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticateUserRequest) ProtoMessage() {}
+
+func (x *AuthenticateUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticateUserRequest.ProtoReflect.Descriptor instead.
+func (*AuthenticateUserRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AuthenticateUserRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *AuthenticateUserRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type AuthenticateUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	IssuedAt      *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	Msg           string                 `protobuf:"bytes,5,opt,name=msg,proto3" json:"msg,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthenticateUserResponse) Reset() {
+	*x = AuthenticateUserResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthenticateUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticateUserResponse) ProtoMessage() {}
+
+func (x *AuthenticateUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticateUserResponse.ProtoReflect.Descriptor instead.
+func (*AuthenticateUserResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *AuthenticateUserResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *AuthenticateUserResponse) GetIssuedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.IssuedAt
+	}
+	return nil
+}
+
+func (x *AuthenticateUserResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *AuthenticateUserResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *AuthenticateUserResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\"\x87\x01\n" +
+	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x87\x01\n" +
 	"\x13RegisterUserRequest\x12\x1b\n" +
 	"\tfull_name\x18\x01 \x01(\tR\bfullName\x12!\n" +
 	"\fphone_number\x18\x02 \x01(\tR\vphoneNumber\x12\x14\n" +
@@ -153,9 +282,20 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\bpassword\x18\x04 \x01(\tR\bpassword\"@\n" +
 	"\x14RegisterUserResponse\x12\x10\n" +
 	"\x03msg\x18\x01 \x01(\tR\x03msg\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status2Z\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\"K\n" +
+	"\x17AuthenticateUserRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\xce\x01\n" +
+	"\x18AuthenticateUserResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x127\n" +
+	"\tissued_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAt\x129\n" +
+	"\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12\x10\n" +
+	"\x03msg\x18\x05 \x01(\tR\x03msg2\xb3\x01\n" +
 	"\vAuthService\x12K\n" +
-	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponseb\x06proto3"
+	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponse\x12W\n" +
+	"\x10AuthenticateUser\x12 .auth.v1.AuthenticateUserRequest\x1a!.auth.v1.AuthenticateUserResponseb\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once
@@ -169,19 +309,26 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*RegisterUserRequest)(nil),  // 0: auth.v1.RegisterUserRequest
-	(*RegisterUserResponse)(nil), // 1: auth.v1.RegisterUserResponse
+	(*RegisterUserRequest)(nil),      // 0: auth.v1.RegisterUserRequest
+	(*RegisterUserResponse)(nil),     // 1: auth.v1.RegisterUserResponse
+	(*AuthenticateUserRequest)(nil),  // 2: auth.v1.AuthenticateUserRequest
+	(*AuthenticateUserResponse)(nil), // 3: auth.v1.AuthenticateUserResponse
+	(*timestamppb.Timestamp)(nil),    // 4: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	0, // 0: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
-	1, // 1: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: auth.v1.AuthenticateUserResponse.issued_at:type_name -> google.protobuf.Timestamp
+	4, // 1: auth.v1.AuthenticateUserResponse.expires_at:type_name -> google.protobuf.Timestamp
+	0, // 2: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
+	2, // 3: auth.v1.AuthService.AuthenticateUser:input_type -> auth.v1.AuthenticateUserRequest
+	1, // 4: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
+	3, // 5: auth.v1.AuthService.AuthenticateUser:output_type -> auth.v1.AuthenticateUserResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -195,7 +342,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

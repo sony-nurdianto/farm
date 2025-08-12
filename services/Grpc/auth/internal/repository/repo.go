@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/constants"
@@ -19,6 +20,8 @@ import (
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_avr.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr AvrSerdeInstance,AvrSerializer,AvrDeserializer
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_kev.go  github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev Kafka,KevProducer
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_authrepo.go -source=repo.go
+
+const TRANSACTIONAL_ID string = "register-user"
 
 type AuthRepo interface {
 	CreateUserAsync(id, email, fullName, phone, passwordHash string) error
@@ -64,7 +67,16 @@ func NewAuthRepo(
 	avr avr.AvrSerdeInstance,
 	kv kev.Kafka,
 ) (rp authRepo, _ error) {
-	db, err := pkg.OpenPostgres("postgres://sony:secret@localhost:5000/auth?sslmode=disable", pgi)
+	dbaddrs := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DBUSER"),
+		os.Getenv("DBPASS"),
+		os.Getenv("DBHOST"),
+		os.Getenv("DBPORT"),
+		os.Getenv("DBAUTH"),
+	)
+
+	db, err := pkg.OpenPostgres(dbaddrs, pgi)
 	if err != nil {
 		return rp, err
 	}
@@ -86,7 +98,7 @@ func NewAuthRepo(
 	rp.getUserByEmailStmt = gue
 
 	cfg := map[kev.ConfigKeyKafka]string{
-		kev.BOOTSTRAP_SERVERS:  "localhost:29092",
+		kev.BOOTSTRAP_SERVERS:  os.Getenv("KAKFKABROKER"),
 		kev.ACKS:               "all",
 		kev.ENABLE_IDEMPOTENCE: "true",
 		kev.COMPRESION_TYPE:    "snappy",
@@ -94,10 +106,10 @@ func NewAuthRepo(
 		kev.RETRY_BACKOFF_MS:   "100",
 		kev.LINGER_MS:          "5",
 		kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
-		kev.TRANSACTIONAL_ID:                      "register-user",
+		kev.TRANSACTIONAL_ID:                      TRANSACTIONAL_ID,
 	}
 
-	srgs, err := schrgs.NewSchemaRegistery("http://localhost:8081", sri)
+	srgs, err := schrgs.NewSchemaRegistery(os.Getenv("SCHEMAREGISTERYADDR"), sri)
 	if err != nil {
 		return rp, err
 	}

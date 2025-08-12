@@ -32,7 +32,7 @@ func handleRegisterError(err error) error {
 	}
 }
 
-func (ass *AuthServiceServer) Register(
+func (ass *AuthServiceServer) RegisterUser(
 	ctx context.Context,
 	in *pbgen.RegisterUserRequest,
 ) (*pbgen.RegisterUserResponse, error) {
@@ -42,4 +42,11 @@ func (ass *AuthServiceServer) Register(
 	}
 
 	return res, nil
+}
+
+func (ass *AuthServiceServer) AuthenticateUser(
+	ctx context.Context,
+	in *pbgen.AuthenticateUserRequest,
+) (*pbgen.AuthenticateUserResponse, error) {
+	return nil, nil
 }
