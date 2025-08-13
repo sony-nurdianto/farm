@@ -30,4 +30,11 @@ func (r *Routes) Build() {
 		signInHandler,
 	)
 	r.app.Route("/auth", authRouter.Builder)
+
+	r.app.Route("/index", func(router fiber.Router) {
+		router.Get("", authHandler.AuthTokenBaseValidate, func(c *fiber.Ctx) error {
+			userId := c.Locals("user_subject")
+			return c.SendString(userId.(string))
+		})
+	})
 }
