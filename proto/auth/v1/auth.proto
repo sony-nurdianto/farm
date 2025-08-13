@@ -27,12 +27,22 @@ message AuthenticateUserResponse {
   google.protobuf.Timestamp expires_at = 3;
   string status = 4;
   string msg = 5;
+}
 
+message TokenValidateRequest {
+  string token = 1;
+}
+
+message TokenValidateResponse {
+  bool valid = 1;
+  string msg = 2;
+  optional string subject = 3;
+  optional google.protobuf.Timestamp expires_at = 4;
+  optional string isuer = 5;
 }
 
 service AuthService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
   rpc AuthenticateUser(AuthenticateUserRequest) returns (AuthenticateUserResponse);
+  rpc TokenValidate(TokenValidateRequest) returns (TokenValidateResponse);
 }
-
-

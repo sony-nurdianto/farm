@@ -39,6 +39,7 @@ func secret() []byte {
 
 func (tg tokhan) CreateWebToken(subject string) (string, error) {
 	jsonToken := paseto.JSONToken{
+		IssuedAt:   time.Now(),
 		Expiration: time.Now().Add(1 * time.Hour),
 		Subject:    subject,
 		Issuer:     "auth",

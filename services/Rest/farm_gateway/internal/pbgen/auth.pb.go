@@ -270,6 +270,126 @@ func (x *AuthenticateUserResponse) GetMsg() string {
 	return ""
 }
 
+type TokenValidateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TokenValidateRequest) Reset() {
+	*x = TokenValidateRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TokenValidateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TokenValidateRequest) ProtoMessage() {}
+
+func (x *TokenValidateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TokenValidateRequest.ProtoReflect.Descriptor instead.
+func (*TokenValidateRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TokenValidateRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type TokenValidateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Subject       *string                `protobuf:"bytes,3,opt,name=subject,proto3,oneof" json:"subject,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3,oneof" json:"expires_at,omitempty"`
+	Isuer         *string                `protobuf:"bytes,5,opt,name=isuer,proto3,oneof" json:"isuer,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TokenValidateResponse) Reset() {
+	*x = TokenValidateResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TokenValidateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TokenValidateResponse) ProtoMessage() {}
+
+func (x *TokenValidateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TokenValidateResponse.ProtoReflect.Descriptor instead.
+func (*TokenValidateResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TokenValidateResponse) GetValid() bool {
+	if x != nil {
+		return x.Valid
+	}
+	return false
+}
+
+func (x *TokenValidateResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *TokenValidateResponse) GetSubject() string {
+	if x != nil && x.Subject != nil {
+		return *x.Subject
+	}
+	return ""
+}
+
+func (x *TokenValidateResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *TokenValidateResponse) GetIsuer() string {
+	if x != nil && x.Isuer != nil {
+		return *x.Isuer
+	}
+	return ""
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
@@ -292,10 +412,24 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
 	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x10\n" +
-	"\x03msg\x18\x05 \x01(\tR\x03msg2\xb3\x01\n" +
+	"\x03msg\x18\x05 \x01(\tR\x03msg\",\n" +
+	"\x14TokenValidateRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\xde\x01\n" +
+	"\x15TokenValidateResponse\x12\x14\n" +
+	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x1d\n" +
+	"\asubject\x18\x03 \x01(\tH\x00R\asubject\x88\x01\x01\x12>\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\texpiresAt\x88\x01\x01\x12\x19\n" +
+	"\x05isuer\x18\x05 \x01(\tH\x02R\x05isuer\x88\x01\x01B\n" +
+	"\n" +
+	"\b_subjectB\r\n" +
+	"\v_expires_atB\b\n" +
+	"\x06_isuer2\x83\x02\n" +
 	"\vAuthService\x12K\n" +
 	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponse\x12W\n" +
-	"\x10AuthenticateUser\x12 .auth.v1.AuthenticateUserRequest\x1a!.auth.v1.AuthenticateUserResponseb\x06proto3"
+	"\x10AuthenticateUser\x12 .auth.v1.AuthenticateUserRequest\x1a!.auth.v1.AuthenticateUserResponse\x12N\n" +
+	"\rTokenValidate\x12\x1d.auth.v1.TokenValidateRequest\x1a\x1e.auth.v1.TokenValidateResponseb\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once
@@ -309,26 +443,31 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_auth_v1_auth_proto_goTypes = []any{
 	(*RegisterUserRequest)(nil),      // 0: auth.v1.RegisterUserRequest
 	(*RegisterUserResponse)(nil),     // 1: auth.v1.RegisterUserResponse
 	(*AuthenticateUserRequest)(nil),  // 2: auth.v1.AuthenticateUserRequest
 	(*AuthenticateUserResponse)(nil), // 3: auth.v1.AuthenticateUserResponse
-	(*timestamppb.Timestamp)(nil),    // 4: google.protobuf.Timestamp
+	(*TokenValidateRequest)(nil),     // 4: auth.v1.TokenValidateRequest
+	(*TokenValidateResponse)(nil),    // 5: auth.v1.TokenValidateResponse
+	(*timestamppb.Timestamp)(nil),    // 6: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	4, // 0: auth.v1.AuthenticateUserResponse.issued_at:type_name -> google.protobuf.Timestamp
-	4, // 1: auth.v1.AuthenticateUserResponse.expires_at:type_name -> google.protobuf.Timestamp
-	0, // 2: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
-	2, // 3: auth.v1.AuthService.AuthenticateUser:input_type -> auth.v1.AuthenticateUserRequest
-	1, // 4: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
-	3, // 5: auth.v1.AuthService.AuthenticateUser:output_type -> auth.v1.AuthenticateUserResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	6, // 0: auth.v1.AuthenticateUserResponse.issued_at:type_name -> google.protobuf.Timestamp
+	6, // 1: auth.v1.AuthenticateUserResponse.expires_at:type_name -> google.protobuf.Timestamp
+	6, // 2: auth.v1.TokenValidateResponse.expires_at:type_name -> google.protobuf.Timestamp
+	0, // 3: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
+	2, // 4: auth.v1.AuthService.AuthenticateUser:input_type -> auth.v1.AuthenticateUserRequest
+	4, // 5: auth.v1.AuthService.TokenValidate:input_type -> auth.v1.TokenValidateRequest
+	1, // 6: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
+	3, // 7: auth.v1.AuthService.AuthenticateUser:output_type -> auth.v1.AuthenticateUserResponse
+	5, // 8: auth.v1.AuthService.TokenValidate:output_type -> auth.v1.TokenValidateResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -336,13 +475,14 @@ func file_auth_v1_auth_proto_init() {
 	if File_auth_v1_auth_proto != nil {
 		return
 	}
+	file_auth_v1_auth_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

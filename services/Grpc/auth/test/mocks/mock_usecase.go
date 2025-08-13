@@ -34,6 +34,21 @@ func (m *MockServiceUsecase) EXPECT() *MockServiceUsecaseMockRecorder {
 	return m.recorder
 }
 
+// TokenValidate mocks base method.
+func (m *MockServiceUsecase) TokenValidate(req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TokenValidate", req)
+	ret0, _ := ret[0].(*pbgen.TokenValidateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TokenValidate indicates an expected call of TokenValidate.
+func (mr *MockServiceUsecaseMockRecorder) TokenValidate(req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TokenValidate", reflect.TypeOf((*MockServiceUsecase)(nil).TokenValidate), req)
+}
+
 // UserRegister mocks base method.
 func (m *MockServiceUsecase) UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
 	m.ctrl.T.Helper()

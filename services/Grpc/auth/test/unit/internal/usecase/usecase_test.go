@@ -4,13 +4,17 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/o1egl/paseto"
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/token"
 	"github.com/sony-nurdianto/farm/auth/internal/entity"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
 	"github.com/sony-nurdianto/farm/auth/test/mocks"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestUseCaseUserRegisterUserExsist(t *testing.T) {
@@ -334,4 +338,89 @@ func TestUserSignIn_Success(t *testing.T) {
 	assert.Equal(t, out.Token, "Token")
 	assert.Equal(t, out.Msg, "User Authenticated Success Login. Welcome !")
 	assert.Equal(t, out.Status, "Success")
+}
+
+func TestTokenValidateExperied(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mocksTokhan.EXPECT().
+		VerifyWebToken(gomock.Any()).
+		Return(paseto.JSONToken{
+			Issuer:     "auth",
+			Expiration: time.Now().Add(time.Hour * -1),
+			Subject:    "user-id",
+		}, token.ErrTokenExperied)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.TokenValidateRequest{
+		Token: "token",
+	}
+
+	res, err := uc.TokenValidate(req)
+	assert.NoError(t, err)
+	assert.Nil(t, res.Isuer)
+	assert.Nil(t, res.Subject)
+	assert.Nil(t, res.ExpiresAt)
+	assert.False(t, res.Valid)
+	assert.Equal(t, res.Msg, "Token Experied")
+}
+
+func TestTokenValidateErrorVerifyWebToken(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	mocksTokhan.EXPECT().
+		VerifyWebToken(gomock.Any()).
+		Return(paseto.JSONToken{}, token.ErrDecryptFailed)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.TokenValidateRequest{
+		Token: "token",
+	}
+
+	res, err := uc.TokenValidate(req)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	assert.EqualError(t, err, token.ErrDecryptFailed.Error())
+}
+
+func TestTokenValidateSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepo(ctrl)
+	mocksPassEn := mocks.NewMockPassEncrypt(ctrl)
+	mocksTokhan := mocks.NewMockTokhan(ctrl)
+
+	expRes := paseto.JSONToken{
+		Issuer:     "auth",
+		Expiration: time.Now().Add(time.Hour * 1),
+		Subject:    "user-id",
+	}
+
+	mocksTokhan.EXPECT().
+		VerifyWebToken(gomock.Any()).
+		Return(expRes, nil)
+
+	uc := usecase.NewServiceUsecase(mockAuthRepo, mocksPassEn, mocksTokhan)
+
+	req := &pbgen.TokenValidateRequest{
+		Token: "token",
+	}
+
+	res, err := uc.TokenValidate(req)
+	assert.NoError(t, err)
+	assert.Equal(t, *res.Isuer, expRes.Issuer)
+	assert.Equal(t, *res.Subject, expRes.Subject)
+	assert.Equal(t, res.ExpiresAt, timestamppb.New(expRes.Expiration))
+	assert.True(t, res.Valid)
+	assert.Equal(t, res.Msg, "Token Is Valid")
 }

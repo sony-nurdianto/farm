@@ -66,3 +66,14 @@ func (ass *AuthServiceServer) AuthenticateUser(
 
 	return res, nil
 }
+
+func (ass *AuthServiceServer) TokenValidate(
+	ctx context.Context,
+	in *pbgen.TokenValidateRequest,
+) (*pbgen.TokenValidateResponse, error) {
+	res, err := ass.serviceUsecase.TokenValidate(in)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return res, nil
+}

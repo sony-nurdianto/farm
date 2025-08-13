@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/sony-nurdianto/farm/auth/internal/encryption/token"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/service"
 	"github.com/sony-nurdianto/farm/auth/internal/usecase"
@@ -256,6 +257,99 @@ func TestServiceUserLoginSuccess(t *testing.T) {
 	}
 
 	_, err := svc.AuthenticateUser(
+		context.Background(),
+		request,
+	)
+	assert.NoError(t, err)
+}
+
+func TestServiceTokenValidateError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUsecase := mocks.NewMockServiceUsecase(ctrl)
+	mockUsecase.EXPECT().
+		TokenValidate(gomock.Any()).
+		Return(
+			nil,
+			token.ErrDecryptFailed,
+		)
+
+	svc := service.NewAuthServiceServer(mockUsecase)
+
+	request := &pbgen.TokenValidateRequest{
+		Token: "Token",
+	}
+
+	res, err := svc.TokenValidate(
+		context.Background(),
+		request,
+	)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, token.ErrDecryptFailed.Error())
+	assert.Nil(t, res)
+}
+
+func TestServiceTokenValidateTokenExperied(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUsecase := mocks.NewMockServiceUsecase(ctrl)
+	mockUsecase.EXPECT().
+		TokenValidate(gomock.Any()).
+		Return(
+			&pbgen.TokenValidateResponse{
+				Valid: false,
+				Msg:   "Token Experied",
+			},
+			nil,
+		)
+
+	svc := service.NewAuthServiceServer(mockUsecase)
+
+	request := &pbgen.TokenValidateRequest{
+		Token: "Token",
+	}
+
+	res, err := svc.TokenValidate(
+		context.Background(),
+		request,
+	)
+	assert.NoError(t, err)
+	assert.False(t, res.Valid)
+	assert.Nil(t, res.Isuer)
+	assert.Nil(t, res.Subject)
+	assert.Nil(t, res.ExpiresAt)
+}
+
+func TestServiceTokenValidate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	isuer := "isuer"
+	subject := "id"
+
+	mockUsecase := mocks.NewMockServiceUsecase(ctrl)
+	mockUsecase.EXPECT().
+		TokenValidate(gomock.Any()).
+		Return(
+			&pbgen.TokenValidateResponse{
+				Valid:     true,
+				Isuer:     &isuer,
+				Subject:   &subject,
+				Msg:       "Success Register User",
+				ExpiresAt: timestamppb.New(time.Now().Add(1 * time.Hour)),
+			},
+			nil,
+		)
+
+	svc := service.NewAuthServiceServer(mockUsecase)
+
+	request := &pbgen.TokenValidateRequest{
+		Token: "Token",
+	}
+
+	_, err := svc.TokenValidate(
 		context.Background(),
 		request,
 	)
