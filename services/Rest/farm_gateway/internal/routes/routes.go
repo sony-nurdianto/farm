@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
-	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers"
+	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/authh"
 )
 
 type Routes struct {
@@ -21,7 +21,7 @@ func NewRoutes(app *fiber.App, grpcSvc api.GrpcAuthService) *Routes {
 }
 
 func (r *Routes) Build() {
-	authHandler := handlers.NewAuthHandler(r.grpcSvc)
+	authHandler := authh.NewAuthHandler(r.grpcSvc)
 
 	signupHandler := NewRouterHandlers("/signup", http.MethodPost, authHandler.SignUp)
 	signInHandler := NewRouterHandlers("/signin", http.MethodPost, authHandler.SignIn)
@@ -29,6 +29,7 @@ func (r *Routes) Build() {
 		signupHandler,
 		signInHandler,
 	)
+
 	r.app.Route("/auth", authRouter.Builder)
 
 	r.app.Route("/index", func(router fiber.Router) {

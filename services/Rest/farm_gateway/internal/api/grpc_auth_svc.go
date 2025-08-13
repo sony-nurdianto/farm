@@ -7,22 +7,24 @@ import (
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/pbgen"
 )
 
+//go:generate mockgen -source=../pbgen/auth_grpc.pb.go -destination=../../test/mocks/mock_auth_grpc.pb.go -package=mocks
+//go:generate mockgen -source=grpc_auth_svc.go -destination=../../test/mocks/mock_grpc_auth_svc.go -package=mocks
+
 type GrpcAuthService interface {
 	AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
 	AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error)
 	AuthTokenValidate(req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error)
 }
 
-type grpcService struct {
+type grpcAuthService struct {
 	authSvc pbgen.AuthServiceClient
 }
 
-func NewGrpcService(conn *GrpcClientConn) GrpcAuthService {
-	authSvc := pbgen.NewAuthServiceClient(conn)
-	return grpcService{authSvc: authSvc}
+func NewGrpcService(svc pbgen.AuthServiceClient) GrpcAuthService {
+	return grpcAuthService{authSvc: svc}
 }
 
-func (s grpcService) AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
+func (s grpcAuthService) AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		5*time.Second,
@@ -37,7 +39,7 @@ func (s grpcService) AuthUserRegister(req *pbgen.RegisterUserRequest) (*pbgen.Re
 	return res, err
 }
 
-func (s grpcService) AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
+func (s grpcAuthService) AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		5*time.Second,
@@ -52,7 +54,7 @@ func (s grpcService) AuthUserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.
 	return res, nil
 }
 
-func (s grpcService) AuthTokenValidate(req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error) {
+func (s grpcAuthService) AuthTokenValidate(req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		5*time.Second,
