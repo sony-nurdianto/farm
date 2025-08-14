@@ -27,9 +27,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalln(err)
-	}
+	godotenv.Load()
 
 	repo, err := repository.NewAuthRepo(
 		schrgs.NewRegistery(),

@@ -2,8 +2,10 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/pbgen"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/routes"
@@ -12,10 +14,12 @@ import (
 )
 
 func main() {
+	godotenv.Load()
+
 	insCred := insecure.NewCredentials()
 	trsCred := grpc.WithTransportCredentials(insCred)
 
-	conn, err := grpc.NewClient("localhost:50051", trsCred)
+	conn, err := grpc.NewClient(os.Getenv("GRPC_AUTH_SERVICE"), trsCred)
 	if err != nil {
 		log.Fatalln(err)
 	}

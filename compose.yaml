@@ -8,12 +8,12 @@ services:
     environment:
       POSTGRES_USER: sony
       POSTGRES_PASSWORD: secret 
-      POSTGRES_DB: farm
+      POSTGRES_DB: auth
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - farm_postgres:/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sony -d farm"]  
+      test: ["CMD-SHELL", "pg_isready -U sony -d auth"]  
       interval: 10s  
       timeout: 5s
       retries: 5
@@ -317,6 +317,38 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  grpc-auth-service:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/grpc/auth_service.dockerfile
+    env_file:
+      - ./services/Grpc/auth/.env
+    healthcheck:
+      test: ["CMD", "nc", "-z", "grpc-auth-service", "50051"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  rest-farm-gateway:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/rest/farm_gateway.dockerfile
+    env_file:
+      - ./services/Rest/farm_gateway/.env
+    ports:
+      - 8000:3000
+    healthcheck:
+      test: ["CMD", "nc", "-z", "rest-farm-gateway", "3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      grpc-auth-service:
+        condition: service_healthy
 
 volumes:
   farm_postgres:
