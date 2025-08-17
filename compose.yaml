@@ -133,6 +133,7 @@ services:
         - -c
         - |
           confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.8.4 && \
+          confluent-hub install --no-prompt jcustenborder/kafka-connect-redis:latest && \
           /etc/confluent/docker/run
         
     volumes:

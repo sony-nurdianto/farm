@@ -1,0 +1,17 @@
+{
+  "name": "redis-sink-connector",
+  "config": {
+    "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
+    "tasks.max": "1",
+    "topics": "user-events,account-events",
+    "redis.hosts": "localhost:6379",
+    "redis.password": "your-password",
+    "redis.database": "0",
+    "redis.operation": "SET",
+    "redis.key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+    "redis.value.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://localhost:8081"
+  }
+}

@@ -29,7 +29,7 @@ func (h authHandler) AuthTokenBaseValidate(c *fiber.Ctx) error {
 		Token: token,
 	}
 
-	res, err := h.grpcAuthSvc.AuthTokenValidate(req)
+	res, err := h.grpcAuthSvc.AuthTokenValidate(c.UserContext(), req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{

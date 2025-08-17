@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -22,7 +25,8 @@ import (
 func main() {
 	godotenv.Load()
 
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	serviceObsName := "farm-gateway"
 	connColl, err := grpc.NewClient(
@@ -79,7 +83,19 @@ func main() {
 	appRoutes := routes.NewRoutes(app, authSvc)
 	appRoutes.Build()
 
-	if err := app.Listen("0.0.0.0:3000"); err != nil {
-		log.Fatalln(err)
+	go func() {
+		if err := app.Listen("0.0.0.0:3000"); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("Server Stoping, Gracefully Stop ...")
+			fmt.Println("Application Quit.")
+			return
+		default:
+		}
 	}
 }

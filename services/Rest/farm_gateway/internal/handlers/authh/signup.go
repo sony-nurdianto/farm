@@ -23,7 +23,7 @@ func (h authHandler) SignUp(c *fiber.Ctx) error {
 		Password:    user.Password,
 	}
 
-	res, err := h.grpcAuthSvc.AuthUserRegister(req)
+	res, err := h.grpcAuthSvc.AuthUserRegister(c.UserContext(), req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{
