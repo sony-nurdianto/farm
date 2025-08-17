@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
+	"github.com/sony-nurdianto/farm/auth/internal/recorderr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"go.opentelemetry.io/otel/attribute"
 	otelCodes "go.opentelemetry.io/otel/codes"
@@ -17,7 +18,7 @@ import (
 func InterceptTokenValidate(ctx context.Context, sp trace.Span, lg *logs.Logger, req any) error {
 	fullMethodName := pbgen.AuthService_AuthenticateUser_FullMethodName
 	code := codes.InvalidArgument
-	recorder := NewintercpthErrorRecorder(sp, lg)
+	recorder := recorderr.NewErrorRecorder(sp, lg)
 	if req == nil {
 		return recorder.Record(
 			ctx,

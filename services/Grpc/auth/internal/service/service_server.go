@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/codes"
 
 	otelCodes "go.opentelemetry.io/otel/codes"
-	"google.golang.org/grpc/status"
 )
 
 type AuthServiceServer struct {
@@ -58,21 +57,22 @@ func (ass *AuthServiceServer) RegisterUser(
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelCodes.Error, "User Registration Failed")
-		return nil, handleRegisterError(ctx, err, errRecorder)
+		return nil, handleRegisterError(hctx, err, errRecorder)
 	}
 
 	span.SetStatus(otelCodes.Ok, "User registration completed successfully")
 	return res, nil
 }
 
-func handleAutUserErr(err error) error {
+func handleAutUserErr(ctx context.Context, err error, errRecorder recorderr.ErrorRecorder) error {
+	fullMethodName := pbgen.AuthService_AuthenticateUser_FullMethodName
 	switch {
 	case errors.Is(err, usecase.ErrorUserIsNotExsist):
-		return status.Error(codes.NotFound, err.Error())
+		return errRecorder.Record(ctx, codes.NotFound, fullMethodName, err.Error())
 	case errors.Is(err, usecase.ErrorPasswordIsInvalid):
-		return status.Error(codes.InvalidArgument, err.Error())
+		return errRecorder.Record(ctx, codes.InvalidArgument, fullMethodName, err.Error())
 	default:
-		return status.Error(codes.Internal, err.Error())
+		return errRecorder.Record(ctx, codes.Internal, fullMethodName, err.Error())
 	}
 }
 
@@ -80,9 +80,21 @@ func (ass *AuthServiceServer) AuthenticateUser(
 	ctx context.Context,
 	in *pbgen.AuthenticateUserRequest,
 ) (*pbgen.AuthenticateUserResponse, error) {
-	res, err := ass.serviceUsecase.UserSignIn(ctx, in)
+	tracer := otel.Tracer("auth-service")
+	hctx, span := tracer.Start(ctx, "ServiceHandler:RegisterUser")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("operation", "authenticate_user"),
+		attribute.String("layer", "handler"),
+	)
+
+	errRecorder := recorderr.NewErrorRecorder(span, logs.NewLogger())
+	res, err := ass.serviceUsecase.UserSignIn(hctx, in)
 	if err != nil {
-		return nil, handleAutUserErr(err)
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "User SignIn Failed")
+		return nil, handleAutUserErr(hctx, err, errRecorder)
 	}
 
 	return res, nil
@@ -92,9 +104,23 @@ func (ass *AuthServiceServer) TokenValidate(
 	ctx context.Context,
 	in *pbgen.TokenValidateRequest,
 ) (*pbgen.TokenValidateResponse, error) {
-	res, err := ass.serviceUsecase.TokenValidate(ctx, in)
+	tracer := otel.Tracer("auth-service")
+	hctx, span := tracer.Start(ctx, "ServiceHandler:RegisterUser")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("operation", "authenticate_user"),
+		attribute.String("layer", "handler"),
+	)
+
+	errRecorder := recorderr.NewErrorRecorder(span, logs.NewLogger())
+	fullMethodName := pbgen.AuthService_TokenValidate_FullMethodName
+	res, err := ass.serviceUsecase.TokenValidate(hctx, in)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		span.RecordError(err)
+		span.SetStatus(otelCodes.Error, "Failed Validate Token")
+		return nil, errRecorder.Record(hctx, codes.InvalidArgument, fullMethodName, err.Error())
 	}
+
 	return res, nil
 }

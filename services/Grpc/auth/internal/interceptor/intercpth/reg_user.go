@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
+	"github.com/sony-nurdianto/farm/auth/internal/recorderr"
 	"github.com/sony-nurdianto/farm/auth/internal/validator"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"google.golang.org/grpc/codes"
@@ -19,7 +20,7 @@ import (
 func InterceptRegisterUser(ctx context.Context, sp trace.Span, lg *logs.Logger, req any) error {
 	fullMethodName := pbgen.AuthService_RegisterUser_FullMethodName
 	code := codes.InvalidArgument
-	recorder := NewintercpthErrorRecorder(sp, lg)
+	recorder := recorderr.NewErrorRecorder(sp, lg)
 
 	if req == nil {
 		return recorder.Record(
