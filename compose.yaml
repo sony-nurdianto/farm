@@ -260,11 +260,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "grpc_health_probe", "-addr=:50051", "-service=auth-service"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD", "grpc_health_probe", "-addr=:50051", "-service=auth-service"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
   
   rest-farm-gateway:
     build:
@@ -275,8 +275,8 @@ services:
     ports:
       - 8000:3000
     depends_on:
-      grpc-auth-service:
-        condition: service_healthy
+      - grpc-auth-service
+
     healthcheck:
       test: ["CMD", "nc", "-z", "rest-farm-gateway", "3000"]
       interval: 10s

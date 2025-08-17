@@ -1,42 +1,88 @@
 package intercpth
 
 import (
-	"log"
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
 	"github.com/sony-nurdianto/farm/auth/internal/validator"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+
+	"go.opentelemetry.io/otel/attribute"
+	otelCodes "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func InterceptRegisterUser(req any) error {
-	if req == nil {
-		log.Printf("[AuthService] Nil request payload for Register")
-		return status.Error(codes.InvalidArgument, "Expected Request is not nil")
+func InterceptRegisterUser(ctx context.Context, sp trace.Span, lg *logs.Logger, req any) error {
+	fullMethodName := pbgen.AuthService_RegisterUser_FullMethodName
+	code := codes.InvalidArgument
+	recorder := NewintercpthErrorRecorder(sp, lg)
 
+	if req == nil {
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			"[AuthService] Nil request payload for Register - Expected Request is not nil",
+		)
 	}
 
 	dataRequest, ok := req.(*pbgen.RegisterUserRequest)
 	if !ok {
-		log.Printf("[AuthService] Invalid request type for Register - got: %T", req)
-		return status.Error(codes.InvalidArgument, "Expected Request have type RegisterRequest Proto")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			fmt.Sprintf("[AuthService] Invalid request type for Register - got: %T - Expected Request have type RegisterRequest Proto", req),
+		)
 	}
 
 	if !validator.ValidateEmail(dataRequest.Email) {
-		log.Printf("[AuthService] Invalid request type for Register - Email Invalid - %s", dataRequest.Email)
-		return status.Error(codes.InvalidArgument, "Email is not valid")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			fmt.Sprintf("[AuthService] Invalid request type for Register - Email Invalid - %s", dataRequest.Email),
+		)
 	}
 
 	if !validator.ValidatePhone(dataRequest.PhoneNumber) {
-		log.Printf("[AuthService] Invalid request type for Register - Phone Number Invalid - %s", dataRequest.PhoneNumber)
-		return status.Error(codes.InvalidArgument, "Phone number is not valid")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			fmt.Sprintf("[AuthService] Invalid request type for Register - Phone Number Invalid - %s", dataRequest.PhoneNumber),
+		)
 	}
 
 	if !validator.ValidatePassword(dataRequest.Password) {
-		log.Printf("[AuthService] Invalid request type for Register - Password Invalid - does not meet complexity requirements")
-		return status.Error(codes.InvalidArgument, "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			"[AuthService] Invalid request type for Register - Password Invalid - does not meet complexity requirements - Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character",
+		)
 	}
 
-	log.Printf("[AuthService] Register request - Email: %s, Phone: %s", dataRequest.Email, dataRequest.PhoneNumber)
+	lg.Info(
+		ctx,
+		fmt.Sprintf("[AuthService] Register request - Email: %s, Phone: %s", dataRequest.Email, dataRequest.PhoneNumber),
+		slog.String("full_method", fullMethodName),
+		slog.Time("timestamp", time.Now()),
+		slog.String("function", "InterceptRegisterUser"),
+	)
+
+	sp.AddEvent("validation_completed",
+		trace.WithAttributes(
+			attribute.String("email", dataRequest.Email),
+			attribute.String("phone", dataRequest.PhoneNumber),
+			attribute.String("validation_status", "success"),
+		),
+	)
+	sp.SetStatus(otelCodes.Ok, "Request validation successful")
+
 	return nil
 }

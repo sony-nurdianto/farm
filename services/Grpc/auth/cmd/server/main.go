@@ -27,10 +27,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health"
 
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability"
-	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func main() {
@@ -96,9 +94,9 @@ func main() {
 		),
 	)
 
-	hs := health.NewServer()
-	grpc_health_v1.RegisterHealthServer(gs, hs)
-	hs.SetServingStatus(serviceObsName, grpc_health_v1.HealthCheckResponse_SERVING)
+	// hs := health.NewServer()
+	// grpc_health_v1.RegisterHealthServer(gs, hs)
+	// hs.SetServingStatus(serviceObsName, grpc_health_v1.HealthCheckResponse_SERVING)
 
 	svc := service.NewAuthServiceServer(uc)
 	pbgen.RegisterAuthServiceServer(gs, svc)

@@ -6,6 +6,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type TracerSpan interface {
+	SpanFromContext(ctx context.Context) trace.Span
+}
+
 type traceSpan struct{}
 
 func NewTraceSpan() traceSpan {

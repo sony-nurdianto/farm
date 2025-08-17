@@ -1,29 +1,65 @@
 package intercpth
 
 import (
-	"log"
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
+	"go.opentelemetry.io/otel/attribute"
+	otelCodes "go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func InterceptTokenValidate(req any) error {
+func InterceptTokenValidate(ctx context.Context, sp trace.Span, lg *logs.Logger, req any) error {
+	fullMethodName := pbgen.AuthService_AuthenticateUser_FullMethodName
+	code := codes.InvalidArgument
+	recorder := NewintercpthErrorRecorder(sp, lg)
 	if req == nil {
-		log.Printf("[AuthService] Nil request payload for TokenValidate")
-		return status.Error(codes.InvalidArgument, "Expected Request is not nil")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			"[AuthService] Nil request payload for TokenValidate - Expected Request is not nil",
+		)
 	}
 
 	dataRequest, ok := req.(*pbgen.TokenValidateRequest)
 	if !ok {
-		log.Printf("[AuthService] Invalid request type for TokenValidate - got: %T", req)
-		return status.Error(codes.InvalidArgument, "Expected Request have type TokenValidateRequest Proto")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			fmt.Sprintf("[AuthService] Invalid request type for TokenValidate - got: %T - Expected Request have type TokenValidateRequest Proto", req),
+		)
 	}
 
 	if len(dataRequest.Token) == 0 {
-		log.Printf("[AuthService] Invalid request type for TokenValidate - Token is empty - does not meet requirements")
-		return status.Error(codes.InvalidArgument, "Expected Request - Token is not empty")
+		return recorder.Record(
+			ctx,
+			code,
+			fullMethodName,
+			"[AuthService] Invalid request type for TokenValidate - Token is empty - does not meet requirements",
+		)
 	}
+
+	lg.Info(
+		ctx,
+		"[AuthService] Token Validate request",
+		slog.String("full_method", fullMethodName),
+		slog.Time("timestamp", time.Now()),
+		slog.String("function", "InterceptTokenValidate"),
+	)
+
+	sp.AddEvent("validation_completed",
+		trace.WithAttributes(
+			attribute.String("validation_status", "success"),
+		),
+	)
+	sp.SetStatus(otelCodes.Ok, "Request validation successful")
 
 	return nil
 }
