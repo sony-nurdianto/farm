@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/passencrypt"
@@ -19,9 +20,9 @@ var (
 
 //go:generate mockgen -package=mocks -destination=../../test/mocks/mock_usecase.go -source=usecase.go
 type ServiceUsecase interface {
-	UserRegister(user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
-	UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error)
-	TokenValidate(req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error)
+	UserRegister(ctx context.Context, user *pbgen.RegisterUserRequest) (*pbgen.RegisterUserResponse, error)
+	UserSignIn(ctx context.Context, req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error)
+	TokenValidate(ctx context.Context, req *pbgen.TokenValidateRequest) (*pbgen.TokenValidateResponse, error)
 }
 
 type serviceUsecase struct {

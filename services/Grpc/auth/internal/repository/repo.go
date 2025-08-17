@@ -24,8 +24,8 @@ import (
 const TRANSACTIONAL_ID string = "register-user"
 
 type AuthRepo interface {
-	CreateUserAsync(id, email, fullName, phone, passwordHash string) error
-	GetUserByEmail(email string) (user entity.Users, _ error)
+	CreateUserAsync(ctx context.Context, id, email, fullName, phone, passwordHash string) error
+	GetUserByEmail(ctx context.Context, email string) (user entity.Users, _ error)
 }
 
 type authRepo struct {

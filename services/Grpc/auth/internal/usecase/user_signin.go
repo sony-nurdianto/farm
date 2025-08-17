@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,8 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (su serviceUsecase) UserSignIn(req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
-	user, err := su.authRepo.GetUserByEmail(req.GetEmail())
+func (su serviceUsecase) UserSignIn(ctx context.Context, req *pbgen.AuthenticateUserRequest) (*pbgen.AuthenticateUserResponse, error) {
+	user, err := su.authRepo.GetUserByEmail(ctx, req.GetEmail())
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("%w: user with email %s is not exist", ErrorUserIsNotExsist, req.GetEmail())
 	}

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 
 	"github.com/sony-nurdianto/farm/auth/internal/encryption/token"
@@ -9,6 +10,7 @@ import (
 )
 
 func (su serviceUsecase) TokenValidate(
+	ctx context.Context,
 	req *pbgen.TokenValidateRequest,
 ) (*pbgen.TokenValidateResponse, error) {
 	res := &pbgen.TokenValidateResponse{}

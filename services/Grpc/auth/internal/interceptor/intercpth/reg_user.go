@@ -77,8 +77,10 @@ func InterceptRegisterUser(ctx context.Context, sp trace.Span, lg *logs.Logger, 
 
 	sp.AddEvent("validation_completed",
 		trace.WithAttributes(
-			attribute.String("email", dataRequest.Email),
-			attribute.String("phone", dataRequest.PhoneNumber),
+			attribute.String("user.email", dataRequest.GetEmail()),
+			attribute.String("user.full_name", dataRequest.GetFullName()),
+			attribute.String("user.phone", dataRequest.GetPhoneNumber()),
+			attribute.String("layer", "interceptor"),
 			attribute.String("validation_status", "success"),
 		),
 	)
