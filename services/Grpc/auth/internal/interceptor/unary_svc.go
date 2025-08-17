@@ -7,8 +7,13 @@ import (
 
 	"github.com/sony-nurdianto/farm/auth/internal/interceptor/intercpth"
 	"github.com/sony-nurdianto/farm/auth/internal/pbgen"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"google.golang.org/grpc"
 )
+
+type authUnaryInterceptor struct {
+	logger logs.Logger
+}
 
 func AuthServiceUnaryInterceptor(
 	ctx context.Context,

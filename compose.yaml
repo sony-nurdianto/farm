@@ -183,52 +183,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
+  
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-      - '--web.enable-admin-api'
-      - '--web.enable-remote-write-receiver'
-    ports:
-      - "9090:9090"
     volumes:
-      - ./infra/observability/config/prometheus.yaml:/etc/prometheus/prometheus.yml:z
-      - prometheus_data:/prometheus
+      - ./infra/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 3  
 
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    command: [ "-config.file=/etc/tempo.yaml" ]
-    ports:
-      - "3200:3200"   # tempo UI
-      - "9095:9095"   # tempo gRPC internal
-      - "14317:4317"  # OTLP gRPC
-      - "14318:4318"  # OTLP HTTP
-      - "9412:9411"   # Zipkin
-    volumes:
-      - ./infra/observability/config/tempo.yaml:/etc/tempo.yaml:z
-      - tempo_data:/var/tempo
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  jaeger-all-in-one:
-    image: cr.jaegertracing.io/jaegertracing/jaeger:2.9.0
-    container_name: jaeger-all-in-one
+  jaeger:
+    image: jaegertracing/opentelemetry-all-in-one:latest
+    container_name: jaeger
     ports:
       - "16686:16686"   # Jaeger UI
       - "14268:14268"   # jaeger.thrift over HTTP
@@ -238,18 +208,14 @@ services:
       - "5778:5778"     # serve configs
       - "9411:9411"     # Zipkin compatible endpoint
     environment:
-      COLLECTOR_ZIPKIN_HOST_PORT: 9411
       COLLECTOR_OTLP_ENABLED: true
-      LOG_LEVEL: debug
-    volumes:
-      - jaeger_data:/badger
+      COLLECTOR_ZIPKIN_HOST_PORT: 9411
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  
   loki:
     image: grafana/loki:latest
     container_name: loki
@@ -257,7 +223,6 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - loki_data:/loki
       - ./infra/observability/config/loki.yaml:/etc/loki/local-config.yaml:z
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
@@ -265,74 +230,42 @@ services:
       timeout: 10s
       retries: 3
 
-  # OpenTelemetry Collector
+
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: otel-collector
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    ports:
-      - "4317:4317"   # otlp grpc receiver
-      - "4318:4318"   # otlp http receiver
-      - "8889:8889"   # prometheus metrics
-      - "13133:13133" # health check
-      - "9464:9464"   # prometheus exporter
-      - "8888:8888"   # metrics endpoint
+    image: otel/opentelemetry-collector-contrib
     volumes:
-      - ./infra/observability/config/otel-collector.yaml:/etc/otel-collector-config.yaml:z
-    depends_on:
-      - prometheus
-      # - tempo
-      - loki
-      - jaeger-all-in-one
+      - ./infra/observability/config/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 1888:1888 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP http receiver
+      - 55679:55679 # zpages extension
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:13133/"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Grafana - Observability Dashboard
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: false
-      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
-      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./infra/observability/config/grafana/provisioning:/etc/grafana/provisioning:z
-      - ./infra/observability/config/grafana/dashboards:/var/lib/grafana/dashboards:z
-    depends_on:
-      - prometheus
-      # - tempo
-      - loki
-      - jaeger-all-in-one
-      - otel-collector
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
+# Service
   grpc-auth-service:
     build:
       context: .
       dockerfile: ./scripts/dockerfile/services/grpc/auth_service.dockerfile
     env_file:
       - ./services/Grpc/auth/.env
-    healthcheck:
-      test: ["CMD", "nc", "-z", "grpc-auth-service", "50051"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
-
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051", "-service=auth-service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
   rest-farm-gateway:
     build:
       context: .
@@ -341,22 +274,18 @@ services:
       - ./services/Rest/farm_gateway/.env
     ports:
       - 8000:3000
-    healthcheck:
-      test: ["CMD", "nc", "-z", "rest-farm-gateway", "3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     depends_on:
       grpc-auth-service:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nc", "-z", "rest-farm-gateway", "3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
 volumes:
   farm_postgres:
   kafka_logs:
   kafka_connect_data:
-  tempo_data:
-  prometheus_data:
-  grafana_data:
-  loki_data:
-  jaeger_data:
 

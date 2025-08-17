@@ -23,27 +23,27 @@ type pooledProducer struct {
 	eventOnce sync.Once
 }
 
-type CleanUpOpts struct {
-	Interval    time.Duration
-	MaxIdleTime time.Duration
-}
+// type CleanUpOpts struct {
+// 	Interval    time.Duration
+// 	MaxIdleTime time.Duration
+// }
 
-func NewKafkaProducerPool(kk Kafka, cleanOpt *CleanUpOpts) *KafkaProducerPool {
+func NewKafkaProducerPool(kk Kafka) *KafkaProducerPool {
 	pool := &KafkaProducerPool{
 		kafka:     kk,
 		producers: make(map[string]*pooledProducer),
 	}
 
-	interval := 5 * time.Minute
-	maxIdleTime := 10 * time.Minute
-
-	if cleanOpt != nil {
-		interval = cleanOpt.Interval
-		maxIdleTime = cleanOpt.MaxIdleTime
-	}
+	// interval := 5 * time.Minute
+	// maxIdleTime := 10 * time.Minute
+	//
+	// if cleanOpt != nil {
+	// 	interval = cleanOpt.Interval
+	// 	maxIdleTime = cleanOpt.MaxIdleTime
+	// }
 
 	// Start cleanup goroutine untuk remove idle producers
-	go pool.cleanupRoutine(interval, maxIdleTime)
+	// go pool.cleanupRoutine(interval, maxIdleTime)
 
 	return pool
 }
@@ -141,28 +141,28 @@ func (kp *KafkaProducerPool) handleEvents(producer KevProducer, key string) {
 	}
 }
 
-func (kp *KafkaProducerPool) cleanupRoutine(interval, maxIdleTime time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		kp.cleanupIdleProducers(maxIdleTime)
-	}
-}
-
-func (kp *KafkaProducerPool) cleanupIdleProducers(maxIdleTime time.Duration) {
-	kp.mu.Lock()
-	defer kp.mu.Unlock()
-
-	now := time.Now()
-	for key, pooled := range kp.producers {
-		if now.Sub(pooled.lastUsed) > maxIdleTime {
-			pooled.producer.Close()
-			delete(kp.producers, key)
-			fmt.Printf("🧹 Cleaned up idle producer: %s\n", key)
-		}
-	}
-}
+// func (kp *KafkaProducerPool) cleanupRoutine(interval, maxIdleTime time.Duration) {
+// 	ticker := time.NewTicker(interval)
+// 	defer ticker.Stop()
+//
+// 	for range ticker.C {
+// 		kp.cleanupIdleProducers(maxIdleTime)
+// 	}
+// }
+//
+// func (kp *KafkaProducerPool) cleanupIdleProducers(maxIdleTime time.Duration) {
+// 	kp.mu.Lock()
+// 	defer kp.mu.Unlock()
+//
+// 	now := time.Now()
+// 	for key, pooled := range kp.producers {
+// 		if now.Sub(pooled.lastUsed) > maxIdleTime {
+// 			pooled.producer.Close()
+// 			delete(kp.producers, key)
+// 			fmt.Printf("🧹 Cleaned up idle producer: %s\n", key)
+// 		}
+// 	}
+// }
 
 func (kp *KafkaProducerPool) Close() {
 	kp.mu.Lock()
@@ -232,7 +232,7 @@ func (kp *KafkaProducerPool) SendMessage(cfg map[ConfigKeyKafka]string, msgs ...
 		}
 
 		msgFactory := msg.Factory()
-		deliveryChan := make(chan Event, 1) // Buffered channel
+		deliveryChan := make(chan kafka.Event, 1) // Buffered channel
 
 		err := producer.Produce(&msgFactory, deliveryChan)
 		if err != nil {

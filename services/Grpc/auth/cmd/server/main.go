@@ -23,11 +23,42 @@ import (
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+
+	"github.com/sony-nurdianto/farm/shared_lib/Go/observability"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func main() {
 	godotenv.Load()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	serviceObsName := "auth-service"
+
+	connColl, err := grpc.NewClient(
+		os.Getenv("OTELCOLLECTORADDR"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+
+	obs := observability.NewObservability(
+		serviceObsName,
+		connColl,
+	)
+
+	tp, mp, lp, err := obs.Init(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer tp.Shutdown(ctx)
+	defer mp.Shutdown(ctx)
+	defer lp.Shutdown(ctx)
 
 	repo, err := repository.NewAuthRepo(
 		schrgs.NewRegistery(),
@@ -53,10 +84,21 @@ func main() {
 	)
 
 	gs := grpc.NewServer(
+		grpc.StatsHandler(
+			otelgrpc.NewServerHandler(
+				otelgrpc.WithTracerProvider(tp),
+				otelgrpc.WithMeterProvider(mp),
+				otelgrpc.WithPropagators(otel.GetTextMapPropagator()),
+			),
+		),
 		grpc.UnaryInterceptor(
 			interceptor.AuthServiceUnaryInterceptor,
 		),
 	)
+
+	hs := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(gs, hs)
+	hs.SetServingStatus(serviceObsName, grpc_health_v1.HealthCheckResponse_SERVING)
 
 	svc := service.NewAuthServiceServer(uc)
 	pbgen.RegisterAuthServiceServer(gs, svc)
@@ -75,9 +117,6 @@ func main() {
 	}(lis)
 
 	fmt.Println("Server Running At 0.0.0.0:50051")
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	for {
 		select {

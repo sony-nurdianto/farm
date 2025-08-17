@@ -117,7 +117,7 @@ func NewAuthRepo(
 	rp.schemaRegisteryClient = srgs.Client()
 	rp.avro = avr
 
-	pool := kev.NewKafkaProducerPool(kv, nil)
+	pool := kev.NewKafkaProducerPool(kv)
 
 	producer, err := pool.Producer(cfg)
 	if err != nil {

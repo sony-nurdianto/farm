@@ -20,7 +20,7 @@ func TestKafkaProducerPool_Producer_SetConfigMap_Error(t *testing.T) {
 	defer ctrl.Finish()
 
 	kafkaAdapter := kev.NewKafka()
-	pool := kev.NewKafkaProducerPool(kafkaAdapter, nil)
+	pool := kev.NewKafkaProducerPool(kafkaAdapter)
 	cfg := map[kev.ConfigKeyKafka]string{
 		"abogoboga": "yeamplow", // invalid config map
 	}
@@ -36,7 +36,7 @@ func TestKafkaProducerPool_Producer_Error(t *testing.T) {
 
 	mockKafka := mocks.NewMockKafka(ctrl)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	cfg := map[kev.ConfigKeyKafka]string{
 		"bootstrap.servers": "localhost:9092",
@@ -79,7 +79,7 @@ func TestKafkaProducer_FatalError(t *testing.T) {
 		Times(1)
 
 	// Create pool
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	// Get producer first to trigger the event handler goroutine
 	producer, err := pool.Producer(cfg)
@@ -133,7 +133,7 @@ func TestKafkaProducer_FatalErrorWithCleanupVerification(t *testing.T) {
 			closeCalled <- true
 		})
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	// Get producer
 	producer, err := pool.Producer(cfg)
@@ -192,7 +192,7 @@ func TestKafkaProducerPool_SendMessage_Success(t *testing.T) {
 		NewProducer(gomock.Any()).
 		Return(mockProducer, nil)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	cfg := map[kev.ConfigKeyKafka]string{
 		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
@@ -245,7 +245,7 @@ func TestKafkaProducerPool_HandleEvents_AllCases(t *testing.T) {
 	mockProducer.EXPECT().
 		Close().AnyTimes() // akan dipanggil jika ada error fatal
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	cfg := map[kev.ConfigKeyKafka]string{
 		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
@@ -324,7 +324,7 @@ func TestKafkaProducerPool_GetPoolStats_WithEntries(t *testing.T) {
 		mockKafka.EXPECT().NewProducer(gomock.Any()).Return(mockProducer2, nil),
 	)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	// Kirim dua message dengan config berbeda (agar hash berbeda)
 	cfg1 := map[kev.ConfigKeyKafka]string{
@@ -362,42 +362,42 @@ func TestKafkaProducerPool_GetPoolStats_WithEntries(t *testing.T) {
 	}
 }
 
-func TestKafkaProducerPool_CleanupIdleProducers_Indirect(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockProducer := mocks.NewMockKevProducer(ctrl)
-	mockKafka := mocks.NewMockKafka(ctrl)
-
-	// Channel events yang tidak perlu isi apa-apa cukup dibuat buffered
-	eventChan := make(chan kafka.Event, 1)
-
-	// Setup expectations
-	mockProducer.EXPECT().KafkaProducer().Return(&kafka.Producer{}).AnyTimes()
-	mockProducer.EXPECT().Events().Return(eventChan).AnyTimes()
-	mockProducer.EXPECT().Close().AnyTimes()
-
-	mockKafka.EXPECT().NewProducer(gomock.Any()).Return(mockProducer, nil).AnyTimes()
-
-	// Buat pool dengan interval dan maxIdleTime kecil agar cepat cleanup
-	pool := kev.NewKafkaProducerPool(mockKafka, &kev.CleanUpOpts{
-		Interval:    10 * time.Millisecond,
-		MaxIdleTime: 10 * time.Millisecond,
-	})
-
-	cfg := map[kev.ConfigKeyKafka]string{
-		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
-	}
-
-	// Panggil Producer untuk bikin pooledProducer
-	_, err := pool.Producer(cfg)
-	assert.NoError(t, err)
-
-	// Set lastUsed ke waktu lama supaya dianggap idle
-
-	// Tunggu agar cleanupRoutine jalan dan panggil Close()
-	time.Sleep(50 * time.Millisecond)
-}
+// func TestKafkaProducerPool_CleanupIdleProducers_Indirect(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+//
+// 	mockProducer := mocks.NewMockKevProducer(ctrl)
+// 	mockKafka := mocks.NewMockKafka(ctrl)
+//
+// 	// Channel events yang tidak perlu isi apa-apa cukup dibuat buffered
+// 	eventChan := make(chan kafka.Event, 1)
+//
+// 	// Setup expectations
+// 	mockProducer.EXPECT().KafkaProducer().Return(&kafka.Producer{}).AnyTimes()
+// 	mockProducer.EXPECT().Events().Return(eventChan).AnyTimes()
+// 	mockProducer.EXPECT().Close().AnyTimes()
+//
+// 	mockKafka.EXPECT().NewProducer(gomock.Any()).Return(mockProducer, nil).AnyTimes()
+//
+// 	// Buat pool dengan interval dan maxIdleTime kecil agar cepat cleanup
+// 	pool := kev.NewKafkaProducerPool(mockKafka, &kev.CleanUpOpts{
+// 		Interval:    10 * time.Millisecond,
+// 		MaxIdleTime: 10 * time.Millisecond,
+// 	})
+//
+// 	cfg := map[kev.ConfigKeyKafka]string{
+// 		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
+// 	}
+//
+// 	// Panggil Producer untuk bikin pooledProducer
+// 	_, err := pool.Producer(cfg)
+// 	assert.NoError(t, err)
+//
+// 	// Set lastUsed ke waktu lama supaya dianggap idle
+//
+// 	// Tunggu agar cleanupRoutine jalan dan panggil Close()
+// 	time.Sleep(50 * time.Millisecond)
+// }
 
 func TestKafkaProducerPool_Close(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -426,7 +426,7 @@ func TestKafkaProducerPool_Close(t *testing.T) {
 		Return(&kafka.Producer{}).
 		AnyTimes()
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 
 	cfg := map[kev.ConfigKeyKafka]string{
 		kev.ConfigKeyKafka("bootstrap.servers"): "localhost:9092",
@@ -449,7 +449,7 @@ func TestSendMessage_EmptyMessages(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockKafka := mocks.NewMockKafka(ctrl)
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	// Test with no messages
@@ -466,7 +466,7 @@ func TestKafkaProducerPool_SendMessage_NewProducerError(t *testing.T) {
 
 	mockKafka := mocks.NewMockKafka(ctrl)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	cfg := map[kev.ConfigKeyKafka]string{
@@ -517,7 +517,7 @@ func TestKafkaProducerPool_SendMessage_ProduceError(t *testing.T) {
 		Return(fmt.Errorf("produce error")).
 		Times(1)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	tpc := "test-topic"
@@ -570,7 +570,7 @@ func TestKafkaProducerPool_SendMessage_DeliveryChanClosed(t *testing.T) {
 		}).
 		Times(1)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	tpc := "test-topic"
@@ -628,7 +628,7 @@ func TestKafkaProducerPool_SendMessage_DeliveryFailed(t *testing.T) {
 		Return(0).
 		Times(1)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	tpc := "test-topic"
@@ -684,7 +684,7 @@ func TestKafkaProducerPool_SendMessage_FlushRemaining(t *testing.T) {
 		Return(2).
 		Times(1)
 
-	pool := kev.NewKafkaProducerPool(mockKafka, nil)
+	pool := kev.NewKafkaProducerPool(mockKafka)
 	defer pool.Close()
 
 	tpc := "test-topic"
