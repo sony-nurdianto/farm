@@ -5,6 +5,7 @@ import "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 //go:generate mockgen -source=kafka_def.go -destination=../test/mocks/kev/mock_kafka.go -package=mocks
 type Kafka interface {
 	NewProducer(conf *kafka.ConfigMap) (KevProducer, error)
+	NewConsumer(conf *kafka.ConfigMap) (KevConsumer, error)
 }
 
 type kafkaAdapter struct{}
@@ -20,4 +21,13 @@ func (kafkaAdapter) NewProducer(conf *kafka.ConfigMap) (KevProducer, error) {
 	}
 
 	return NewProducer(p), nil
+}
+
+func (kafkaAdapter) NewConsumer(conf *kafka.ConfigMap) (KevConsumer, error) {
+	c, err := kafka.NewConsumer(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConsumer(c), nil
 }

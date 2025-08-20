@@ -12,6 +12,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - farm_postgres:/var/lib/postgresql/data/pgdata
+    command: postgres -c wal_level=logical -c max_replication_slots=10 -c max_wal_senders=10
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sony -d auth"]  
       interval: 10s  
@@ -23,6 +24,44 @@ services:
     restart: always
     ports:
       - 9080:8080
+
+  redis-farmer-master: 
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: redis-farmer-master
+    ports:
+      - 6379:6379
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./infra/database/redis/farmer/redis-master.conf:/etc/redis/redis.conf:z
+      - ./infra/database/redis/farmer/farmer-acl.conf:/data/users.acl:z
+
+  redis-farmer-slave-1: 
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: redis-farmer-slave-1
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./infra/database/redis/farmer/redis-slave-1.conf:/etc/redis/redis.conf:z
+      - ./infra/database/redis/farmer/farmer-acl.conf:/data/users.acl:z
+
+  sentinel-farmer:
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: sentinel-farmer
+    command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
+    volumes:
+      - ./infra/database/redis/farmer/sentinel.conf:/etc/redis/sentinel.conf:z
+    ports:
+      - 26379:26379
+    depends_on:
+      - redis-farmer-master
+      - redis-farmer-slave-1
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - 5540:5540
+    depends_on:
+      - redis-farmer-master
 
   kafka-controller-1:
     image: apache/kafka:latest
@@ -147,6 +186,39 @@ services:
       timeout: 10s
       retries: 3
 
+  debezium-connect:
+    image: debezium/connect:2.7.3.Final
+    container_name: debezium-connect
+    ports:
+      - "8084:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka-broker-1:19092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_connect_configs
+      OFFSET_STORAGE_TOPIC: debezium_connect_offsets
+      STATUS_STORAGE_TOPIC: debezium_connect_statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      # KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      # VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMA_ENABLE: true
+      VALUE_CONVERTER_SCHEMA_ENABLE: true
+      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_CONNECT_PLUGINS_DIR: /kafka/connect/
+    volumes:
+      - ./infra/debezium/confluentinc-kafka-connect-avro-converter-8.0.0/lib:/kafka/connect/libs:z
+    depends_on:
+      - kafka-broker-1
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   # Kafka UI Service
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
