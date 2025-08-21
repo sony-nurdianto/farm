@@ -68,7 +68,7 @@ func (kc *KafkaConsumerPool) getOrCreateProducer(cfg kafka.ConfigMap) (*pooledCo
 	return pooled, nil
 }
 
-func RebalanceCb(c KevConsumer, e kafka.Event) error {
+func RebalanceCbCooperativeSticky(c *kafka.Consumer, e kafka.Event) error {
 	switch ev := e.(type) {
 	case kafka.AssignedPartitions:
 		log.Printf("🟢 Partitions assigned: %d partitions", len(ev.Partitions))
@@ -84,7 +84,7 @@ func RebalanceCb(c KevConsumer, e kafka.Event) error {
 			}
 		}
 
-		if err := c.Assign(ev.Partitions); err != nil {
+		if err := c.IncrementalAssign(ev.Partitions); err != nil {
 			log.Printf("❌ Failed to assign partitions: %v", err)
 			return err
 		}
@@ -106,7 +106,7 @@ func RebalanceCb(c KevConsumer, e kafka.Event) error {
 			}
 		}
 
-		if err := c.Unassign(); err != nil {
+		if err := c.IncrementalUnassign(ev.Partitions); err != nil {
 			log.Printf("❌ Failed to unassign partitions: %v", err)
 			return err
 		}

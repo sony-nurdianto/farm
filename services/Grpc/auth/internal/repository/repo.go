@@ -30,7 +30,7 @@ type AuthRepo interface {
 
 type authRepo struct {
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
-	avro                  avr.AvrSerdeInstance
+	avroSerializer        avr.AvrSerializer
 	db                    pkg.PostgresDatabase
 	createUserstmt        pkg.Stmt
 	getUserByEmailStmt    pkg.Stmt
@@ -64,7 +64,7 @@ func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) err
 func NewAuthRepo(
 	sri schrgs.SchemaRegisteryInstance,
 	pgi pkg.PostgresInstance,
-	avr avr.AvrSerdeInstance,
+	avri avr.AvrSerdeInstance,
 	kv kev.Kafka,
 ) (rp authRepo, _ error) {
 	dbaddrs := fmt.Sprintf(
@@ -115,7 +115,17 @@ func NewAuthRepo(
 	}
 
 	rp.schemaRegisteryClient = srgs.Client()
-	rp.avro = avr
+
+	serializer, err := avri.NewGenericSerializer(
+		rp.schemaRegisteryClient.Client(),
+		avr.ValueSerde,
+		avr.NewSerializerConfig(),
+	)
+	if err != nil {
+		return rp, err
+	}
+
+	rp.avroSerializer = serializer
 
 	pool := kev.NewKafkaProducerPool(kv)
 
@@ -141,27 +151,8 @@ func NewAuthRepo(
 }
 
 func (rp authRepo) CloseRepo() {
-	rp.db.Close()
-	rp.authProducer.Close()
 	rp.schemaRegisteryClient.Client().Close()
+	rp.avroSerializer.Close()
+	rp.authProducer.Close()
+	rp.db.Close()
 }
-
-// func (rp AuthRepo) CreateUser(email, passwordHash string) (user entity.Users, _ error) {
-// 	ctx, cancel := context.WithTimeout(
-// 		context.Background(),
-// 		time.Millisecond*500,
-// 	)
-// 	defer cancel()
-//
-// 	userId := uuid.NewString()
-//
-// 	row := rp.createUserstmt.QueryRowContext(ctx, userId, email, passwordHash)
-//
-// 	err := row.Scan(&user.Id, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
-// 	if err != nil {
-// 		return user, err
-// 	}
-//
-// 	return user, nil
-// }
-//

@@ -7,7 +7,6 @@ import (
 
 	"github.com/sony-nurdianto/farm/auth/internal/constants"
 	"github.com/sony-nurdianto/farm/auth/internal/models"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -35,20 +34,8 @@ func (rp authRepo) publishAvro(
 		attribute.String("user.id", account.Id),
 	)
 
-	span.AddEvent("creating_avro_serializer")
-	serializer, err := rp.avro.NewGenericSerializer(
-		rp.schemaRegisteryClient.Client(),
-		avr.ValueSerde,
-		avr.NewSerializerConfig(),
-	)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "Failed to create avro serializer")
-		return err
-	}
-
 	span.AddEvent("serializing_account_data")
-	accountPayload, err := serializer.Serialize(accountTopic, account)
+	accountPayload, err := rp.avroSerializer.Serialize(accountTopic, account)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Failed to serialize account data")
@@ -57,7 +44,7 @@ func (rp authRepo) publishAvro(
 	span.SetAttributes(attribute.Int("messaging.account_payload_size", len(accountPayload)))
 
 	span.AddEvent("serializing_user_data")
-	userPayload, err := serializer.Serialize(userTopic, user)
+	userPayload, err := rp.avroSerializer.Serialize(userTopic, user)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Failed to serialize user data")

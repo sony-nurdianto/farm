@@ -2,6 +2,8 @@ package kev
 
 import "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
+type KevError = kafka.Error
+
 //go:generate mockgen -source=kafka_def.go -destination=../test/mocks/kev/mock_kafka.go -package=mocks
 type Kafka interface {
 	NewProducer(conf *kafka.ConfigMap) (KevProducer, error)

@@ -1,41 +1,83 @@
 package repo
 
 import (
+	"context"
 	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/redis/go-redis/v9"
+	"github.com/sony-nurdianto/farm/services/Events/auth/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
-type authRepo struct {
+type Repo struct {
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
-	avro                  avr.AvrSerdeInstance
+	avroDeserializer      avr.AvrDeserializer
 	authConsumer          kev.KevConsumer
 	rdb                   *redis.Client
 }
 
 func NewAuthRepo(
 	sri schrgs.SchemaRegisteryInstance,
-	avr avr.AvrSerdeInstance,
+	avri avr.AvrSerdeInstance,
 	kv kev.Kafka,
-	cfg map[kev.ConfigKeyKafka]string,
+	kevcfg map[kev.ConfigKeyKafka]string,
 	rdb *redis.Client,
-) (ap authRepo, _ error) {
+) (ap Repo, _ error) {
 	srgs, err := schrgs.NewSchemaRegistery(os.Getenv("SCHEMAREGISTERYADDR"), sri)
 	if err != nil {
 		return ap, err
 	}
-
 	ap.schemaRegisteryClient = srgs.Client()
-	ap.avro = avr
 
+	dese, err := avri.NewGenericDeserializer(
+		ap.schemaRegisteryClient.Client(),
+		serde.ValueSerde,
+		avr.NewDeserializerConfig(),
+	)
+	if err != nil {
+		return ap, err
+	}
+
+	ap.avroDeserializer = dese
 	pool := kev.NewKafkaConsumerPool(kv)
-	consumer, err := pool.Consumer(cfg)
+	consumer, err := pool.Consumer(kevcfg)
+	if err != nil {
+		return ap, err
+	}
 
 	ap.authConsumer = consumer
+
 	ap.rdb = rdb
 
 	return ap, nil
+}
+
+func (ar Repo) InsertFarmerCache(ctx context.Context, key string, farmer models.Farmer) error {
+	hset := ar.rdb.HSet(ctx, key, farmer)
+	if _, err := hset.Result(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ar Repo) DeserializerFarmer(topic string, payload []byte) (f models.Farmer, _ error) {
+	if err := ar.avroDeserializer.DeserializeInto(topic, payload, &f); err != nil {
+		return f, err
+	}
+
+	return f, nil
+}
+
+func (ar Repo) Consumer() kev.KevConsumer {
+	return ar.authConsumer
+}
+
+func (ar Repo) CloseRepo() {
+	ar.schemaRegisteryClient.Client().Close()
+	ar.avroDeserializer.Close()
+	ar.authConsumer.Close()
+	ar.rdb.Close()
 }

@@ -3,7 +3,6 @@ package avr
 import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avro"
 )
 
 type avroGenericSerde struct {
@@ -17,7 +16,7 @@ func NewAvroGenericSerde(client schemaregistry.Client, avr AvrSerdeInstance) (ag
 		return ags, err
 	}
 
-	ags.Deserialize, err = avr.NewGenericDeserializer(client, serde.ValueSerde, avro.NewDeserializerConfig())
+	ags.Deserialize, err = avr.NewGenericDeserializer(client, serde.ValueSerde, NewDeserializerConfig())
 	if err != nil {
 		return ags, err
 	}

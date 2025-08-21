@@ -19,3 +19,19 @@ func NewSerializerConfig() *SerializerConfig {
 func (c *SerializerConfig) ToAvroConfig() *avro.SerializerConfig {
 	return &c.SerializerConfig
 }
+
+type DeserializerConfig struct {
+	avro.DeserializerConfig
+}
+
+func NewDeserializerConfig() *DeserializerConfig {
+	conf := avro.NewDeserializerConfig()
+
+	return &DeserializerConfig{
+		DeserializerConfig: *conf,
+	}
+}
+
+func (c *DeserializerConfig) ToAvroConfig() *avro.DeserializerConfig {
+	return &c.DeserializerConfig
+}

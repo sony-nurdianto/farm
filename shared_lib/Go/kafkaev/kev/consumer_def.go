@@ -72,7 +72,7 @@ func (c consumer) AssignmentLost() bool {
 }
 
 func (c consumer) Close() error {
-	return c.Close()
+	return c.kcons.Close()
 }
 
 func (c consumer) Commit() ([]kafka.TopicPartition, error) {

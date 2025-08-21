@@ -94,10 +94,6 @@ func main() {
 		),
 	)
 
-	// hs := health.NewServer()
-	// grpc_health_v1.RegisterHealthServer(gs, hs)
-	// hs.SetServingStatus(serviceObsName, grpc_health_v1.HealthCheckResponse_SERVING)
-
 	svc := service.NewAuthServiceServer(uc)
 	pbgen.RegisterAuthServiceServer(gs, svc)
 

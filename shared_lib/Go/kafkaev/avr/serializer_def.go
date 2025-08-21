@@ -5,6 +5,7 @@ import "github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avro"
 //go:generate mockgen -source=serializer_def.go -destination=../test/mocks/avr/mock_serializer.go -package=mocks
 type AvrSerializer interface {
 	Serialize(topic string, msg any) ([]byte, error)
+	Close() error
 }
 
 type avrSerializer struct {
@@ -19,4 +20,8 @@ func NewAvrSerializer(gse *avro.GenericSerializer) *avrSerializer {
 
 func (s *avrSerializer) Serialize(topic string, msg any) ([]byte, error) {
 	return s.genericSerializer.Serialize(topic, msg)
+}
+
+func (s *avrSerializer) Close() error {
+	return s.genericSerializer.Close()
 }

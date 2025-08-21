@@ -34,14 +34,29 @@ services:
     volumes:
       - ./infra/database/redis/farmer/redis-master.conf:/etc/redis/redis.conf:z
       - ./infra/database/redis/farmer/farmer-acl.conf:/data/users.acl:z
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
 
   redis-farmer-slave-1: 
     image: redis/redis-stack-server:7.2.0-v18
     container_name: redis-farmer-slave-1
+    ports:
+      - 6378:6379
     command: ["redis-server", "/etc/redis/redis.conf"]
     volumes:
       - ./infra/database/redis/farmer/redis-slave-1.conf:/etc/redis/redis.conf:z
       - ./infra/database/redis/farmer/farmer-acl.conf:/data/users.acl:z
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
 
   sentinel-farmer:
     image: redis/redis-stack-server:7.2.0-v18
@@ -54,6 +69,13 @@ services:
     depends_on:
       - redis-farmer-master
       - redis-farmer-slave-1
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
 
   redis-insight:
     image: redislabs/redisinsight:latest
@@ -120,6 +142,10 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-broker-1:19092'  # FIXED: Correct port
       SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: PLAINTEXT
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_DEBUG: 'true'
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: backward
+      SCHEMA_REGISTRY_SCHEMA_PROVIDERS: 'io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider'
     depends_on:
       - kafka-broker-1
 
@@ -219,6 +245,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+
   # Kafka UI Service
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -238,6 +266,10 @@ services:
       # Kafka Connect integration
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+      
+      # Debeziym CDC integration
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: debezium-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://debezium-connect:8083
       
       # UI Configuration
       AUTH_TYPE: "DISABLED"  # Disable authentication for development
@@ -322,6 +354,17 @@ services:
       timeout: 10s
       retries: 3
 
+  events-auth-farmer:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/events/auth_farmer_ev_lis.dockerfile
+    depends_on:
+      redis-farmer-master:
+        condition: service_healthy
+      redis-farmer-slave-1:  
+        condition: service_healthy
+      sentinel-farmer:
+        condition: service_healthy
 
 # Service
   grpc-auth-service:
