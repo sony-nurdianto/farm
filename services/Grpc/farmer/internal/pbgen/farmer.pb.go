@@ -333,10 +333,10 @@ const file_farmer_v1_farmer_proto_rawDesc = "" +
 	"\x06_emailB\b\n" +
 	"\x06_phone\"F\n" +
 	"\x1bUpdateFarmerProfileResponse\x12'\n" +
-	"\x05value\x18\x01 \x01(\v2\x11.farmer.v1.FarmerR\x05value2\xbd\x01\n" +
+	"\x05value\x18\x01 \x01(\v2\x11.farmer.v1.FarmerR\x05value2\xc9\x01\n" +
 	"\rFarmerService\x12R\n" +
-	"\rFarmerProfile\x12\x1f.farmer.v1.FarmerProfileRequest\x1a .farmer.v1.FarmerProfileResponse\x12X\n" +
-	"\x13UpdateFarmerProfile\x12\x1f.farmer.v1.FarmerProfileRequest\x1a .farmer.v1.FarmerProfileResponseb\x06proto3"
+	"\rFarmerProfile\x12\x1f.farmer.v1.FarmerProfileRequest\x1a .farmer.v1.FarmerProfileResponse\x12d\n" +
+	"\x13UpdateFarmerProfile\x12%.farmer.v1.UpdateFarmerProfileRequest\x1a&.farmer.v1.UpdateFarmerProfileResponseb\x06proto3"
 
 var (
 	file_farmer_v1_farmer_proto_rawDescOnce sync.Once
@@ -365,9 +365,9 @@ var file_farmer_v1_farmer_proto_depIdxs = []int32{
 	0, // 2: farmer.v1.FarmerProfileResponse.farmer:type_name -> farmer.v1.Farmer
 	0, // 3: farmer.v1.UpdateFarmerProfileResponse.value:type_name -> farmer.v1.Farmer
 	1, // 4: farmer.v1.FarmerService.FarmerProfile:input_type -> farmer.v1.FarmerProfileRequest
-	1, // 5: farmer.v1.FarmerService.UpdateFarmerProfile:input_type -> farmer.v1.FarmerProfileRequest
+	3, // 5: farmer.v1.FarmerService.UpdateFarmerProfile:input_type -> farmer.v1.UpdateFarmerProfileRequest
 	2, // 6: farmer.v1.FarmerService.FarmerProfile:output_type -> farmer.v1.FarmerProfileResponse
-	2, // 7: farmer.v1.FarmerService.UpdateFarmerProfile:output_type -> farmer.v1.FarmerProfileResponse
+	4, // 7: farmer.v1.FarmerService.UpdateFarmerProfile:output_type -> farmer.v1.UpdateFarmerProfileResponse
 	6, // [6:8] is the sub-list for method output_type
 	4, // [4:6] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name

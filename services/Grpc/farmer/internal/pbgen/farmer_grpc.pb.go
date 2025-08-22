@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FarmerServiceClient interface {
 	FarmerProfile(ctx context.Context, in *FarmerProfileRequest, opts ...grpc.CallOption) (*FarmerProfileResponse, error)
-	UpdateFarmerProfile(ctx context.Context, in *FarmerProfileRequest, opts ...grpc.CallOption) (*FarmerProfileResponse, error)
+	UpdateFarmerProfile(ctx context.Context, in *UpdateFarmerProfileRequest, opts ...grpc.CallOption) (*UpdateFarmerProfileResponse, error)
 }
 
 type farmerServiceClient struct {
@@ -49,9 +49,9 @@ func (c *farmerServiceClient) FarmerProfile(ctx context.Context, in *FarmerProfi
 	return out, nil
 }
 
-func (c *farmerServiceClient) UpdateFarmerProfile(ctx context.Context, in *FarmerProfileRequest, opts ...grpc.CallOption) (*FarmerProfileResponse, error) {
+func (c *farmerServiceClient) UpdateFarmerProfile(ctx context.Context, in *UpdateFarmerProfileRequest, opts ...grpc.CallOption) (*UpdateFarmerProfileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(FarmerProfileResponse)
+	out := new(UpdateFarmerProfileResponse)
 	err := c.cc.Invoke(ctx, FarmerService_UpdateFarmerProfile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (c *farmerServiceClient) UpdateFarmerProfile(ctx context.Context, in *Farme
 // for forward compatibility.
 type FarmerServiceServer interface {
 	FarmerProfile(context.Context, *FarmerProfileRequest) (*FarmerProfileResponse, error)
-	UpdateFarmerProfile(context.Context, *FarmerProfileRequest) (*FarmerProfileResponse, error)
+	UpdateFarmerProfile(context.Context, *UpdateFarmerProfileRequest) (*UpdateFarmerProfileResponse, error)
 	mustEmbedUnimplementedFarmerServiceServer()
 }
 
@@ -78,7 +78,7 @@ type UnimplementedFarmerServiceServer struct{}
 func (UnimplementedFarmerServiceServer) FarmerProfile(context.Context, *FarmerProfileRequest) (*FarmerProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FarmerProfile not implemented")
 }
-func (UnimplementedFarmerServiceServer) UpdateFarmerProfile(context.Context, *FarmerProfileRequest) (*FarmerProfileResponse, error) {
+func (UnimplementedFarmerServiceServer) UpdateFarmerProfile(context.Context, *UpdateFarmerProfileRequest) (*UpdateFarmerProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateFarmerProfile not implemented")
 }
 func (UnimplementedFarmerServiceServer) mustEmbedUnimplementedFarmerServiceServer() {}
@@ -121,7 +121,7 @@ func _FarmerService_FarmerProfile_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _FarmerService_UpdateFarmerProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FarmerProfileRequest)
+	in := new(UpdateFarmerProfileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func _FarmerService_UpdateFarmerProfile_Handler(srv interface{}, ctx context.Con
 		FullMethod: FarmerService_UpdateFarmerProfile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FarmerServiceServer).UpdateFarmerProfile(ctx, req.(*FarmerProfileRequest))
+		return srv.(FarmerServiceServer).UpdateFarmerProfile(ctx, req.(*UpdateFarmerProfileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

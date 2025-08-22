@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package farmer.v1;
 
-
 import "google/protobuf/timestamp.proto";
 
 message Farmer {
@@ -10,7 +9,7 @@ message Farmer {
   string full_name = 2;
   string email = 3;
   string phone = 4;
-  google.protobuf.Timestamp registered_at = 5; 
+  google.protobuf.Timestamp registered_at = 5;
   bool verified = 6;
   google.protobuf.Timestamp updated_at = 7;
 }
@@ -34,7 +33,6 @@ message UpdateFarmerProfileResponse {
 }
 
 service FarmerService {
- rpc FarmerProfile(FarmerProfileRequest) returns (FarmerProfileResponse);
- rpc UpdateFarmerProfile(FarmerProfileRequest) returns (FarmerProfileResponse);
+  rpc FarmerProfile(FarmerProfileRequest) returns (FarmerProfileResponse);
+  rpc UpdateFarmerProfile(UpdateFarmerProfileRequest) returns (UpdateFarmerProfileResponse);
 }
-
