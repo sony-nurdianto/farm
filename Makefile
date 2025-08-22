@@ -6,3 +6,6 @@ compose_test_down:
 
 gen_auth_proto:	
 	 cd proto && buf generate --template ./auth/buf.gen.yaml --path ./auth/v1/auth.proto
+
+gen_farmer_proto:	
+	 cd proto && buf generate --template ./farmer/buf.gen.yaml --path ./farmer/v1/farmer.proto

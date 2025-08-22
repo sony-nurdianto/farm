@@ -1,0 +1,26 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ../services/Grpc/farmer/internal/pbgen
+    opt: 
+      - Mfarmer/v1/farmer.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
+  - remote: buf.build/grpc/go
+    out: ../services/Grpc/farmer/internal/pbgen
+    opt: 
+      - Mfarmer/v1/farmer.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
+  - remote: buf.build/protocolbuffers/go
+    out: ../services/Rest/farm_gateway/internal/pbgen
+    opt:  
+      - Mfarmer/v1/farmer.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
+  - remote: buf.build/grpc/go
+    out: ../services/Rest/farm_gateway/internal/pbgen
+    opt: 
+      - Mfarmer/v1/farmer.proto=.;pbgen
+    include_imports: true
+    include_wkt: false
