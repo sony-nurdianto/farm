@@ -29,7 +29,7 @@ type AuthRepo interface {
 }
 
 type authRepo struct {
-	schemaRegisteryClient schrgs.SchemaRegisteryClient
+	schemaRegisteryClient schrgs.SchrgsClient
 	avroSerializer        avr.AvrSerializer
 	db                    pkg.PostgresDatabase
 	createUserstmt        pkg.Stmt
@@ -54,7 +54,7 @@ func initTransactionWithRetry(ctx context.Context, producer kev.KevProducer) err
 		if err == nil {
 			return nil
 		}
-		time.Sleep(time.Second * 2) // atau exponential backoff bisa dipakai
+		time.Sleep(time.Second * 2)
 
 		counter++
 	}
@@ -97,6 +97,29 @@ func NewAuthRepo(
 
 	rp.getUserByEmailStmt = gue
 
+	srgs, err := sri.NewClient(
+		sri.NewConfig(
+			os.Getenv("SCHEMAREGISTERYADDR"),
+		),
+	)
+	if err != nil {
+		return rp, err
+	}
+
+	rp.schemaRegisteryClient = srgs
+
+	serializer, err := avri.NewGenericSerializer(
+		rp.schemaRegisteryClient,
+		avr.ValueSerde,
+		avr.NewSerializerConfig(),
+	)
+	if err != nil {
+		return rp, err
+	}
+
+	rp.avroSerializer = serializer
+
+	pool := kev.NewKafkaProducerPool(kv)
 	cfg := map[kev.ConfigKeyKafka]string{
 		kev.BOOTSTRAP_SERVERS:  os.Getenv("KAKFKABROKER"),
 		kev.ACKS:               "all",
@@ -108,26 +131,6 @@ func NewAuthRepo(
 		kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
 		kev.TRANSACTIONAL_ID:                      TRANSACTIONAL_ID,
 	}
-
-	srgs, err := schrgs.NewSchemaRegistery(os.Getenv("SCHEMAREGISTERYADDR"), sri)
-	if err != nil {
-		return rp, err
-	}
-
-	rp.schemaRegisteryClient = srgs.Client()
-
-	serializer, err := avri.NewGenericSerializer(
-		rp.schemaRegisteryClient.Client(),
-		avr.ValueSerde,
-		avr.NewSerializerConfig(),
-	)
-	if err != nil {
-		return rp, err
-	}
-
-	rp.avroSerializer = serializer
-
-	pool := kev.NewKafkaProducerPool(kv)
 
 	producer, err := pool.Producer(cfg)
 	if err != nil {
@@ -151,7 +154,7 @@ func NewAuthRepo(
 }
 
 func (rp authRepo) CloseRepo() {
-	rp.schemaRegisteryClient.Client().Close()
+	rp.schemaRegisteryClient.Close()
 	rp.avroSerializer.Close()
 	rp.authProducer.Close()
 	rp.db.Close()

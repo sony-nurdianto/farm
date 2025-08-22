@@ -2,6 +2,8 @@ package schrgs
 
 import "github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 
+type SchrgsClient = schemaregistry.Client
+
 //go:generate mockgen -source=schemargs_client_def.go -destination=../test/mocks/schrgs/mock_schemargs_client.go -package=mocks
 //go:generate mockgen -destination=../test/mocks/schrgs/mock_confluent_client.go -package=mocks github.com/confluentinc/confluent-kafka-go/v2/schemaregistry Client
 type SchemaRegisteryClient interface {
