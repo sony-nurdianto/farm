@@ -354,10 +354,10 @@ services:
       timeout: 10s
       retries: 3
 
-  events-auth-farmer:
+  events-farmer-user-mutations:
     build:
       context: .
-      dockerfile: ./scripts/dockerfile/services/events/auth_farmer_ev_lis.dockerfile
+      dockerfile: ./scripts/dockerfile/services/events/users_mutation_service.dockerfile
     depends_on:
       redis-farmer-master:
         condition: service_healthy
