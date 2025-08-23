@@ -15,7 +15,7 @@ func multiplex(
 	for v := range c {
 		select {
 		case <-ctx.Done():
-			return // berhenti jika sudah ada sinyal done
+			return
 		case rcv <- v:
 		}
 	}

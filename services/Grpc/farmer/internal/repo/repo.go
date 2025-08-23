@@ -173,13 +173,13 @@ func NewFarmerRepo(
 	defer done()
 
 	src := initSchemaRegistery(opsCtx, sri)
-	ops := []<-chan any{
+	chs := []<-chan any{
 		schemaAndSerializerPipe(opsCtx, avri, src),
 		initFarmerProducer(opsCtx, kv),
 		initRedisDatabae(opsCtx, rdi),
 	}
 
-	for v := range concurent.FanIn(opsCtx, ops...) {
+	for v := range concurent.FanIn(opsCtx, chs...) {
 		switch res := v.(type) {
 		case concurent.Result[schemaRegistryPair]:
 			if res.Error != nil {

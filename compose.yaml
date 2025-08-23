@@ -358,6 +358,8 @@ services:
     build:
       context: .
       dockerfile: ./scripts/dockerfile/services/events/users_mutation_service.dockerfile
+    env_file:
+      - ./services/Events/farmer/.env
     depends_on:
       redis-farmer-master:
         condition: service_healthy

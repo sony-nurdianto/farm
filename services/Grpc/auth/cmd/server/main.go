@@ -59,6 +59,7 @@ func main() {
 	defer lp.Shutdown(ctx)
 
 	repo, err := repository.NewAuthRepo(
+		ctx,
 		schrgs.NewRegistery(),
 		pkg.NewPostgresInstance(),
 		avr.NewAvrSerdeInstance(),

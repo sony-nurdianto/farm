@@ -38,7 +38,7 @@ func redisConnection(
 		trace.WithAttributes(
 			attribute.String("component", "redis"),
 			attribute.String("operation", "connect"),
-			attribute.String("master_name", os.Getenv("FARMER_REDIS_MASTER_NAME")),
+			attribute.String("master_name", os.Getenv("FARMERREDISMASTERNAME")),
 		),
 	)
 
@@ -50,10 +50,10 @@ func redisConnection(
 		attemptSpan.SetAttributes(attribute.Int("retry.attempt", count))
 
 		rdb := redis.NewFailoverClient(&redis.FailoverOptions{
-			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
-			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR")},
-			Username:      os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
-			Password:      os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
+			MasterName:    os.Getenv("FARMERREDISMASTERNAME"),
+			SentinelAddrs: []string{os.Getenv("SENTINELFARMERREDISADDR")},
+			Username:      os.Getenv("FARMERREDISMASTERUSERNAME"),
+			Password:      os.Getenv("FARMERREDISMASTERPASSWORD"),
 			DB:            0,
 		})
 
@@ -94,8 +94,8 @@ func redisConnection(
 
 func main() {
 	startTime := time.Now()
-	godotenv.Load()
 
+	godotenv.Load()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
