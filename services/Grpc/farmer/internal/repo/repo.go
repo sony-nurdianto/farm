@@ -3,15 +3,23 @@ package repo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/concurent"
+	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/models"
+
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
+
+type FarmerRepo interface {
+	GetUsersByIDFromCache(ctx context.Context, id string) (farmer models.Users, _ error)
+	UpdateUserAsync(ctx context.Context, users *models.UpdateUsers) error
+}
 
 type farmerRepo struct {
 	sriClient      schrgs.SchrgsClient
@@ -73,7 +81,7 @@ func schemaAndSerializerPipe(
 
 		schRes, ok := client.(concurent.Result[schrgs.SchrgsClient])
 		if !ok {
-			res.Error = errors.New("Wrong type data")
+			res.Error = errors.New("wrong type data")
 			send(ctx, out, res)
 			return
 		}
@@ -141,7 +149,7 @@ func initRedisDatabae(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 		defer close(out)
 		var res concurent.Result[redis.RedisClient]
 
-		rdb := redis.NewRedisDb(rdi)
+		rdb := redis.NewRedisDB(rdi)
 		rdc, err := rdb.InitRedisClient(context.Background(), &redis.FailoverOptions{
 			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
 			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR")},
@@ -201,4 +209,18 @@ func NewFarmerRepo(
 	}
 
 	return fr, nil
+}
+
+func (fr farmerRepo) GetUsersByIDFromCache(ctx context.Context, id string) (user models.Users, _ error) {
+	hkey := fmt.Sprintf("users:%s", id)
+
+	err := fr.farmerCache.HGetAll(ctx, hkey).Scan(&user)
+	if err != nil {
+		return user, nil
+	}
+	if user == (models.Users{}) {
+		return user, errors.New("user is not existed")
+	}
+	return user, nil
+
 }

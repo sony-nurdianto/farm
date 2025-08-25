@@ -55,3 +55,33 @@ func (uci unaryClientInterceptor) UnaryAuthClientIntercept(
 	log.Println("gRPC method:", method, "response:", res, "error:", err)
 	return err
 }
+
+func (uci unaryClientInterceptor) UnaryFarmerClientInterceptor(
+
+	ctx context.Context,
+	method string,
+	req, res any,
+	cc *grpc.ClientConn,
+	invoker grpc.UnaryInvoker,
+	opts ...grpc.CallOption,
+) error {
+	tracer := uci.traceProvider.Tracer("farmer-service-client")
+	ctx, span := tracer.Start(ctx, method)
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("rpc.system", "grpc"),
+		attribute.String("rpc.method", method),
+	)
+
+	err := invoker(ctx, method, req, res, cc, opts...)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+
+	span.SetAttributes(attribute.String("rpc.status_code", status.Code(err).String()))
+
+	log.Println("gRPC method:", method, "response:", res, "error:", err)
+	return err
+}

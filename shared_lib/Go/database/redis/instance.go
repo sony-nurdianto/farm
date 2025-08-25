@@ -12,8 +12,6 @@ func NewRedisInstance() rdi {
 	return rdi{}
 }
 
-func (rdi) NewFailoverClient(failoverOpt *FailoverOptions) RedisClient {
-	rdc := redis.NewFailoverClient(failoverOpt)
-
-	return NewRedisClient(rdc)
+func (rdi) NewFailoverClient(failoverOpt *FailoverOptions) *Client {
+	return redis.NewFailoverClient(failoverOpt)
 }

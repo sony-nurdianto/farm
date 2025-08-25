@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,6 +34,9 @@ func main() {
 		os.Getenv("OTELCOLLECTORADDR"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	obs := observability.NewObservability(
 		serviceObsName,
@@ -48,22 +52,25 @@ func main() {
 	defer mp.Shutdown(ctx)
 	defer lp.Shutdown(ctx)
 
-	authCI := api.NewUnaryClientInterceptor(tp)
+	statHandler := grpc.WithStatsHandler(
+		otelgrpc.NewClientHandler(
+			otelgrpc.WithTracerProvider(tp),
+			otelgrpc.WithMeterProvider(mp),
+			otelgrpc.WithPropagators(otel.GetTextMapPropagator()),
+		),
+	)
+
+	cred := grpc.WithTransportCredentials(
+		insecure.NewCredentials(),
+	)
+
+	clientIntercpt := api.NewUnaryClientInterceptor(tp)
 
 	conn, err := grpc.NewClient(
 		os.Getenv("GRPC_AUTH_SERVICE"),
-		grpc.WithTransportCredentials(
-			insecure.NewCredentials(),
-		),
-		grpc.WithStatsHandler(
-			otelgrpc.NewClientHandler(
-				otelgrpc.WithTracerProvider(tp),
-				otelgrpc.WithMeterProvider(mp),
-				otelgrpc.WithPropagators(otel.GetTextMapPropagator()),
-			),
-		),
-
-		grpc.WithUnaryInterceptor(authCI.UnaryAuthClientIntercept),
+		cred,
+		statHandler,
+		grpc.WithUnaryInterceptor(clientIntercpt.UnaryAuthClientIntercept),
 	)
 	if err != nil {
 		log.Fatalln(err)
@@ -75,12 +82,27 @@ func main() {
 		pbgen.NewAuthServiceClient(conn),
 	)
 
+	fConn, err := grpc.NewClient(
+		os.Getenv("GRPC_FARMER_SERVICE"),
+		cred,
+		statHandler,
+		grpc.WithUnaryInterceptor(clientIntercpt.UnaryFarmerClientInterceptor),
+	)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer fConn.Close()
+
+	farmerSvc := api.NewGrpcFarmerService(
+		pbgen.NewFarmerServiceClient(fConn),
+	)
+
 	obsm := middleware.NewObservabilityMiddleware(tp, mp)
 
 	app := fiber.New()
 	app.Use(obsm.Trace)
 	app.Use(obsm.Metric)
-	appRoutes := routes.NewRoutes(app, authSvc)
+	appRoutes := routes.NewRoutes(app, authSvc, farmerSvc)
 	appRoutes.Build()
 
 	go func() {
@@ -89,6 +111,8 @@ func main() {
 		}
 	}()
 
+	var once sync.Once
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -96,6 +120,7 @@ func main() {
 			fmt.Println("Application Quit.")
 			return
 		default:
+			once.Do(func() { fmt.Println("Server Running at 0.0.0.0:3000") })
 		}
 	}
 }

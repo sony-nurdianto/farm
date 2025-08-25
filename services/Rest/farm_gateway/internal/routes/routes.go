@@ -6,22 +6,29 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/authh"
+	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/farmerh"
 )
 
 type Routes struct {
-	app     *fiber.App
-	grpcSvc api.GrpcAuthService
+	app       *fiber.App
+	authSvc   api.GrpcAuthService
+	farmerSvc api.GrpcFarmerService
 }
 
-func NewRoutes(app *fiber.App, grpcSvc api.GrpcAuthService) *Routes {
+func NewRoutes(
+	app *fiber.App,
+	authSvc api.GrpcAuthService,
+	farmerSvc api.GrpcFarmerService,
+) *Routes {
 	return &Routes{
 		app,
-		grpcSvc,
+		authSvc,
+		farmerSvc,
 	}
 }
 
 func (r *Routes) Build() {
-	authHandler := authh.NewAuthHandler(r.grpcSvc)
+	authHandler := authh.NewAuthHandler(r.authSvc)
 
 	signupHandler := NewRouterHandlers("/signup", http.MethodPost, authHandler.SignUp)
 	signInHandler := NewRouterHandlers("/signin", http.MethodPost, authHandler.SignIn)
@@ -32,10 +39,14 @@ func (r *Routes) Build() {
 
 	r.app.Route("/auth", authRouter.Builder)
 
-	r.app.Route("/index", func(router fiber.Router) {
-		router.Get("", authHandler.AuthTokenBaseValidate, func(c *fiber.Ctx) error {
-			userId := c.Locals("user_subject")
-			return c.SendString(userId.(string))
-		})
-	})
+	farmerHandler := farmerh.NewFarmerHandler(r.farmerSvc)
+	farmerProfileHandler := NewRouterHandlers("/profile", http.MethodPost, authHandler.AuthTokenBaseValidate, farmerHandler.GetFarmerProfile)
+	updateProfileHandler := NewRouterHandlers("/update_profile", http.MethodPatch, authHandler.AuthTokenBaseValidate, farmerHandler.UpdateUsers)
+	farmerRouter := NewRouter(
+		farmerProfileHandler,
+		updateProfileHandler,
+	)
+
+	r.app.Route("/farmer", farmerRouter.Builder)
+
 }

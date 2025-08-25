@@ -11,7 +11,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/interceptor"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/pbgen"
+	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/repo"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/service"
+	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/usecase"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -61,8 +67,22 @@ func main() {
 		),
 	)
 
+	farmerRepo, err := repo.NewFarmerRepo(
+		ctx,
+		avr.NewAvrSerdeInstance(),
+		kev.NewKafka(),
+		schrgs.NewRegistery(),
+		redis.NewRedisInstance(),
+	)
+
+	farmerUseCase := usecase.NewFarmerUseCase(farmerRepo)
+
+	if err != nil {
+		logger.Fatal(ctx, err.Error(), err)
+	}
+
 	svc := service.NewFarmerServiceServer(
-		tp.Tracer(serviceObsName), mp.Meter(serviceObsName),
+		tp.Tracer(serviceObsName), mp.Meter(serviceObsName), farmerUseCase,
 	)
 	pbgen.RegisterFarmerServiceServer(svr, svc)
 

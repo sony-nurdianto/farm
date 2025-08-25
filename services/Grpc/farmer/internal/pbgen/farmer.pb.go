@@ -204,9 +204,10 @@ func (x *FarmerProfileResponse) GetFarmer() *Farmer {
 
 type UpdateFarmerProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FullName      *string                `protobuf:"bytes,1,opt,name=full_name,json=fullName,proto3,oneof" json:"full_name,omitempty"`
-	Email         *string                `protobuf:"bytes,2,opt,name=email,proto3,oneof" json:"email,omitempty"`
-	Phone         *string                `protobuf:"bytes,3,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FullName      *string                `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3,oneof" json:"full_name,omitempty"`
+	Email         *string                `protobuf:"bytes,3,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Phone         *string                `protobuf:"bytes,4,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -241,6 +242,13 @@ func (*UpdateFarmerProfileRequest) Descriptor() ([]byte, []int) {
 	return file_farmer_v1_farmer_proto_rawDescGZIP(), []int{3}
 }
 
+func (x *UpdateFarmerProfileRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 func (x *UpdateFarmerProfileRequest) GetFullName() string {
 	if x != nil && x.FullName != nil {
 		return *x.FullName
@@ -264,7 +272,8 @@ func (x *UpdateFarmerProfileRequest) GetPhone() string {
 
 type UpdateFarmerProfileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Value         *Farmer                `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -299,11 +308,18 @@ func (*UpdateFarmerProfileResponse) Descriptor() ([]byte, []int) {
 	return file_farmer_v1_farmer_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UpdateFarmerProfileResponse) GetValue() *Farmer {
+func (x *UpdateFarmerProfileResponse) GetStatus() string {
 	if x != nil {
-		return x.Value
+		return x.Status
 	}
-	return nil
+	return ""
+}
+
+func (x *UpdateFarmerProfileResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
 }
 
 var File_farmer_v1_farmer_proto protoreflect.FileDescriptor
@@ -323,17 +339,19 @@ const file_farmer_v1_farmer_proto_rawDesc = "" +
 	"\x14FarmerProfileRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"B\n" +
 	"\x15FarmerProfileResponse\x12)\n" +
-	"\x06farmer\x18\x01 \x01(\v2\x11.farmer.v1.FarmerR\x06farmer\"\x96\x01\n" +
-	"\x1aUpdateFarmerProfileRequest\x12 \n" +
-	"\tfull_name\x18\x01 \x01(\tH\x00R\bfullName\x88\x01\x01\x12\x19\n" +
-	"\x05email\x18\x02 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x19\n" +
-	"\x05phone\x18\x03 \x01(\tH\x02R\x05phone\x88\x01\x01B\f\n" +
+	"\x06farmer\x18\x01 \x01(\v2\x11.farmer.v1.FarmerR\x06farmer\"\xa6\x01\n" +
+	"\x1aUpdateFarmerProfileRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12 \n" +
+	"\tfull_name\x18\x02 \x01(\tH\x00R\bfullName\x88\x01\x01\x12\x19\n" +
+	"\x05email\x18\x03 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x19\n" +
+	"\x05phone\x18\x04 \x01(\tH\x02R\x05phone\x88\x01\x01B\f\n" +
 	"\n" +
 	"_full_nameB\b\n" +
 	"\x06_emailB\b\n" +
-	"\x06_phone\"F\n" +
-	"\x1bUpdateFarmerProfileResponse\x12'\n" +
-	"\x05value\x18\x01 \x01(\v2\x11.farmer.v1.FarmerR\x05value2\xc9\x01\n" +
+	"\x06_phone\"G\n" +
+	"\x1bUpdateFarmerProfileResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg2\xc9\x01\n" +
 	"\rFarmerService\x12R\n" +
 	"\rFarmerProfile\x12\x1f.farmer.v1.FarmerProfileRequest\x1a .farmer.v1.FarmerProfileResponse\x12d\n" +
 	"\x13UpdateFarmerProfile\x12%.farmer.v1.UpdateFarmerProfileRequest\x1a&.farmer.v1.UpdateFarmerProfileResponseb\x06proto3"
@@ -363,16 +381,15 @@ var file_farmer_v1_farmer_proto_depIdxs = []int32{
 	5, // 0: farmer.v1.Farmer.registered_at:type_name -> google.protobuf.Timestamp
 	5, // 1: farmer.v1.Farmer.updated_at:type_name -> google.protobuf.Timestamp
 	0, // 2: farmer.v1.FarmerProfileResponse.farmer:type_name -> farmer.v1.Farmer
-	0, // 3: farmer.v1.UpdateFarmerProfileResponse.value:type_name -> farmer.v1.Farmer
-	1, // 4: farmer.v1.FarmerService.FarmerProfile:input_type -> farmer.v1.FarmerProfileRequest
-	3, // 5: farmer.v1.FarmerService.UpdateFarmerProfile:input_type -> farmer.v1.UpdateFarmerProfileRequest
-	2, // 6: farmer.v1.FarmerService.FarmerProfile:output_type -> farmer.v1.FarmerProfileResponse
-	4, // 7: farmer.v1.FarmerService.UpdateFarmerProfile:output_type -> farmer.v1.UpdateFarmerProfileResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 3: farmer.v1.FarmerService.FarmerProfile:input_type -> farmer.v1.FarmerProfileRequest
+	3, // 4: farmer.v1.FarmerService.UpdateFarmerProfile:input_type -> farmer.v1.UpdateFarmerProfileRequest
+	2, // 5: farmer.v1.FarmerService.FarmerProfile:output_type -> farmer.v1.FarmerProfileResponse
+	4, // 6: farmer.v1.FarmerService.UpdateFarmerProfile:output_type -> farmer.v1.UpdateFarmerProfileResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_farmer_v1_farmer_proto_init() }

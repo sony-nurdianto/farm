@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -38,7 +39,7 @@ func redisConnection(
 		trace.WithAttributes(
 			attribute.String("component", "redis"),
 			attribute.String("operation", "connect"),
-			attribute.String("master_name", os.Getenv("FARMERREDISMASTERNAME")),
+			attribute.String("master_name", os.Getenv("FARMER_REDIS_MASTER_NAME")),
 		),
 	)
 
@@ -50,10 +51,10 @@ func redisConnection(
 		attemptSpan.SetAttributes(attribute.Int("retry.attempt", count))
 
 		rdb := redis.NewFailoverClient(&redis.FailoverOptions{
-			MasterName:    os.Getenv("FARMERREDISMASTERNAME"),
-			SentinelAddrs: []string{os.Getenv("SENTINELFARMERREDISADDR")},
-			Username:      os.Getenv("FARMERREDISMASTERUSERNAME"),
-			Password:      os.Getenv("FARMERREDISMASTERPASSWORD"),
+			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
+			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR")},
+			Username:      os.Getenv("FARMER_REDIS_MASTER_USERNAME"),
+			Password:      os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
 			DB:            0,
 		})
 
@@ -105,6 +106,9 @@ func main() {
 		os.Getenv("OTELCOLLECTORADDR"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	obsProvider := observability.NewObservability(
 		serviceObsName,
@@ -204,7 +208,6 @@ func main() {
 		}
 	}()
 
-	fmt.Println("event service daemon run")
 	observeMeter.StartupDuration.Record(
 		ctx,
 		time.Since(startTime).Seconds(),
@@ -217,6 +220,8 @@ func main() {
 	defer ticker.Stop()
 
 	uptimeStart := time.Now()
+
+	var once sync.Once
 
 	for {
 		select {
@@ -235,6 +240,7 @@ func main() {
 			)
 
 		default:
+			once.Do(func() { fmt.Println("event service daemon run") })
 		}
 	}
 }

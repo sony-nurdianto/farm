@@ -292,7 +292,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - ./infra/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/observability/config/prometheus.yml:/etc/prometheus/prometheus.yml:z
     ports:
       - 9090:9090
     healthcheck:
@@ -339,7 +339,7 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib
     volumes:
-      - ./infra/observability/config/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
+      - ./infra/observability/config/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:z
     ports:
       - 1888:1888 # pprof extension
       - 8888:8888 # Prometheus metrics exposed by the Collector
@@ -376,14 +376,30 @@ services:
     env_file:
       - ./services/Grpc/auth/.env
     depends_on:
+      events-farmer-user-mutations:
+        condition: service_started
       postgres:
         condition: service_healthy
+
     # healthcheck:
     #   test: ["CMD", "grpc_health_probe", "-addr=:50051", "-service=auth-service"]
     #   interval: 10s
     #   timeout: 5s
     #   retries: 5
-  
+
+  grpc-farmer-service:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/grpc/farmer_service.dockerfile
+    env_file:
+      - ./services/Grpc/farmer/.env
+    depends_on:
+      events-farmer-user-mutations:
+        condition: service_started
+      postgres:
+        condition: service_healthy  
+
+        
   rest-farm-gateway:
     build:
       context: .
@@ -394,7 +410,7 @@ services:
       - 8000:3000
     depends_on:
       - grpc-auth-service
-
+      - grpc-farmer-service
     healthcheck:
       test: ["CMD", "nc", "-z", "rest-farm-gateway", "3000"]
       interval: 10s

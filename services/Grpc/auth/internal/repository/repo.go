@@ -59,28 +59,28 @@ func send(
 	}
 }
 
-type repoPgDb struct {
+type repoPgDB struct {
 	db                 pkg.PostgresDatabase
 	getUserByEmailStmt pkg.Stmt
 }
 
-func initPostgresDb(ctx context.Context, pgi pkg.PostgresInstance) <-chan any {
+func initPostgresDB(ctx context.Context, pgi pkg.PostgresInstance) <-chan any {
 	out := make(chan any, 1)
 
 	go func() {
 		defer close(out)
 		var res concurrent.Result[pkg.PostgresDatabase]
 
-		dbaddrs := fmt.Sprintf(
+		dbAddrs := fmt.Sprintf(
 			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 			os.Getenv("DBUSER"),
 			os.Getenv("DBPASS"),
 			os.Getenv("DBHOST"),
 			os.Getenv("DBPORT"),
-			os.Getenv("DBAUTH"),
+			os.Getenv("DBNAME"),
 		)
 
-		db, err := pkg.OpenPostgres(dbaddrs, pgi)
+		db, err := pkg.OpenPostgres(dbAddrs, pgi)
 		if err != nil {
 			res.Error = err
 			send(ctx, out, res)
@@ -94,11 +94,11 @@ func initPostgresDb(ctx context.Context, pgi pkg.PostgresInstance) <-chan any {
 	return out
 }
 
-func prepareDb(ctx context.Context, dbChan <-chan any) <-chan any {
+func prepareDB(ctx context.Context, dbChan <-chan any) <-chan any {
 	out := make(chan any, 1)
 	go func() {
 		defer close(out)
-		var res concurrent.Result[repoPgDb]
+		var res concurrent.Result[repoPgDB]
 
 		dbcv, ok := <-dbChan
 		if !ok {
@@ -107,7 +107,7 @@ func prepareDb(ctx context.Context, dbChan <-chan any) <-chan any {
 
 		dbres, ok := dbcv.(concurrent.Result[pkg.PostgresDatabase])
 		if !ok {
-			res.Error = errors.New("Wrong type data")
+			res.Error = errors.New("wrong type data")
 			send(ctx, out, res)
 			return
 		}
@@ -172,7 +172,7 @@ func schemaNSerializerPipe(ctx context.Context, avri avr.AvrSerdeInstance, clien
 
 		schRes, ok := client.(concurrent.Result[schrgs.SchrgsClient])
 		if !ok {
-			res.Error = errors.New("Wrong type data")
+			res.Error = errors.New("wrong type data")
 			send(ctx, out, res)
 			return
 		}
@@ -267,18 +267,18 @@ func NewAuthRepo(
 	opsCtx, done := context.WithTimeout(ctx, time.Second*30)
 	defer done()
 
-	dbch := initPostgresDb(opsCtx, pgi)
+	dbch := initPostgresDB(opsCtx, pgi)
 	src := initSchemaRegistery(opsCtx, sri)
 
 	chs := []<-chan any{
-		prepareDb(opsCtx, dbch),
+		prepareDB(opsCtx, dbch),
 		schemaNSerializerPipe(opsCtx, avri, src),
 		initAuthProducer(opsCtx, kv),
 	}
 
 	for v := range concurrent.FanIn(opsCtx, chs...) {
 		switch res := v.(type) {
-		case concurrent.Result[repoPgDb]:
+		case concurrent.Result[repoPgDB]:
 			if res.Error != nil {
 				return rp, res.Error
 			}

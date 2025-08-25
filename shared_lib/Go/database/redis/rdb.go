@@ -13,7 +13,7 @@ type rdb struct {
 	rdi RedisInstance
 }
 
-func NewRedisDb(i RedisInstance) rdb {
+func NewRedisDB(i RedisInstance) rdb {
 	return rdb{
 		rdi: i,
 	}

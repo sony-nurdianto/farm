@@ -176,7 +176,7 @@ func (fs farmerService) SyncUserCache(
 			var cacheDuration time.Duration
 
 			switch op {
-			case "c", "u":
+			case "c", "u", "r":
 				cacheStart := time.Now()
 				cacheCtx, cacheSpan := tracer.Start(msgCtx, "cache_upsert",
 					trace.WithAttributes(

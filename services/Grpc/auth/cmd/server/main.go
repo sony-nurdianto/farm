@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/joho/godotenv"
@@ -43,6 +44,9 @@ func main() {
 		os.Getenv("OTELCOLLECTORADDR"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	obs := observability.NewObservability(
 		serviceObsName,
@@ -111,7 +115,7 @@ func main() {
 		}
 	}(lis)
 
-	fmt.Println("Server Running At 0.0.0.0:50051")
+	var once sync.Once
 
 	for {
 		select {
@@ -121,6 +125,9 @@ func main() {
 			fmt.Println("Application Quit.")
 			return
 		default:
+			once.Do(func() {
+				fmt.Println("Server Running At 0.0.0.0:50051")
+			})
 		}
 	}
 }

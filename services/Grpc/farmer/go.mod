@@ -3,6 +3,7 @@ module github.com/sony-nurdianto/farm/services/Grpc/farmer
 go 1.24.6
 
 require (
+	github.com/google/go-cmp v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/redis v0.0.0
 	github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev v0.0.0-00010101000000-000000000000
