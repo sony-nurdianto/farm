@@ -6,6 +6,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.12.1
+	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres v0.0.0
 	github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev v0.0.0
 	github.com/sony-nurdianto/farm/shared_lib/Go/observability v0.0.0
 	go.opentelemetry.io/otel v1.37.0
@@ -24,6 +25,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1 // indirect
 	github.com/heetch/avro v0.4.5 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.62.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.13.0 // indirect
@@ -45,6 +47,7 @@ require (
 )
 
 replace (
+	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres => ../../../shared_lib/Go/database/postgres
 	github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev => ../../../shared_lib/Go/kafkaev
 	github.com/sony-nurdianto/farm/shared_lib/Go/observability => ../../../shared_lib/Go/observability
 )

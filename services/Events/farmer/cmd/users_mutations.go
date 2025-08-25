@@ -15,6 +15,7 @@ import (
 	"github.com/sony-nurdianto/farm/services/Events/farmer/internal/obs"
 	"github.com/sony-nurdianto/farm/services/Events/farmer/internal/repo"
 	"github.com/sony-nurdianto/farm/services/Events/farmer/internal/services"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
@@ -173,6 +174,7 @@ func main() {
 		avr.NewAvrSerdeInstance(),
 		kev.NewKafka(),
 		cfgFarmer,
+		pkg.NewPostgresInstance(),
 		rdb,
 	)
 	if err != nil {

@@ -186,6 +186,11 @@ func (fs farmerService) SyncUserCache(
 					),
 				)
 
+				if err := fs.repo.SyncAccountsEmail(cacheCtx, farmer.ID, farmer.Email); err != nil {
+					logger.Error(cacheCtx, "Cache upsert error", err)
+					continue
+				}
+
 				err := fs.repo.UpsertFarmerCache(cacheCtx, cacheKey, farmer)
 				cacheDuration = time.Since(cacheStart)
 

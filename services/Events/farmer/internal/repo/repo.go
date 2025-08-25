@@ -6,7 +6,9 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/redis/go-redis/v9"
+	"github.com/sony-nurdianto/farm/services/Events/farmer/constants"
 	"github.com/sony-nurdianto/farm/services/Events/farmer/internal/models"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
@@ -16,7 +18,13 @@ type Repo struct {
 	schemaRegisteryClient schrgs.SchemaRegisteryClient
 	avroDeserializer      avr.AvrDeserializer
 	authConsumer          kev.KevConsumer
+	authDB                authDB
 	rdb                   *redis.Client
+}
+
+type authDB struct {
+	db              pkg.PostgresDatabase
+	updateEmailStmt pkg.Stmt
 }
 
 func NewAuthRepo(
@@ -24,6 +32,7 @@ func NewAuthRepo(
 	avri avr.AvrSerdeInstance,
 	kv kev.Kafka,
 	kevcfg map[kev.ConfigKeyKafka]string,
+	pgi pkg.PostgresInstance,
 	rdb *redis.Client,
 ) (ap Repo, _ error) {
 	srgs, err := schrgs.NewSchemaRegistery(os.Getenv("SCHEMAREGISTERYADDR"), sri)
@@ -50,9 +59,35 @@ func NewAuthRepo(
 
 	ap.authConsumer = consumer
 
+	pgDB, err := pkg.OpenPostgres(os.Getenv("AUTH_DATABASE_ADDR"), pgi)
+	if err != nil {
+		return ap, err
+	}
+
+	ues, err := pgDB.Prepare(constants.AuthUpdateEmailAccount)
+	if err != nil {
+		return ap, err
+	}
+
+	athDB := authDB{
+		db:              pgDB,
+		updateEmailStmt: ues,
+	}
+
+	ap.authDB = athDB
+
 	ap.rdb = rdb
 
 	return ap, nil
+}
+
+func (ar Repo) SyncAccountsEmail(ctx context.Context, id, email string) error {
+	row := ar.authDB.updateEmailStmt.QueryRowContext(ctx, email, id)
+	if err := row.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ar Repo) UpsertFarmerCache(ctx context.Context, key string, farmer models.Farmer) error {

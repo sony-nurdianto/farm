@@ -8,24 +8,25 @@ import (
 	"time"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/concurent"
+	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/constants"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/models"
-
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
 type FarmerRepo interface {
 	GetUsersByIDFromCache(ctx context.Context, id string) (farmer models.Users, _ error)
-	UpdateUserAsync(ctx context.Context, users *models.UpdateUsers) error
+	UpdateUser(ctx context.Context, users *models.UpdateUsers) (models.Users, error)
 }
 
 type farmerRepo struct {
-	sriClient      schrgs.SchrgsClient
-	avrSerializer  avr.AvrSerializer
-	farmerProudcer kev.KevProducer
-	farmerCache    redis.RedisClient
+	farmerCache redis.RedisClient
+	farmerDB    farmerDB
+}
+
+type farmerDB struct {
+	db             pkg.PostgresDatabase
+	updateUserStmt pkg.Stmt
 }
 
 func send(
@@ -40,103 +41,63 @@ func send(
 	}
 }
 
-func initSchemaRegistery(ctx context.Context, sri schrgs.SchemaRegisteryInstance) <-chan any {
+func initPostgresDB(ctx context.Context, pgi pkg.PostgresInstance, addr string) <-chan any {
 	out := make(chan any, 1)
+
 	go func() {
 		defer close(out)
-		var res concurent.Result[schrgs.SchrgsClient]
-		src, err := sri.NewClient(
-			sri.NewConfig(os.Getenv("SCHEMAREGISTERYADDR")),
-		)
+		var res concurent.Result[pkg.PostgresDatabase]
+
+		db, err := pkg.OpenPostgres(addr, pgi)
 		if err != nil {
 			res.Error = err
 			send(ctx, out, res)
 			return
 		}
 
-		res.Value = src
+		res.Value = db
 		send(ctx, out, res)
 	}()
 
 	return out
 }
 
-type schemaRegistryPair struct {
-	Serializer avr.AvrSerializer
-	Client     schrgs.SchrgsClient
-}
-
-func schemaAndSerializerPipe(
-	ctx context.Context,
-	avri avr.AvrSerdeInstance,
-	clientChan <-chan any,
-) <-chan any {
+func prepareFarmerStmt(ctx context.Context, dbChan <-chan any) <-chan any {
 	out := make(chan any, 1)
 
 	go func() {
 		defer close(out)
-		var res concurent.Result[schemaRegistryPair]
 
-		client := <-clientChan
+		var res concurent.Result[farmerDB]
 
-		schRes, ok := client.(concurent.Result[schrgs.SchrgsClient])
+		dbCv := <-dbChan
+
+		dbres, ok := dbCv.(concurent.Result[pkg.PostgresDatabase])
 		if !ok {
-			res.Error = errors.New("wrong type data")
+			res.Error = errors.New("wrong data type")
 			send(ctx, out, res)
 			return
 		}
 
-		if schRes.Error != nil {
-			res.Error = schRes.Error
+		if dbres.Error != nil {
+			res.Error = dbres.Error
 			send(ctx, out, res)
 			return
 		}
 
-		seri, err := avri.NewGenericSerializer(
-			schRes.Value,
-			avr.ValueSerde,
-			avr.NewSerializerConfig(),
-		)
-		if err != nil {
-			res.Error = err
-			send(ctx, out, res)
-			return
-		}
-		res.Value.Serializer = seri
-		res.Value.Client = schRes.Value
-		send(ctx, out, res)
-	}()
-	return out
-}
-
-func initFarmerProducer(ctx context.Context, kv kev.Kafka) <-chan any {
-	out := make(chan any, 1)
-
-	go func() {
-		defer close(out)
-		var res concurent.Result[kev.KevProducer]
-
-		pool := kev.NewKafkaProducerPool(kv)
-		cfg := map[kev.ConfigKeyKafka]string{
-			kev.BOOTSTRAP_SERVERS:  os.Getenv("KAKFKABROKER"),
-			kev.ACKS:               "all",
-			kev.ENABLE_IDEMPOTENCE: "true",
-			kev.COMPRESION_TYPE:    "snappy",
-			kev.RETRIES:            "5",
-			kev.RETRY_BACKOFF_MS:   "100",
-			kev.LINGER_MS:          "5",
-			kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
-			kev.TRANSACTIONAL_ID:                      "",
-		}
-
-		producer, err := pool.Producer(cfg)
+		// ues = updateUsersStmt
+		uus, err := dbres.Value.Prepare(constants.UserQueryUpdate)
 		if err != nil {
 			res.Error = err
 			send(ctx, out, res)
 			return
 		}
 
-		res.Value = producer
+		res.Value = farmerDB{
+			db:             dbres.Value,
+			updateUserStmt: uus,
+		}
+
 		send(ctx, out, res)
 	}()
 
@@ -172,39 +133,32 @@ func initRedisDatabae(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 
 func NewFarmerRepo(
 	ctx context.Context,
-	avri avr.AvrSerdeInstance,
-	kv kev.Kafka,
-	sri schrgs.SchemaRegisteryInstance,
+	pgi pkg.PostgresInstance,
 	rdi redis.RedisInstance,
 ) (fr farmerRepo, err error) {
 	opsCtx, done := context.WithTimeout(ctx, time.Second*30)
 	defer done()
 
-	src := initSchemaRegistery(opsCtx, sri)
+	farmerDBCh := initPostgresDB(ctx, pgi, os.Getenv("FARMER_DATABASE_ADDR"))
+
 	chs := []<-chan any{
-		schemaAndSerializerPipe(opsCtx, avri, src),
-		initFarmerProducer(opsCtx, kv),
+		prepareFarmerStmt(ctx, farmerDBCh),
 		initRedisDatabae(opsCtx, rdi),
 	}
 
 	for v := range concurent.FanIn(opsCtx, chs...) {
 		switch res := v.(type) {
-		case concurent.Result[schemaRegistryPair]:
-			if res.Error != nil {
-				return fr, res.Error
-			}
-			fr.sriClient = res.Value.Client
-			fr.avrSerializer = res.Value.Serializer
-		case concurent.Result[kev.KevProducer]:
-			if res.Error != nil {
-				return fr, res.Error
-			}
-			fr.farmerProudcer = res.Value
 		case concurent.Result[redis.RedisClient]:
 			if res.Error != nil {
 				return fr, res.Error
 			}
 			fr.farmerCache = res.Value
+		case concurent.Result[farmerDB]:
+			if res.Error != nil {
+				return fr, res.Error
+			}
+
+			fr.farmerDB = res.Value
 		}
 	}
 
@@ -222,5 +176,4 @@ func (fr farmerRepo) GetUsersByIDFromCache(ctx context.Context, id string) (user
 		return user, errors.New("user is not existed")
 	}
 	return user, nil
-
 }

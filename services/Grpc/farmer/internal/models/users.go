@@ -4,7 +4,7 @@ type UpdateUsers struct {
 	ID       string  `avro:"id" json:"id"`
 	FullName *string `avro:"full_name" json:"full_name"`
 	Email    *string `avro:"email" json:"email"`
-	Phone    *string `avro:"phone" json:"avro"`
+	Phone    *string `avro:"phone" json:"phone"`
 }
 
 type Users struct {

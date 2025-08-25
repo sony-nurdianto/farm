@@ -33,7 +33,6 @@ func NewFarmerServiceServer(trc trace.Tracer, mtr metric.Meter, farmerUsecase us
 func (fss farmerServiceServer) FarmerProfile(
 	ctx context.Context, in *pbgen.FarmerProfileRequest,
 ) (*pbgen.FarmerProfileResponse, error) {
-
 	farmer, err := fss.farmerUsecase.GetUserByID(ctx, in.GetId())
 	if err == nil {
 		return farmer, nil
@@ -49,7 +48,6 @@ func (fss farmerServiceServer) FarmerProfile(
 func (fss farmerServiceServer) UpdateFarmerProfile(
 	ctx context.Context, in *pbgen.UpdateFarmerProfileRequest,
 ) (*pbgen.UpdateFarmerProfileResponse, error) {
-
 	userUpdate := &models.UpdateUsers{
 		ID:       in.GetId(),
 		FullName: in.FullName,
@@ -57,7 +55,7 @@ func (fss farmerServiceServer) UpdateFarmerProfile(
 		Phone:    in.Phone,
 	}
 
-	if err := fss.farmerUsecase.AsyncUpdateUser(ctx, userUpdate); err != nil {
+	if _, err := fss.farmerUsecase.UpdateUser(ctx, userUpdate); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

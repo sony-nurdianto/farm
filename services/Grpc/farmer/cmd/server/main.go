@@ -14,10 +14,8 @@ import (
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/repo"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/service"
 	"github.com/sony-nurdianto/farm/services/Grpc/farmer/internal/usecase"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
-	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/observability/otel/logs"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -69,9 +67,7 @@ func main() {
 
 	farmerRepo, err := repo.NewFarmerRepo(
 		ctx,
-		avr.NewAvrSerdeInstance(),
-		kev.NewKafka(),
-		schrgs.NewRegistery(),
+		pkg.NewPostgresInstance(),
 		redis.NewRedisInstance(),
 	)
 

@@ -12,7 +12,7 @@ import (
 
 type FarmerUsecase interface {
 	GetUserByID(ctx context.Context, id string) (*pbgen.FarmerProfileResponse, error)
-	AsyncUpdateUser(ctx context.Context, user *models.UpdateUsers) error
+	UpdateUser(ctx context.Context, user *models.UpdateUsers) (models.Users, error)
 }
 
 type farmerUsecase struct {
@@ -58,13 +58,14 @@ func (fu farmerUsecase) GetUserByID(ctx context.Context, id string) (*pbgen.Farm
 	return farmer, nil
 }
 
-func (fu farmerUsecase) AsyncUpdateUser(ctx context.Context, user *models.UpdateUsers) error {
+func (fu farmerUsecase) UpdateUser(ctx context.Context, user *models.UpdateUsers) (res models.Users, _ error) {
 	uCtx, done := context.WithTimeout(ctx, time.Second*15)
 	defer done()
 
-	if err := fu.repo.UpdateUserAsync(uCtx, user); err != nil {
-		return err
+	res, err := fu.repo.UpdateUser(uCtx, user)
+	if err != nil {
+		return res, err
 	}
 
-	return nil
+	return res, nil
 }
