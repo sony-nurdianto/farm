@@ -15,6 +15,9 @@ type PostgresDatabase interface {
 	SetConnMaxLifetime(d time.Duration)
 	PingContext(ctx context.Context) error
 
+	Begin() (SQLTx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (SQLTx, error)
+
 	Prepare(query string) (Stmt, error)
 	Close() error
 }
@@ -50,6 +53,23 @@ func (pdb postgresDatabase) Prepare(query string) (Stmt, error) {
 	}
 
 	return NewStmt(stmt), nil
+}
+
+func (pdb postgresDatabase) Begin() (SQLTx, error) {
+	tx, err := pdb.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	return NewSQLTx(tx), nil
+}
+
+func (pdb postgresDatabase) BeginTx(ctx context.Context, opts *sql.TxOptions) (SQLTx, error) {
+	tx, err := pdb.db.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewSQLTx(tx), nil
 }
 
 func (pdb postgresDatabase) Close() error {

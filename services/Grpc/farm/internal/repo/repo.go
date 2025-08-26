@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/concurent"
+	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/constants"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
 )
@@ -16,9 +17,11 @@ type farmRepo struct {
 }
 
 const (
-	CreateFarmStmtType string = "CreateFarmStmtType"
-	UpdateFarmStmtType string = "UpdateFarmStmtType"
-	DeleteFarmStmtType string = "DeleteFarmStmtType"
+	CreateFarmStmtType        string = "CreateFarmStmtType"
+	CreateFarmAddressStmtType string = "CreateFarmAddressStmtType"
+	UpdateFarmStmtType        string = "UpdateFarmStmtType"
+	UpdateFarmAddressStmtType string = "UpdateFarmAddressStmtType"
+	DeleteFarmStmtType        string = "DeleteFarmStmtType"
 )
 
 type farmStmt struct {
@@ -27,10 +30,12 @@ type farmStmt struct {
 }
 
 type farmDB struct {
-	db             pkg.PostgresDatabase
-	createFarmStmt pkg.Stmt
-	updateFarmStmt pkg.Stmt
-	deleteFarmStmt pkg.Stmt
+	db                    pkg.PostgresDatabase
+	createFarmStmt        pkg.Stmt
+	createFarmAddressStmt pkg.Stmt
+	updateFarmStmt        pkg.Stmt
+	updateFarmAddresStmt  pkg.Stmt
+	deleteFarmStmt        pkg.Stmt
 }
 
 func initPostgresDB(
@@ -106,9 +111,11 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 		}
 
 		chs := []<-chan any{
-			prepareStmt(ctx, db.Value, "createFarmStmt", CreateFarmStmtType),
-			prepareStmt(ctx, db.Value, "updateFarmStmt", UpdateFarmStmtType),
-			prepareStmt(ctx, db.Value, "deleteFarmStmt", DeleteFarmStmtType),
+			prepareStmt(ctx, db.Value, constants.QueryInsertFarm, CreateFarmStmtType),
+			prepareStmt(ctx, db.Value, constants.QueryInsertFarmAddress, CreateFarmAddressStmtType),
+			prepareStmt(ctx, db.Value, constants.QueryUpdateFarm, UpdateFarmStmtType),
+			prepareStmt(ctx, db.Value, constants.QueryUpdateFarmAddress, UpdateFarmAddressStmtType),
+			prepareStmt(ctx, db.Value, constants.QueryDeleteFarm, DeleteFarmStmtType),
 		}
 
 		dbFarm := farmDB{
@@ -132,8 +139,12 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 			switch vRes.Value.stmtType {
 			case CreateFarmStmtType:
 				dbFarm.createFarmStmt = vRes.Value.stmt
+			case CreateFarmAddressStmtType:
+				dbFarm.createFarmAddressStmt = vRes.Value.stmt
 			case UpdateFarmStmtType:
 				dbFarm.updateFarmStmt = vRes.Value.stmt
+			case UpdateFarmAddressStmtType:
+				dbFarm.updateFarmAddresStmt = vRes.Value.stmt
 			case DeleteFarmStmtType:
 				dbFarm.deleteFarmStmt = vRes.Value.stmt
 			}
@@ -180,7 +191,7 @@ func NewFarmRepo(
 	pgi pkg.PostgresInstance,
 	rdi redis.RedisInstance,
 ) (fr farmRepo, _ error) {
-	dbCh := initPostgresDB(ctx, pgi, "addr")
+	dbCh := initPostgresDB(ctx, pgi, os.Getenv("FARM_DATABASE_ADDR"))
 	chs := []<-chan any{
 		prepareFarmDB(ctx, dbCh),
 		prepareFarmCache(ctx, rdi),
@@ -202,4 +213,22 @@ func NewFarmRepo(
 	}
 
 	return fr, nil
+}
+
+func (fr farmRepo) DeleteFarm(ctx context.Context, id string) (string, error) {
+	row := fr.farmDB.deleteFarmStmt.QueryRowContext(ctx, id)
+	if err := row.Err(); err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (fr farmRepo) CloseRepo() {
+	fr.farmDB.createFarmStmt.Close()
+	fr.farmDB.createFarmAddressStmt.Close()
+	fr.farmDB.updateFarmStmt.Close()
+	fr.farmDB.updateFarmAddresStmt.Close()
+	fr.farmDB.deleteFarmStmt.Close()
+	fr.farmDB.db.Close()
 }

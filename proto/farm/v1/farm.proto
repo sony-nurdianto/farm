@@ -13,6 +13,8 @@ message FarmAddress {
   string city = 5;
   string province = 6;
   string postal_code = 7;
+  google.protobuf.Timestamp created_at = 8; 
+  google.protobuf.Timestamp updated_at = 9;
 }
 
 
@@ -27,6 +29,30 @@ message Farm {
   FarmAddress address = 8;
   google.protobuf.Timestamp created_at = 9; 
   google.protobuf.Timestamp updated_at = 10; 
+}
+
+message UpdateFarmData {
+  string id = 1;  
+  string farm_name = 3;
+  string farm_type = 4;
+  double farm_size = 5;
+  string farm_status = 6;
+  string description = 7;
+}
+
+message UpdateFarmAddressData {
+  string id = 1;
+  string street = 2;
+  string village = 3;
+  string sub_district = 4;
+  string city = 5;
+  string province = 6;
+  string postal_code = 7; 
+}
+
+message UpdateFarm {
+  optional UpdateFarmData farm = 1;
+  optional UpdateFarmAddressData address = 2;
 }
 
 
@@ -62,7 +88,7 @@ message GetFarmListResponse {
 }
 
 message UpdateFarmsRequest {
-  Farm value = 1;
+  UpdateFarm value = 1;
 }
 
 message UpdateFarmsResponse {
