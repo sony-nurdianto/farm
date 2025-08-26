@@ -40,7 +40,7 @@ func (r *Routes) Build() {
 	r.app.Route("/auth", authRouter.Builder)
 
 	farmerHandler := farmerh.NewFarmerHandler(r.farmerSvc)
-	farmerProfileHandler := NewRouterHandlers("/profile", http.MethodPost, authHandler.AuthTokenBaseValidate, farmerHandler.GetFarmerProfile)
+	farmerProfileHandler := NewRouterHandlers("/profile", http.MethodGet, authHandler.AuthTokenBaseValidate, farmerHandler.GetFarmerProfile)
 	updateProfileHandler := NewRouterHandlers("/update_profile", http.MethodPatch, authHandler.AuthTokenBaseValidate, farmerHandler.UpdateUsers)
 	farmerRouter := NewRouter(
 		farmerProfileHandler,
@@ -48,5 +48,4 @@ func (r *Routes) Build() {
 	)
 
 	r.app.Route("/farmer", farmerRouter.Builder)
-
 }

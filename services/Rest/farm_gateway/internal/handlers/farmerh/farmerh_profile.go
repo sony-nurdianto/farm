@@ -1,6 +1,7 @@
 package farmerh
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,22 +10,19 @@ import (
 )
 
 func (h farmerHandler) GetFarmerProfile(c *fiber.Ctx) error {
+	localID := c.Locals("user_subject")
 
-	dr := struct {
-		ID string `json:"id"`
-	}{}
-
-	err := c.BodyParser(&dr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(
+	id, ok := localID.(string)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{
-				"error": err.Error(),
+				"error": errors.New("id is not string"),
 			},
 		)
 	}
 
 	req := &pbgen.FarmerProfileRequest{
-		Id: dr.ID,
+		Id: id,
 	}
 
 	res, err := h.grpcFarmerSvc.FarmerProfile(c.UserContext(), req)

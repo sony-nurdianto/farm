@@ -41,7 +41,11 @@ func send(
 	}
 }
 
-func initPostgresDB(ctx context.Context, pgi pkg.PostgresInstance, addr string) <-chan any {
+func initPostgresDB(
+	ctx context.Context,
+	pgi pkg.PostgresInstance,
+	addr string,
+) <-chan any {
 	out := make(chan any, 1)
 
 	go func() {
@@ -112,11 +116,14 @@ func initRedisDatabae(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 
 		rdb := redis.NewRedisDB(rdi)
 		rdc, err := rdb.InitRedisClient(context.Background(), &redis.FailoverOptions{
-			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
-			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR")},
-			Username:      os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
-			Password:      os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
-			DB:            0,
+			MasterName: os.Getenv("FARMER_REDIS_MASTER_NAME"),
+			SentinelAddrs: []string{
+				os.Getenv("SENTINEL_FARMER_REDIS_ADDR"),
+				os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2"),
+			},
+			Username: os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
+			Password: os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
+			DB:       0,
 		})
 		if err != nil {
 			res.Error = err

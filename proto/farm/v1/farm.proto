@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package farm.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+message FarmAddress {
+  string id = 1;
+  string street = 2;
+  string village = 3;
+  string sub_district = 4;
+  string city = 5;
+  string province = 6;
+  string postal_code = 7;
+}
+
+
+message Farm {
+  string id = 1;  
+  string farmer_id = 2;
+  string farm_name = 3;
+  string farm_type = 4;
+  double farm_size = 5;
+  string farm_status = 6;
+  string description = 7;
+  FarmAddress address = 8;
+  google.protobuf.Timestamp created_at = 9; 
+  google.protobuf.Timestamp updated_at = 10; 
+}
+
+
+message CreateFarmRequest {
+  Farm farm = 1; 
+}
+
+message CreateFarmResponse {
+  string id = 1;
+  string farm_name = 2;
+  string status = 3;
+  string msg = 4;
+}
+
+message GetFarmByIDRequest {
+  string id = 1;
+}
+
+
+message GetFarmByIDResponse {
+    Farm farm = 1;
+}
+
+
+message GetFarmListRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+
+message GetFarmListResponse {
+  repeated Farm farms = 1;
+}
+
+message UpdateFarmsRequest {
+  Farm value = 1;
+}
+
+message UpdateFarmsResponse {
+  string id = 1;
+  string farm_name = 2;
+  string status = 3;
+  string msg = 4;
+}
+
+message DeleteFarmRequest {
+  string value = 1;
+}
+
+message DeleteFarmResponse {
+  string id = 1;
+  string status =2;
+  string msg = 3;
+}
+
+
+
+service FarmService {
+  rpc CreateFarm(stream CreateFarmRequest) returns (stream CreateFarmResponse);
+  rpc GetFarmByID(GetFarmByIDRequest) returns (GetFarmByIDResponse);
+  rpc GetFarmList(GetFarmListRequest) returns (stream GetFarmListResponse);
+  rpc UpdateFarms(stream UpdateFarmsRequest) returns (stream UpdateFarmsResponse);
+  rpc DeleteFarm(DeleteFarmRequest) returns (DeleteFarmResponse); 
+}
+
+
+
+

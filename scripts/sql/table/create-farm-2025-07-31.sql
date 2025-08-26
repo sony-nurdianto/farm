@@ -1,12 +1,12 @@
 
 CREATE TABLE farms (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY,
     farmer_id UUID NOT NULL,
     farm_name VARCHAR(225) NOT NULL,
-    farm_type farm_type_enum NOT NULL DEFAULT 'CROPLAND',
+    farm_type VARCHAR NOT NULL DEFAULT 'CROPLAND',
     farm_size NUMERIC(6, 2) NOT NULL,
     photo_url TEXT,
-    farm_status farm_status_enum NOT NULL DEFAULT 'ACTIVE',
+    farm_status VARCHAR NOT NULL DEFAULT 'ACTIVE',
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

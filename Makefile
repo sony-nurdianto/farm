@@ -9,3 +9,6 @@ gen_auth_proto:
 
 gen_farmer_proto:	
 	 cd proto && buf generate --template ./farmer/buf.gen.yaml --path ./farmer/v1/farmer.proto
+
+gen_farm_proto:	
+	 cd proto && buf generate --template ./farm/buf.gen.yaml --path ./farm/v1/farm.proto

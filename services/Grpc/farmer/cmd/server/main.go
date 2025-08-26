@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/joho/godotenv"
@@ -37,6 +39,9 @@ func main() {
 		os.Getenv("OTELCOLLECTORADDR"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
+	if err != nil {
+		logger.Fatal(ctx, err.Error(), err)
+	}
 
 	obs := observability.NewObservability(
 		serviceObsName,
@@ -93,6 +98,8 @@ func main() {
 		}
 	}(lis)
 
+	var once sync.Once
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -111,6 +118,7 @@ func main() {
 			)
 			return
 		default:
+			once.Do(func() { fmt.Println("Server is Running ....") })
 		}
 	}
 }

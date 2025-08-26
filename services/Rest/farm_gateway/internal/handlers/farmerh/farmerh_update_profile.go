@@ -1,6 +1,8 @@
 package farmerh
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/models"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/pbgen"
@@ -8,6 +10,16 @@ import (
 
 func (h farmerHandler) UpdateUsers(c *fiber.Ctx) error {
 	var user models.UpdateUsers
+
+	localID := c.Locals("user_subject")
+	id, ok := localID.(string)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			fiber.Map{
+				"error": errors.New("id is not string"),
+			},
+		)
+	}
 
 	err := c.BodyParser(&user)
 	if err != nil {
@@ -19,7 +31,7 @@ func (h farmerHandler) UpdateUsers(c *fiber.Ctx) error {
 	}
 
 	req := &pbgen.UpdateFarmerProfileRequest{
-		Id:       user.ID,
+		Id:       id,
 		FullName: user.FullName,
 		Email:    user.Email,
 		Phone:    user.Phone,

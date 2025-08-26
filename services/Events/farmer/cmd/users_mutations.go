@@ -53,7 +53,7 @@ func redisConnection(
 
 		rdb := redis.NewFailoverClient(&redis.FailoverOptions{
 			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
-			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR")},
+			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR"), os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2")},
 			Username:      os.Getenv("FARMER_REDIS_MASTER_USERNAME"),
 			Password:      os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
 			DB:            0,
