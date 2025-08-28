@@ -7,7 +7,7 @@ type Farm struct {
 	FarmerID    string
 	FarmName    string
 	FarmType    string
-	FarmSize    float32
+	FarmSize    float64
 	FarmStatus  string
 	Description string
 	AddressesID string

@@ -7,9 +7,14 @@ import (
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/concurent"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/constants"
+	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
 )
+
+type FarmRepo interface {
+	CreateFarm(ctx context.Context, opts pkg.TxOpts, farm models.Farm, farmAddr models.FarmAddress) (models.FarmWithAddress, error)
+}
 
 type farmRepo struct {
 	farmCache redis.RedisClient

@@ -3,6 +3,7 @@ module github.com/sony-nurdianto/farm/services/Grpc/farm
 go 1.25.0
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres v0.0.0-00010101000000-000000000000
 	github.com/sony-nurdianto/farm/shared_lib/Go/database/redis v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.75.0

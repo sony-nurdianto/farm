@@ -58,13 +58,15 @@ message UpdateFarm {
 
 message CreateFarmRequest {
   Farm farm = 1; 
+  FarmAddress address = 2;
 }
 
 message CreateFarmResponse {
-  string id = 1;
+  string farm_id = 1;
   string farm_name = 2;
-  string status = 3;
-  string msg = 4;
+  string address_id = 3; 
+  string status = 4;
+  string msg = 5;
 }
 
 message GetFarmByIDRequest {
@@ -92,10 +94,11 @@ message UpdateFarmsRequest {
 }
 
 message UpdateFarmsResponse {
-  string id = 1;
-  string farm_name = 2;
-  string status = 3;
-  string msg = 4;
+  optional string farm_id = 1;
+  optional string farm_name = 2;
+  optional string address_id = 3;
+  string status = 4;
+  string msg = 5;
 }
 
 message DeleteFarmRequest {
