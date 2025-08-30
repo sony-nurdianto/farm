@@ -44,6 +44,6 @@ func (fh farmHandler) CreateFarm(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"data":   res,
 		"status": "Success",
-		"Msg":    "Create Farm Done",
+		"msg":    "Create Farm Done",
 	})
 }

@@ -68,10 +68,7 @@ message UpdateFarmAddressData {
   string postal_code = 7; 
 }
 
-message UpdateFarm {
-  optional UpdateFarmData farm = 1;
-  optional UpdateFarmAddressData address = 2;
-}
+
 
 
 message CreateFarmRequest {
@@ -108,7 +105,8 @@ message GetFarmListResponse {
 }
 
 message UpdateFarmsRequest {
-  UpdateFarm value = 1;
+  optional UpdateFarmData farm = 1;
+  optional UpdateFarmAddressData address = 2;
 }
 
 message UpdateFarmsResponse {

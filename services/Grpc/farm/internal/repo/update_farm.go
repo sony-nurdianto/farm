@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
@@ -82,38 +81,37 @@ func changeFarm(
 
 func (fr farmRepo) UpdateFarm(
 	ctx context.Context, opts *pkg.TxOpts, farm *models.UpdateFarm, address *models.UpdateFarmAddress,
-) (f models.Farm, a models.FarmAddress, _ error) {
-	if farm == nil && address == nil {
-		return f, a, errors.New("needed at least one data is update farm , address or both")
-	}
-
+) (*models.Farm, *models.FarmAddress, error) {
 	tx, err := fr.farmDB.db.BeginTx(ctx, opts)
 	if err != nil {
-		return f, a, err
+		return nil, nil, err
 	}
 
 	defer tx.Rollback()
 
+	var farmRes *models.Farm
+	var farmAddrRes *models.FarmAddress
+
 	if farm != nil {
 		txFarmStmt := tx.Stmt(fr.farmDB.updateFarmStmt)
-		farmRes, err := changeFarm(ctx, txFarmStmt, farm)
+		farm, err := changeFarm(ctx, txFarmStmt, farm)
 		if err != nil {
-			return f, a, err
+			return nil, nil, err
 		}
 
-		f = farmRes
+		farmRes = &farm
 	}
 
 	if address != nil {
 		txAddrStmt := tx.Stmt(fr.farmDB.updateFarmAddresStmt)
 		addRes, err := changeFarmAddreses(ctx, txAddrStmt, address)
 		if err != nil {
-			return f, a, err
+			return nil, nil, err
 		}
-		a = addRes
+		farmAddrRes = &addRes
 	}
 
 	tx.Commit()
 
-	return f, a, nil
+	return farmRes, farmAddrRes, nil
 }

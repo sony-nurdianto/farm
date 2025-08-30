@@ -2,6 +2,7 @@ package usescase
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 
 type FarmUsecase interface {
 	InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) (*pbgen.CreateFarmResponse, error)
+	UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) (*pbgen.UpdateFarmsResponse, error)
 }
 
 type farmUsecase struct {
@@ -77,4 +79,60 @@ func (fu farmUsecase) InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequ
 	res.Msg = "Success Create Users"
 
 	return res, nil
+}
+
+func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) (*pbgen.UpdateFarmsResponse, error) {
+	txOpts := pkg.TxOpts{
+		Isolation: pkg.LevelSerializable,
+		ReadOnly:  false,
+	}
+
+	farm := new(models.UpdateFarm)
+	farmAddr := new(models.UpdateFarmAddress)
+
+	if req.Address == nil && req.Farm == nil {
+		return nil, errors.New("at least farm or farm address have value")
+	}
+
+	if req.Farm != nil {
+		farmValue := req.Farm
+		farm.ID = farmValue.Id
+		farm.FarmName = farmValue.FarmName
+		farm.FarmSize = farmValue.FarmSize
+		farm.FarmStatus = farmValue.FarmStatus
+		farm.FarmType = farmValue.FarmType
+	}
+
+	if req.Address != nil {
+		farmAddrValue := req.Address
+		farmAddr.ID = farmAddrValue.Id
+		farmAddr.Street = farmAddrValue.Street
+		farmAddr.SubDistrict = farmAddrValue.SubDistrict
+		farmAddr.City = farmAddrValue.City
+		farmAddr.Village = farmAddrValue.Village
+		farmAddr.Province = farmAddrValue.Province
+		farmAddr.PostalCode = farmAddrValue.PostalCode
+	}
+
+	res := new(pbgen.UpdateFarmsResponse)
+
+	updateFarm, updateFarmAddr, err := fu.repo.UpdateFarm(ctx, &txOpts, farm, farmAddr)
+	if err != nil {
+		res.Status = "Error"
+		res.Msg = err.Error()
+		return res, nil
+	}
+
+	if updateFarm != nil {
+		res.FarmId = &updateFarm.ID
+		res.FarmName = &updateFarm.FarmName
+	}
+	if updateFarmAddr != nil {
+		res.AddressId = &updateFarmAddr.ID
+	}
+
+	res.Msg = "Sucesss UpdateFarm"
+	res.Status = "Success"
+
+	return nil, nil
 }

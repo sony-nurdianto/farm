@@ -14,6 +14,7 @@ import (
 
 type FarmRepo interface {
 	CreateFarm(ctx context.Context, opts pkg.TxOpts, farm models.Farm, farmAddr models.FarmAddress) (models.FarmWithAddress, error)
+	UpdateFarm(ctx context.Context, opts *pkg.TxOpts, farm *models.UpdateFarm, address *models.UpdateFarmAddress) (*models.Farm, *models.FarmAddress, error)
 }
 
 type farmRepo struct {

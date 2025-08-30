@@ -63,7 +63,33 @@ func (fss FarmServiceServer) GetFarmList(in *pbgen.GetFarmListRequest, stream pb
 }
 
 func (fss FarmServiceServer) UpdateFarms(stream pbgen.FarmService_UpdateFarmsServer) error {
-	return nil
+	ctx := stream.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			msg, err := stream.Recv()
+			if err == io.EOF {
+				log.Println("updateFarm Or UpdateAddress services is Done")
+				return nil
+			}
+			if err != nil {
+				return status.Error(codes.Internal, err.Error())
+			}
+
+			updateFarm, err := fss.farmUc.UpdateUsers(ctx, msg)
+			if err != nil {
+				if err := stream.Send(updateFarm); err != nil {
+					return status.Error(codes.Internal, err.Error())
+				}
+			}
+
+			if err := stream.Send(updateFarm); err != nil {
+				return status.Error(codes.Internal, err.Error())
+			}
+		}
+	}
 }
 
 func (fss FarmServiceServer) DeleteFarm(ctx context.Context, in *pbgen.DeleteFarmRequest) (*pbgen.DeleteFarmResponse, error) {
