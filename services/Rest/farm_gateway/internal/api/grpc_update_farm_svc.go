@@ -39,6 +39,7 @@ func updateFarmSendMsg(
 
 			if req.Address != nil {
 				address = &pbgen.UpdateFarmAddressData{
+					Id:          req.Address.ID,
 					Street:      req.Address.Street,
 					Village:     req.Address.Village,
 					SubDistrict: req.Address.SubDistrict,

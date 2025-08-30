@@ -2,7 +2,6 @@ package usescase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,8 +12,8 @@ import (
 )
 
 type FarmUsecase interface {
-	InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) (*pbgen.CreateFarmResponse, error)
-	UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) (*pbgen.UpdateFarmsResponse, error)
+	InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) *pbgen.CreateFarmResponse
+	UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) *pbgen.UpdateFarmsResponse
 }
 
 type farmUsecase struct {
@@ -27,7 +26,7 @@ func NewFarmUsecase(r repo.FarmRepo) farmUsecase {
 	}
 }
 
-func (fu farmUsecase) InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) (*pbgen.CreateFarmResponse, error) {
+func (fu farmUsecase) InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) *pbgen.CreateFarmResponse {
 	txOpts := pkg.TxOpts{
 		Isolation: pkg.LevelSerializable,
 		ReadOnly:  false,
@@ -66,22 +65,23 @@ func (fu farmUsecase) InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequ
 		ctx, txOpts, farm, farmAddr,
 	)
 	if err != nil {
+		res.FarmName = req.Farm.GetFarmName()
 		res.Status = "Error"
 		res.Msg = err.Error()
 
-		return res, nil
+		return res
 	}
 
 	res.FarmId = users.Farm.ID
 	res.FarmName = users.FarmName
 	res.AddressId = users.AddressesID
 	res.Status = "Success"
-	res.Msg = "Success Create Users"
+	res.Msg = "Success Create Farm"
 
-	return res, nil
+	return res
 }
 
-func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) (*pbgen.UpdateFarmsResponse, error) {
+func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) *pbgen.UpdateFarmsResponse {
 	txOpts := pkg.TxOpts{
 		Isolation: pkg.LevelSerializable,
 		ReadOnly:  false,
@@ -90,10 +90,6 @@ func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsReq
 	farm := new(models.UpdateFarm)
 	farmAddr := new(models.UpdateFarmAddress)
 
-	if req.Address == nil && req.Farm == nil {
-		return nil, errors.New("at least farm or farm address have value")
-	}
-
 	if req.Farm != nil {
 		farmValue := req.Farm
 		farm.ID = farmValue.Id
@@ -101,6 +97,7 @@ func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsReq
 		farm.FarmSize = farmValue.FarmSize
 		farm.FarmStatus = farmValue.FarmStatus
 		farm.FarmType = farmValue.FarmType
+		farm.Description = farmValue.Description
 	}
 
 	if req.Address != nil {
@@ -120,7 +117,7 @@ func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsReq
 	if err != nil {
 		res.Status = "Error"
 		res.Msg = err.Error()
-		return res, nil
+		return res
 	}
 
 	if updateFarm != nil {
@@ -134,5 +131,5 @@ func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsReq
 	res.Msg = "Sucesss UpdateFarm"
 	res.Status = "Success"
 
-	return nil, nil
+	return res
 }

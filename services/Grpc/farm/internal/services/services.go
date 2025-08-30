@@ -39,12 +39,7 @@ func (fss FarmServiceServer) CreateFarm(stream pbgen.FarmService_CreateFarmServe
 				return status.Error(codes.Internal, err.Error())
 			}
 
-			createFarm, err := fss.farmUc.InsertUsers(ctx, msg)
-			if err == nil {
-				if err := stream.Send(createFarm); err != nil {
-					return status.Error(codes.Internal, err.Error())
-				}
-			}
+			createFarm := fss.farmUc.InsertUsers(ctx, msg)
 
 			if err := stream.Send(createFarm); err != nil {
 				return status.Error(codes.Internal, err.Error())
@@ -78,13 +73,11 @@ func (fss FarmServiceServer) UpdateFarms(stream pbgen.FarmService_UpdateFarmsSer
 				return status.Error(codes.Internal, err.Error())
 			}
 
-			updateFarm, err := fss.farmUc.UpdateUsers(ctx, msg)
-			if err != nil {
-				if err := stream.Send(updateFarm); err != nil {
-					return status.Error(codes.Internal, err.Error())
-				}
+			if msg.Farm == nil && msg.Address == nil {
+				return status.Error(codes.InvalidArgument, "at least farm or farm address have value")
 			}
 
+			updateFarm := fss.farmUc.UpdateUsers(ctx, msg)
 			if err := stream.Send(updateFarm); err != nil {
 				return status.Error(codes.Internal, err.Error())
 			}

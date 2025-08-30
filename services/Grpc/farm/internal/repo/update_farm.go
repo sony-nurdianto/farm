@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 )
@@ -11,6 +12,11 @@ import (
 func changeFarmAddreses(
 	ctx context.Context, tx pkg.Stmt, address *models.UpdateFarmAddress,
 ) (res models.FarmAddress, _ error) {
+	addressID, err := uuid.Parse(address.ID)
+	if err != nil {
+		return res, err
+	}
+
 	row := tx.QueryRowContext(
 		ctx,
 		address.Street,
@@ -20,7 +26,7 @@ func changeFarmAddreses(
 		address.Province,
 		address.PostalCode,
 		time.Now().UTC(), // updated_at
-		address.ID,
+		addressID,
 	)
 
 	if err := row.Err(); err != nil {
@@ -47,6 +53,11 @@ func changeFarmAddreses(
 func changeFarm(
 	ctx context.Context, tx pkg.Stmt, farm *models.UpdateFarm,
 ) (res models.Farm, _ error) {
+	farmID, err := uuid.Parse(farm.ID)
+	if err != nil {
+		return res, err
+	}
+
 	row := tx.QueryRowContext(
 		ctx,
 		farm.FarmName,
@@ -55,6 +66,7 @@ func changeFarm(
 		farm.FarmStatus,
 		farm.Description,
 		time.Now().UTC(),
+		farmID,
 	)
 
 	if err := row.Err(); err != nil {
