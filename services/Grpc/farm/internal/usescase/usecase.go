@@ -70,7 +70,7 @@ func (fu farmUsecase) InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequ
 		return res, nil
 	}
 
-	res.FarmId = users.FarmerID
+	res.FarmId = users.Farm.ID
 	res.FarmName = users.FarmName
 	res.AddressId = users.AddressesID
 	res.Status = "Success"
