@@ -52,7 +52,7 @@ services:
     volumes:
       - ./infra/database/redis/farmer/redis-slave-1.conf:/etc/redis/redis.conf:z
       - ./infra/database/redis/farmer/farmer-acl.conf:/data/users.acl:z
-      - redis-farmer-slave-1:/data
+      - redis-farmer-slave-1-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "6379", "ping"]
       interval: 5s
@@ -375,7 +375,6 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
-
     # healthcheck:
     #   test: ["CMD", "grpc_health_probe", "-addr=:50051", "-service=auth-service"]
     #   interval: 10s
@@ -393,6 +392,16 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy  
+
+  grpc-farm-service:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/grpc/farm_service.dockerfile
+    env_file:
+      - ./services/Grpc/farm/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
 
         
   rest-farm-gateway:

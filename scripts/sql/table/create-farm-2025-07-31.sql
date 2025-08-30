@@ -1,4 +1,3 @@
-
 CREATE TABLE farms (
     id UUID PRIMARY KEY,
     farmer_id UUID NOT NULL,
@@ -11,6 +10,6 @@ CREATE TABLE farms (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     address_id UUID NOT NULL,
-    CONSTRAINT fk_address FOREIGN KEY (address_id) REFERENCES addresses(id),
+    CONSTRAINT fk_address FOREIGN KEY (address_id) REFERENCES addresses(id)
 );
 

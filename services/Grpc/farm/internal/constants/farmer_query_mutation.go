@@ -57,7 +57,7 @@ const (
 	`
 
 	QueryUpdateFarm = `
-		update farm
+		update farms
 		set 
 				farm_name = coalesce($1,farm_name),
 				farm_type = coalesce($2,farm_type),
@@ -87,7 +87,7 @@ const (
 			sub_district = coalesce($3,sub_district),
 			city = coalesce($4,city),
 			province = coalesce($5,province),
-			postal_code = coalesce($6,postal_code)
+			postal_code = coalesce($6,postal_code),
 			updated_at = $7 
 		where id = $8
 		returning 
@@ -103,6 +103,6 @@ const (
 	`
 
 	QueryDeleteFarm = `
-		delete from farm where id = $1 cascade
+		delete from farms where id = $1
 	`
 )

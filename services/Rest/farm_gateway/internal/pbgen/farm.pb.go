@@ -246,6 +246,174 @@ func (x *Farm) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type CreateFarmAddress struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Street        string                 `protobuf:"bytes,1,opt,name=street,proto3" json:"street,omitempty"`
+	Village       string                 `protobuf:"bytes,2,opt,name=village,proto3" json:"village,omitempty"`
+	SubDistrict   string                 `protobuf:"bytes,3,opt,name=sub_district,json=subDistrict,proto3" json:"sub_district,omitempty"`
+	City          string                 `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
+	Province      string                 `protobuf:"bytes,5,opt,name=province,proto3" json:"province,omitempty"`
+	PostalCode    string                 `protobuf:"bytes,6,opt,name=postal_code,json=postalCode,proto3" json:"postal_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateFarmAddress) Reset() {
+	*x = CreateFarmAddress{}
+	mi := &file_farm_v1_farm_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateFarmAddress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateFarmAddress) ProtoMessage() {}
+
+func (x *CreateFarmAddress) ProtoReflect() protoreflect.Message {
+	mi := &file_farm_v1_farm_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateFarmAddress.ProtoReflect.Descriptor instead.
+func (*CreateFarmAddress) Descriptor() ([]byte, []int) {
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CreateFarmAddress) GetStreet() string {
+	if x != nil {
+		return x.Street
+	}
+	return ""
+}
+
+func (x *CreateFarmAddress) GetVillage() string {
+	if x != nil {
+		return x.Village
+	}
+	return ""
+}
+
+func (x *CreateFarmAddress) GetSubDistrict() string {
+	if x != nil {
+		return x.SubDistrict
+	}
+	return ""
+}
+
+func (x *CreateFarmAddress) GetCity() string {
+	if x != nil {
+		return x.City
+	}
+	return ""
+}
+
+func (x *CreateFarmAddress) GetProvince() string {
+	if x != nil {
+		return x.Province
+	}
+	return ""
+}
+
+func (x *CreateFarmAddress) GetPostalCode() string {
+	if x != nil {
+		return x.PostalCode
+	}
+	return ""
+}
+
+type CreateFarm struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FarmerId      string                 `protobuf:"bytes,1,opt,name=farmer_id,json=farmerId,proto3" json:"farmer_id,omitempty"`
+	FarmName      string                 `protobuf:"bytes,2,opt,name=farm_name,json=farmName,proto3" json:"farm_name,omitempty"`
+	FarmType      string                 `protobuf:"bytes,3,opt,name=farm_type,json=farmType,proto3" json:"farm_type,omitempty"`
+	FarmSize      float64                `protobuf:"fixed64,4,opt,name=farm_size,json=farmSize,proto3" json:"farm_size,omitempty"`
+	FarmStatus    string                 `protobuf:"bytes,5,opt,name=farm_status,json=farmStatus,proto3" json:"farm_status,omitempty"`
+	Description   string                 `protobuf:"bytes,6,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateFarm) Reset() {
+	*x = CreateFarm{}
+	mi := &file_farm_v1_farm_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateFarm) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateFarm) ProtoMessage() {}
+
+func (x *CreateFarm) ProtoReflect() protoreflect.Message {
+	mi := &file_farm_v1_farm_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateFarm.ProtoReflect.Descriptor instead.
+func (*CreateFarm) Descriptor() ([]byte, []int) {
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateFarm) GetFarmerId() string {
+	if x != nil {
+		return x.FarmerId
+	}
+	return ""
+}
+
+func (x *CreateFarm) GetFarmName() string {
+	if x != nil {
+		return x.FarmName
+	}
+	return ""
+}
+
+func (x *CreateFarm) GetFarmType() string {
+	if x != nil {
+		return x.FarmType
+	}
+	return ""
+}
+
+func (x *CreateFarm) GetFarmSize() float64 {
+	if x != nil {
+		return x.FarmSize
+	}
+	return 0
+}
+
+func (x *CreateFarm) GetFarmStatus() string {
+	if x != nil {
+		return x.FarmStatus
+	}
+	return ""
+}
+
+func (x *CreateFarm) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 type UpdateFarmData struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -260,7 +428,7 @@ type UpdateFarmData struct {
 
 func (x *UpdateFarmData) Reset() {
 	*x = UpdateFarmData{}
-	mi := &file_farm_v1_farm_proto_msgTypes[2]
+	mi := &file_farm_v1_farm_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -272,7 +440,7 @@ func (x *UpdateFarmData) String() string {
 func (*UpdateFarmData) ProtoMessage() {}
 
 func (x *UpdateFarmData) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[2]
+	mi := &file_farm_v1_farm_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -285,7 +453,7 @@ func (x *UpdateFarmData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFarmData.ProtoReflect.Descriptor instead.
 func (*UpdateFarmData) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{2}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UpdateFarmData) GetId() string {
@@ -345,7 +513,7 @@ type UpdateFarmAddressData struct {
 
 func (x *UpdateFarmAddressData) Reset() {
 	*x = UpdateFarmAddressData{}
-	mi := &file_farm_v1_farm_proto_msgTypes[3]
+	mi := &file_farm_v1_farm_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -357,7 +525,7 @@ func (x *UpdateFarmAddressData) String() string {
 func (*UpdateFarmAddressData) ProtoMessage() {}
 
 func (x *UpdateFarmAddressData) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[3]
+	mi := &file_farm_v1_farm_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -370,7 +538,7 @@ func (x *UpdateFarmAddressData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFarmAddressData.ProtoReflect.Descriptor instead.
 func (*UpdateFarmAddressData) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{3}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UpdateFarmAddressData) GetId() string {
@@ -432,7 +600,7 @@ type UpdateFarm struct {
 
 func (x *UpdateFarm) Reset() {
 	*x = UpdateFarm{}
-	mi := &file_farm_v1_farm_proto_msgTypes[4]
+	mi := &file_farm_v1_farm_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -444,7 +612,7 @@ func (x *UpdateFarm) String() string {
 func (*UpdateFarm) ProtoMessage() {}
 
 func (x *UpdateFarm) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[4]
+	mi := &file_farm_v1_farm_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -457,7 +625,7 @@ func (x *UpdateFarm) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFarm.ProtoReflect.Descriptor instead.
 func (*UpdateFarm) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{4}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateFarm) GetFarm() *UpdateFarmData {
@@ -476,15 +644,15 @@ func (x *UpdateFarm) GetAddress() *UpdateFarmAddressData {
 
 type CreateFarmRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Farm          *Farm                  `protobuf:"bytes,1,opt,name=farm,proto3" json:"farm,omitempty"`
-	Address       *FarmAddress           `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	Farm          *CreateFarm            `protobuf:"bytes,1,opt,name=farm,proto3" json:"farm,omitempty"`
+	Address       *CreateFarmAddress     `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateFarmRequest) Reset() {
 	*x = CreateFarmRequest{}
-	mi := &file_farm_v1_farm_proto_msgTypes[5]
+	mi := &file_farm_v1_farm_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -496,7 +664,7 @@ func (x *CreateFarmRequest) String() string {
 func (*CreateFarmRequest) ProtoMessage() {}
 
 func (x *CreateFarmRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[5]
+	mi := &file_farm_v1_farm_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -509,17 +677,17 @@ func (x *CreateFarmRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFarmRequest.ProtoReflect.Descriptor instead.
 func (*CreateFarmRequest) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{5}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *CreateFarmRequest) GetFarm() *Farm {
+func (x *CreateFarmRequest) GetFarm() *CreateFarm {
 	if x != nil {
 		return x.Farm
 	}
 	return nil
 }
 
-func (x *CreateFarmRequest) GetAddress() *FarmAddress {
+func (x *CreateFarmRequest) GetAddress() *CreateFarmAddress {
 	if x != nil {
 		return x.Address
 	}
@@ -539,7 +707,7 @@ type CreateFarmResponse struct {
 
 func (x *CreateFarmResponse) Reset() {
 	*x = CreateFarmResponse{}
-	mi := &file_farm_v1_farm_proto_msgTypes[6]
+	mi := &file_farm_v1_farm_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -551,7 +719,7 @@ func (x *CreateFarmResponse) String() string {
 func (*CreateFarmResponse) ProtoMessage() {}
 
 func (x *CreateFarmResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[6]
+	mi := &file_farm_v1_farm_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -564,7 +732,7 @@ func (x *CreateFarmResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFarmResponse.ProtoReflect.Descriptor instead.
 func (*CreateFarmResponse) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{6}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateFarmResponse) GetFarmId() string {
@@ -611,7 +779,7 @@ type GetFarmByIDRequest struct {
 
 func (x *GetFarmByIDRequest) Reset() {
 	*x = GetFarmByIDRequest{}
-	mi := &file_farm_v1_farm_proto_msgTypes[7]
+	mi := &file_farm_v1_farm_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +791,7 @@ func (x *GetFarmByIDRequest) String() string {
 func (*GetFarmByIDRequest) ProtoMessage() {}
 
 func (x *GetFarmByIDRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[7]
+	mi := &file_farm_v1_farm_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +804,7 @@ func (x *GetFarmByIDRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFarmByIDRequest.ProtoReflect.Descriptor instead.
 func (*GetFarmByIDRequest) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{7}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetFarmByIDRequest) GetId() string {
@@ -655,7 +823,7 @@ type GetFarmByIDResponse struct {
 
 func (x *GetFarmByIDResponse) Reset() {
 	*x = GetFarmByIDResponse{}
-	mi := &file_farm_v1_farm_proto_msgTypes[8]
+	mi := &file_farm_v1_farm_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -667,7 +835,7 @@ func (x *GetFarmByIDResponse) String() string {
 func (*GetFarmByIDResponse) ProtoMessage() {}
 
 func (x *GetFarmByIDResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[8]
+	mi := &file_farm_v1_farm_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -680,7 +848,7 @@ func (x *GetFarmByIDResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFarmByIDResponse.ProtoReflect.Descriptor instead.
 func (*GetFarmByIDResponse) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{8}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetFarmByIDResponse) GetFarm() *Farm {
@@ -700,7 +868,7 @@ type GetFarmListRequest struct {
 
 func (x *GetFarmListRequest) Reset() {
 	*x = GetFarmListRequest{}
-	mi := &file_farm_v1_farm_proto_msgTypes[9]
+	mi := &file_farm_v1_farm_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -712,7 +880,7 @@ func (x *GetFarmListRequest) String() string {
 func (*GetFarmListRequest) ProtoMessage() {}
 
 func (x *GetFarmListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[9]
+	mi := &file_farm_v1_farm_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -725,7 +893,7 @@ func (x *GetFarmListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFarmListRequest.ProtoReflect.Descriptor instead.
 func (*GetFarmListRequest) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{9}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetFarmListRequest) GetLimit() int32 {
@@ -751,7 +919,7 @@ type GetFarmListResponse struct {
 
 func (x *GetFarmListResponse) Reset() {
 	*x = GetFarmListResponse{}
-	mi := &file_farm_v1_farm_proto_msgTypes[10]
+	mi := &file_farm_v1_farm_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -763,7 +931,7 @@ func (x *GetFarmListResponse) String() string {
 func (*GetFarmListResponse) ProtoMessage() {}
 
 func (x *GetFarmListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[10]
+	mi := &file_farm_v1_farm_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -776,7 +944,7 @@ func (x *GetFarmListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFarmListResponse.ProtoReflect.Descriptor instead.
 func (*GetFarmListResponse) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{10}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetFarmListResponse) GetFarms() []*Farm {
@@ -795,7 +963,7 @@ type UpdateFarmsRequest struct {
 
 func (x *UpdateFarmsRequest) Reset() {
 	*x = UpdateFarmsRequest{}
-	mi := &file_farm_v1_farm_proto_msgTypes[11]
+	mi := &file_farm_v1_farm_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -807,7 +975,7 @@ func (x *UpdateFarmsRequest) String() string {
 func (*UpdateFarmsRequest) ProtoMessage() {}
 
 func (x *UpdateFarmsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[11]
+	mi := &file_farm_v1_farm_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -820,7 +988,7 @@ func (x *UpdateFarmsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFarmsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateFarmsRequest) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{11}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateFarmsRequest) GetValue() *UpdateFarm {
@@ -843,7 +1011,7 @@ type UpdateFarmsResponse struct {
 
 func (x *UpdateFarmsResponse) Reset() {
 	*x = UpdateFarmsResponse{}
-	mi := &file_farm_v1_farm_proto_msgTypes[12]
+	mi := &file_farm_v1_farm_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -855,7 +1023,7 @@ func (x *UpdateFarmsResponse) String() string {
 func (*UpdateFarmsResponse) ProtoMessage() {}
 
 func (x *UpdateFarmsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[12]
+	mi := &file_farm_v1_farm_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -868,7 +1036,7 @@ func (x *UpdateFarmsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFarmsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateFarmsResponse) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{12}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateFarmsResponse) GetFarmId() string {
@@ -915,7 +1083,7 @@ type DeleteFarmRequest struct {
 
 func (x *DeleteFarmRequest) Reset() {
 	*x = DeleteFarmRequest{}
-	mi := &file_farm_v1_farm_proto_msgTypes[13]
+	mi := &file_farm_v1_farm_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -927,7 +1095,7 @@ func (x *DeleteFarmRequest) String() string {
 func (*DeleteFarmRequest) ProtoMessage() {}
 
 func (x *DeleteFarmRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[13]
+	mi := &file_farm_v1_farm_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -940,7 +1108,7 @@ func (x *DeleteFarmRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFarmRequest.ProtoReflect.Descriptor instead.
 func (*DeleteFarmRequest) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{13}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *DeleteFarmRequest) GetValue() string {
@@ -961,7 +1129,7 @@ type DeleteFarmResponse struct {
 
 func (x *DeleteFarmResponse) Reset() {
 	*x = DeleteFarmResponse{}
-	mi := &file_farm_v1_farm_proto_msgTypes[14]
+	mi := &file_farm_v1_farm_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -973,7 +1141,7 @@ func (x *DeleteFarmResponse) String() string {
 func (*DeleteFarmResponse) ProtoMessage() {}
 
 func (x *DeleteFarmResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_farm_v1_farm_proto_msgTypes[14]
+	mi := &file_farm_v1_farm_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -986,7 +1154,7 @@ func (x *DeleteFarmResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFarmResponse.ProtoReflect.Descriptor instead.
 func (*DeleteFarmResponse) Descriptor() ([]byte, []int) {
-	return file_farm_v1_farm_proto_rawDescGZIP(), []int{14}
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteFarmResponse) GetId() string {
@@ -1042,7 +1210,24 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xba\x01\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xb9\x01\n" +
+	"\x11CreateFarmAddress\x12\x16\n" +
+	"\x06street\x18\x01 \x01(\tR\x06street\x12\x18\n" +
+	"\avillage\x18\x02 \x01(\tR\avillage\x12!\n" +
+	"\fsub_district\x18\x03 \x01(\tR\vsubDistrict\x12\x12\n" +
+	"\x04city\x18\x04 \x01(\tR\x04city\x12\x1a\n" +
+	"\bprovince\x18\x05 \x01(\tR\bprovince\x12\x1f\n" +
+	"\vpostal_code\x18\x06 \x01(\tR\n" +
+	"postalCode\"\xc3\x01\n" +
+	"\n" +
+	"CreateFarm\x12\x1b\n" +
+	"\tfarmer_id\x18\x01 \x01(\tR\bfarmerId\x12\x1b\n" +
+	"\tfarm_name\x18\x02 \x01(\tR\bfarmName\x12\x1b\n" +
+	"\tfarm_type\x18\x03 \x01(\tR\bfarmType\x12\x1b\n" +
+	"\tfarm_size\x18\x04 \x01(\x01R\bfarmSize\x12\x1f\n" +
+	"\vfarm_status\x18\x05 \x01(\tR\n" +
+	"farmStatus\x12 \n" +
+	"\vdescription\x18\x06 \x01(\tR\vdescription\"\xba\x01\n" +
 	"\x0eUpdateFarmData\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tfarm_name\x18\x03 \x01(\tR\bfarmName\x12\x1b\n" +
@@ -1066,10 +1251,10 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"\aaddress\x18\x02 \x01(\v2\x1e.farm.v1.UpdateFarmAddressDataH\x01R\aaddress\x88\x01\x01B\a\n" +
 	"\x05_farmB\n" +
 	"\n" +
-	"\b_address\"f\n" +
-	"\x11CreateFarmRequest\x12!\n" +
-	"\x04farm\x18\x01 \x01(\v2\r.farm.v1.FarmR\x04farm\x12.\n" +
-	"\aaddress\x18\x02 \x01(\v2\x14.farm.v1.FarmAddressR\aaddress\"\x93\x01\n" +
+	"\b_address\"r\n" +
+	"\x11CreateFarmRequest\x12'\n" +
+	"\x04farm\x18\x01 \x01(\v2\x13.farm.v1.CreateFarmR\x04farm\x124\n" +
+	"\aaddress\x18\x02 \x01(\v2\x1a.farm.v1.CreateFarmAddressR\aaddress\"\x93\x01\n" +
 	"\x12CreateFarmResponse\x12\x17\n" +
 	"\afarm_id\x18\x01 \x01(\tR\x06farmId\x12\x1b\n" +
 	"\tfarm_name\x18\x02 \x01(\tR\bfarmName\x12\x1d\n" +
@@ -1127,48 +1312,50 @@ func file_farm_v1_farm_proto_rawDescGZIP() []byte {
 	return file_farm_v1_farm_proto_rawDescData
 }
 
-var file_farm_v1_farm_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_farm_v1_farm_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_farm_v1_farm_proto_goTypes = []any{
 	(*FarmAddress)(nil),           // 0: farm.v1.FarmAddress
 	(*Farm)(nil),                  // 1: farm.v1.Farm
-	(*UpdateFarmData)(nil),        // 2: farm.v1.UpdateFarmData
-	(*UpdateFarmAddressData)(nil), // 3: farm.v1.UpdateFarmAddressData
-	(*UpdateFarm)(nil),            // 4: farm.v1.UpdateFarm
-	(*CreateFarmRequest)(nil),     // 5: farm.v1.CreateFarmRequest
-	(*CreateFarmResponse)(nil),    // 6: farm.v1.CreateFarmResponse
-	(*GetFarmByIDRequest)(nil),    // 7: farm.v1.GetFarmByIDRequest
-	(*GetFarmByIDResponse)(nil),   // 8: farm.v1.GetFarmByIDResponse
-	(*GetFarmListRequest)(nil),    // 9: farm.v1.GetFarmListRequest
-	(*GetFarmListResponse)(nil),   // 10: farm.v1.GetFarmListResponse
-	(*UpdateFarmsRequest)(nil),    // 11: farm.v1.UpdateFarmsRequest
-	(*UpdateFarmsResponse)(nil),   // 12: farm.v1.UpdateFarmsResponse
-	(*DeleteFarmRequest)(nil),     // 13: farm.v1.DeleteFarmRequest
-	(*DeleteFarmResponse)(nil),    // 14: farm.v1.DeleteFarmResponse
-	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
+	(*CreateFarmAddress)(nil),     // 2: farm.v1.CreateFarmAddress
+	(*CreateFarm)(nil),            // 3: farm.v1.CreateFarm
+	(*UpdateFarmData)(nil),        // 4: farm.v1.UpdateFarmData
+	(*UpdateFarmAddressData)(nil), // 5: farm.v1.UpdateFarmAddressData
+	(*UpdateFarm)(nil),            // 6: farm.v1.UpdateFarm
+	(*CreateFarmRequest)(nil),     // 7: farm.v1.CreateFarmRequest
+	(*CreateFarmResponse)(nil),    // 8: farm.v1.CreateFarmResponse
+	(*GetFarmByIDRequest)(nil),    // 9: farm.v1.GetFarmByIDRequest
+	(*GetFarmByIDResponse)(nil),   // 10: farm.v1.GetFarmByIDResponse
+	(*GetFarmListRequest)(nil),    // 11: farm.v1.GetFarmListRequest
+	(*GetFarmListResponse)(nil),   // 12: farm.v1.GetFarmListResponse
+	(*UpdateFarmsRequest)(nil),    // 13: farm.v1.UpdateFarmsRequest
+	(*UpdateFarmsResponse)(nil),   // 14: farm.v1.UpdateFarmsResponse
+	(*DeleteFarmRequest)(nil),     // 15: farm.v1.DeleteFarmRequest
+	(*DeleteFarmResponse)(nil),    // 16: farm.v1.DeleteFarmResponse
+	(*timestamppb.Timestamp)(nil), // 17: google.protobuf.Timestamp
 }
 var file_farm_v1_farm_proto_depIdxs = []int32{
-	15, // 0: farm.v1.FarmAddress.created_at:type_name -> google.protobuf.Timestamp
-	15, // 1: farm.v1.FarmAddress.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 0: farm.v1.FarmAddress.created_at:type_name -> google.protobuf.Timestamp
+	17, // 1: farm.v1.FarmAddress.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: farm.v1.Farm.address:type_name -> farm.v1.FarmAddress
-	15, // 3: farm.v1.Farm.created_at:type_name -> google.protobuf.Timestamp
-	15, // 4: farm.v1.Farm.updated_at:type_name -> google.protobuf.Timestamp
-	2,  // 5: farm.v1.UpdateFarm.farm:type_name -> farm.v1.UpdateFarmData
-	3,  // 6: farm.v1.UpdateFarm.address:type_name -> farm.v1.UpdateFarmAddressData
-	1,  // 7: farm.v1.CreateFarmRequest.farm:type_name -> farm.v1.Farm
-	0,  // 8: farm.v1.CreateFarmRequest.address:type_name -> farm.v1.FarmAddress
+	17, // 3: farm.v1.Farm.created_at:type_name -> google.protobuf.Timestamp
+	17, // 4: farm.v1.Farm.updated_at:type_name -> google.protobuf.Timestamp
+	4,  // 5: farm.v1.UpdateFarm.farm:type_name -> farm.v1.UpdateFarmData
+	5,  // 6: farm.v1.UpdateFarm.address:type_name -> farm.v1.UpdateFarmAddressData
+	3,  // 7: farm.v1.CreateFarmRequest.farm:type_name -> farm.v1.CreateFarm
+	2,  // 8: farm.v1.CreateFarmRequest.address:type_name -> farm.v1.CreateFarmAddress
 	1,  // 9: farm.v1.GetFarmByIDResponse.farm:type_name -> farm.v1.Farm
 	1,  // 10: farm.v1.GetFarmListResponse.farms:type_name -> farm.v1.Farm
-	4,  // 11: farm.v1.UpdateFarmsRequest.value:type_name -> farm.v1.UpdateFarm
-	5,  // 12: farm.v1.FarmService.CreateFarm:input_type -> farm.v1.CreateFarmRequest
-	7,  // 13: farm.v1.FarmService.GetFarmByID:input_type -> farm.v1.GetFarmByIDRequest
-	9,  // 14: farm.v1.FarmService.GetFarmList:input_type -> farm.v1.GetFarmListRequest
-	11, // 15: farm.v1.FarmService.UpdateFarms:input_type -> farm.v1.UpdateFarmsRequest
-	13, // 16: farm.v1.FarmService.DeleteFarm:input_type -> farm.v1.DeleteFarmRequest
-	6,  // 17: farm.v1.FarmService.CreateFarm:output_type -> farm.v1.CreateFarmResponse
-	8,  // 18: farm.v1.FarmService.GetFarmByID:output_type -> farm.v1.GetFarmByIDResponse
-	10, // 19: farm.v1.FarmService.GetFarmList:output_type -> farm.v1.GetFarmListResponse
-	12, // 20: farm.v1.FarmService.UpdateFarms:output_type -> farm.v1.UpdateFarmsResponse
-	14, // 21: farm.v1.FarmService.DeleteFarm:output_type -> farm.v1.DeleteFarmResponse
+	6,  // 11: farm.v1.UpdateFarmsRequest.value:type_name -> farm.v1.UpdateFarm
+	7,  // 12: farm.v1.FarmService.CreateFarm:input_type -> farm.v1.CreateFarmRequest
+	9,  // 13: farm.v1.FarmService.GetFarmByID:input_type -> farm.v1.GetFarmByIDRequest
+	11, // 14: farm.v1.FarmService.GetFarmList:input_type -> farm.v1.GetFarmListRequest
+	13, // 15: farm.v1.FarmService.UpdateFarms:input_type -> farm.v1.UpdateFarmsRequest
+	15, // 16: farm.v1.FarmService.DeleteFarm:input_type -> farm.v1.DeleteFarmRequest
+	8,  // 17: farm.v1.FarmService.CreateFarm:output_type -> farm.v1.CreateFarmResponse
+	10, // 18: farm.v1.FarmService.GetFarmByID:output_type -> farm.v1.GetFarmByIDResponse
+	12, // 19: farm.v1.FarmService.GetFarmList:output_type -> farm.v1.GetFarmListResponse
+	14, // 20: farm.v1.FarmService.UpdateFarms:output_type -> farm.v1.UpdateFarmsResponse
+	16, // 21: farm.v1.FarmService.DeleteFarm:output_type -> farm.v1.DeleteFarmResponse
 	17, // [17:22] is the sub-list for method output_type
 	12, // [12:17] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -1181,15 +1368,15 @@ func file_farm_v1_farm_proto_init() {
 	if File_farm_v1_farm_proto != nil {
 		return
 	}
-	file_farm_v1_farm_proto_msgTypes[4].OneofWrappers = []any{}
-	file_farm_v1_farm_proto_msgTypes[12].OneofWrappers = []any{}
+	file_farm_v1_farm_proto_msgTypes[6].OneofWrappers = []any{}
+	file_farm_v1_farm_proto_msgTypes[14].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_farm_v1_farm_proto_rawDesc), len(file_farm_v1_farm_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

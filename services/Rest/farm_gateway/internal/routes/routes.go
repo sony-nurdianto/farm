@@ -7,23 +7,27 @@ import (
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/api"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/authh"
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/farmerh"
+	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/handlers/farmh"
 )
 
 type Routes struct {
 	app       *fiber.App
 	authSvc   api.GrpcAuthService
 	farmerSvc api.GrpcFarmerService
+	farmSvc   api.GrpcFarmService
 }
 
 func NewRoutes(
 	app *fiber.App,
 	authSvc api.GrpcAuthService,
 	farmerSvc api.GrpcFarmerService,
+	farmSvc api.GrpcFarmService,
 ) *Routes {
 	return &Routes{
 		app,
 		authSvc,
 		farmerSvc,
+		farmSvc,
 	}
 }
 
@@ -48,4 +52,12 @@ func (r *Routes) Build() {
 	)
 
 	r.app.Route("/farmer", farmerRouter.Builder)
+
+	farmHandler := farmh.NewFarmHandler(r.farmSvc)
+	farmCreateFarmHandler := NewRouterHandlers("/create", http.MethodPost, authHandler.AuthTokenBaseValidate, farmHandler.CreateFarm)
+	farmRouter := NewRouter(
+		farmCreateFarmHandler,
+	)
+
+	r.app.Route("/farm", farmRouter.Builder)
 }

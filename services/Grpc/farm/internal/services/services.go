@@ -16,6 +16,12 @@ type FarmServiceServer struct {
 	farmUc usescase.FarmUsecase
 }
 
+func NewFarmServiceServer(uc usescase.FarmUsecase) FarmServiceServer {
+	return FarmServiceServer{
+		farmUc: uc,
+	}
+}
+
 func (fss FarmServiceServer) CreateFarm(stream pbgen.FarmService_CreateFarmServer) error {
 	ctx := stream.Context()
 	for {

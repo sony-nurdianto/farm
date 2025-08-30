@@ -31,6 +31,24 @@ message Farm {
   google.protobuf.Timestamp updated_at = 10; 
 }
 
+message CreateFarmAddress {
+  string street = 1;
+  string village = 2;
+  string sub_district = 3;
+  string city = 4;
+  string province = 5;
+  string postal_code = 6;
+}
+
+message CreateFarm {
+  string farmer_id = 1;
+  string farm_name = 2;
+  string farm_type = 3;
+  double farm_size = 4;
+  string farm_status = 5;
+  string description = 6;
+}
+
 message UpdateFarmData {
   string id = 1;  
   string farm_name = 3;
@@ -57,8 +75,8 @@ message UpdateFarm {
 
 
 message CreateFarmRequest {
-  Farm farm = 1; 
-  FarmAddress address = 2;
+  CreateFarm farm = 1; 
+  CreateFarmAddress address = 2;
 }
 
 message CreateFarmResponse {
