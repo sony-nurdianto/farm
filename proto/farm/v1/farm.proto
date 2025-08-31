@@ -92,15 +92,24 @@ message GetFarmByIDResponse {
     Farm farm = 1;
 }
 
+enum SortOrder {
+  SortOrder_UKNOWN = 0;
+  SortOrder_ASC = 1;
+  SortOrder_DESC = 2;
+}
 
 message GetFarmListRequest {
-  int32 limit = 1;
-  int32 offset = 2;
+  string farmer_id = 1;
+  string search_name = 2;
+  SortOrder sort_order = 3;
+  int32 limit = 4;
+  int32 offset = 5;
 }
 
 
 message GetFarmListResponse {
-  repeated Farm farms = 1;
+  Farm farms = 1;
+  int32 total = 2;
 }
 
 message UpdateFarmsRequest {

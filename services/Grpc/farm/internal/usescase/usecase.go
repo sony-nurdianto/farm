@@ -9,11 +9,14 @@ import (
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/pbgen"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/repo"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type FarmUsecase interface {
 	InsertUsers(ctx context.Context, req *pbgen.CreateFarmRequest) *pbgen.CreateFarmResponse
 	UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) *pbgen.UpdateFarmsResponse
+	GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error)
+	GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) ([]*pbgen.GetFarmListResponse, error)
 }
 
 type farmUsecase struct {
@@ -132,4 +135,46 @@ func (fu farmUsecase) UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsReq
 	res.Status = "Success"
 
 	return res
+}
+
+func (fu farmUsecase) GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error) {
+	return fu.repo.GetTotalFarms(ctx, req)
+}
+
+func (fu farmUsecase) GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) ([]*pbgen.GetFarmListResponse, error) {
+	var res []*pbgen.GetFarmListResponse
+
+	farms, err := fu.repo.GetFarms(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range farms {
+		farm := &pbgen.GetFarmListResponse{
+			Farms: &pbgen.Farm{
+				Id:          v.Farm.ID,
+				FarmerId:    v.FarmerID,
+				FarmName:    v.FarmName,
+				FarmType:    v.FarmType,
+				FarmSize:    v.FarmSize,
+				FarmStatus:  v.FarmStatus,
+				Description: v.Description,
+				Address: &pbgen.FarmAddress{
+					Id:          v.FarmAddress.ID,
+					Street:      v.Street,
+					Village:     v.Village,
+					SubDistrict: v.SubDistrict,
+					City:        v.City,
+					Province:    v.Province,
+					PostalCode:  v.PostalCode,
+				},
+				CreatedAt: timestamppb.New(v.Farm.CreatedAt),
+				UpdatedAt: timestamppb.New(v.Farm.UpdatedAt),
+			},
+		}
+
+		res = append(res, farm)
+	}
+
+	return res, nil
 }

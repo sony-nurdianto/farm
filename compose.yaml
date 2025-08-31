@@ -28,8 +28,6 @@ services:
   redis-farmer-master: 
     image: redis/redis-stack-server:7.2.0-v18
     container_name: redis-farmer-master
-    ports:
-      - 6379:6379
     command: ["redis-server", "/etc/redis/redis.conf"]
     volumes:
       - ./infra/database/redis/farmer/redis-master.conf:/etc/redis/redis.conf:z
@@ -46,8 +44,6 @@ services:
   redis-farmer-slave-1: 
     image: redis/redis-stack-server:7.2.0-v18
     container_name: redis-farmer-slave-1
-    ports:
-      - 6378:6379
     command: ["redis-server", "/etc/redis/redis.conf"]
     volumes:
       - ./infra/database/redis/farmer/redis-slave-1.conf:/etc/redis/redis.conf:z
@@ -92,6 +88,76 @@ services:
     depends_on:
       - redis-farmer-master
       - redis-farmer-slave-1
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
+  redis-farm-master: 
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: redis-farm-master
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./infra/database/redis/farm/redis-master.conf:/etc/redis/redis.conf:z
+      - ./infra/database/redis/farm/farm-acl.conf:/data/users.acl:z
+      - redis-farm-master-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
+
+  redis-farm-slave-1: 
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: redis-farm-slave-1
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    volumes:
+      - ./infra/database/redis/farm/redis-slave-1.conf:/etc/redis/redis.conf:z
+      - ./infra/database/redis/farm/farmer-acl.conf:/data/users.acl:z
+      - redis-farm-slave-1-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
+  sentinel-farm:
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: sentinel-farm
+    command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
+    volumes:
+      - ./infra/database/redis/farm/sentinel.conf:/etc/redis/sentinel.conf:z
+      - sentinel-farm-data:/data
+    ports:
+      - 26381:26379
+    depends_on:
+      - redis-farm-master
+      - redis-farm-slave-1
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+
+
+  sentinel-farm-2:
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: sentinel-farm-2
+    command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
+    volumes:
+      - ./infra/database/redis/farm/sentinel-2.conf:/etc/redis/sentinel.conf:z
+      - sentinel-farm-2-data:/data
+    ports:
+      - 26382:26379
+    depends_on:
+      - redis-farm-master
+      - redis-farm-slave-1
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26379", "ping"]
       interval: 5s
@@ -435,3 +501,7 @@ volumes:
   redis-farmer-slave-1-data:
   sentinel-farmer-data:
   sentinel-farmer-2-data:
+  redis-farm-master-data:
+  redis-farm-slave-1-data:
+  sentinel-farm-data:
+  sentinel-farm-2-data:

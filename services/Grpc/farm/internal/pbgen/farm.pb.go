@@ -22,6 +22,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SortOrder int32
+
+const (
+	SortOrder_SortOrder_UKNOWN SortOrder = 0
+	SortOrder_SortOrder_ASC    SortOrder = 1
+	SortOrder_SortOrder_DESC   SortOrder = 2
+)
+
+// Enum value maps for SortOrder.
+var (
+	SortOrder_name = map[int32]string{
+		0: "SortOrder_UKNOWN",
+		1: "SortOrder_ASC",
+		2: "SortOrder_DESC",
+	}
+	SortOrder_value = map[string]int32{
+		"SortOrder_UKNOWN": 0,
+		"SortOrder_ASC":    1,
+		"SortOrder_DESC":   2,
+	}
+)
+
+func (x SortOrder) Enum() *SortOrder {
+	p := new(SortOrder)
+	*p = x
+	return p
+}
+
+func (x SortOrder) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SortOrder) Descriptor() protoreflect.EnumDescriptor {
+	return file_farm_v1_farm_proto_enumTypes[0].Descriptor()
+}
+
+func (SortOrder) Type() protoreflect.EnumType {
+	return &file_farm_v1_farm_proto_enumTypes[0]
+}
+
+func (x SortOrder) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SortOrder.Descriptor instead.
+func (SortOrder) EnumDescriptor() ([]byte, []int) {
+	return file_farm_v1_farm_proto_rawDescGZIP(), []int{0}
+}
+
 type FarmAddress struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -808,8 +857,11 @@ func (x *GetFarmByIDResponse) GetFarm() *Farm {
 
 type GetFarmListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset        int32                  `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
+	FarmerId      string                 `protobuf:"bytes,1,opt,name=farmer_id,json=farmerId,proto3" json:"farmer_id,omitempty"`
+	SearchName    string                 `protobuf:"bytes,2,opt,name=search_name,json=searchName,proto3" json:"search_name,omitempty"`
+	SortOrder     SortOrder              `protobuf:"varint,3,opt,name=sort_order,json=sortOrder,proto3,enum=farm.v1.SortOrder" json:"sort_order,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,5,opt,name=offset,proto3" json:"offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -844,6 +896,27 @@ func (*GetFarmListRequest) Descriptor() ([]byte, []int) {
 	return file_farm_v1_farm_proto_rawDescGZIP(), []int{10}
 }
 
+func (x *GetFarmListRequest) GetFarmerId() string {
+	if x != nil {
+		return x.FarmerId
+	}
+	return ""
+}
+
+func (x *GetFarmListRequest) GetSearchName() string {
+	if x != nil {
+		return x.SearchName
+	}
+	return ""
+}
+
+func (x *GetFarmListRequest) GetSortOrder() SortOrder {
+	if x != nil {
+		return x.SortOrder
+	}
+	return SortOrder_SortOrder_UKNOWN
+}
+
 func (x *GetFarmListRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
@@ -860,7 +933,8 @@ func (x *GetFarmListRequest) GetOffset() int32 {
 
 type GetFarmListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Farms         []*Farm                `protobuf:"bytes,1,rep,name=farms,proto3" json:"farms,omitempty"`
+	Farms         *Farm                  `protobuf:"bytes,1,opt,name=farms,proto3" json:"farms,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -895,11 +969,18 @@ func (*GetFarmListResponse) Descriptor() ([]byte, []int) {
 	return file_farm_v1_farm_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *GetFarmListResponse) GetFarms() []*Farm {
+func (x *GetFarmListResponse) GetFarms() *Farm {
 	if x != nil {
 		return x.Farms
 	}
 	return nil
+}
+
+func (x *GetFarmListResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
 }
 
 type UpdateFarmsRequest struct {
@@ -1214,12 +1295,18 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"\x12GetFarmByIDRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
 	"\x13GetFarmByIDResponse\x12!\n" +
-	"\x04farm\x18\x01 \x01(\v2\r.farm.v1.FarmR\x04farm\"B\n" +
-	"\x12GetFarmListRequest\x12\x14\n" +
-	"\x05limit\x18\x01 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x02 \x01(\x05R\x06offset\":\n" +
+	"\x04farm\x18\x01 \x01(\v2\r.farm.v1.FarmR\x04farm\"\xb3\x01\n" +
+	"\x12GetFarmListRequest\x12\x1b\n" +
+	"\tfarmer_id\x18\x01 \x01(\tR\bfarmerId\x12\x1f\n" +
+	"\vsearch_name\x18\x02 \x01(\tR\n" +
+	"searchName\x121\n" +
+	"\n" +
+	"sort_order\x18\x03 \x01(\x0e2\x12.farm.v1.SortOrderR\tsortOrder\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x05 \x01(\x05R\x06offset\"P\n" +
 	"\x13GetFarmListResponse\x12#\n" +
-	"\x05farms\x18\x01 \x03(\v2\r.farm.v1.FarmR\x05farms\"\x9a\x01\n" +
+	"\x05farms\x18\x01 \x01(\v2\r.farm.v1.FarmR\x05farms\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\x9a\x01\n" +
 	"\x12UpdateFarmsRequest\x120\n" +
 	"\x04farm\x18\x01 \x01(\v2\x17.farm.v1.UpdateFarmDataH\x00R\x04farm\x88\x01\x01\x12=\n" +
 	"\aaddress\x18\x02 \x01(\v2\x1e.farm.v1.UpdateFarmAddressDataH\x01R\aaddress\x88\x01\x01B\a\n" +
@@ -1243,7 +1330,11 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"\x12DeleteFarmResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x10\n" +
-	"\x03msg\x18\x03 \x01(\tR\x03msg2\x83\x03\n" +
+	"\x03msg\x18\x03 \x01(\tR\x03msg*H\n" +
+	"\tSortOrder\x12\x14\n" +
+	"\x10SortOrder_UKNOWN\x10\x00\x12\x11\n" +
+	"\rSortOrder_ASC\x10\x01\x12\x12\n" +
+	"\x0eSortOrder_DESC\x10\x022\x83\x03\n" +
 	"\vFarmService\x12I\n" +
 	"\n" +
 	"CreateFarm\x12\x1a.farm.v1.CreateFarmRequest\x1a\x1b.farm.v1.CreateFarmResponse(\x010\x01\x12H\n" +
@@ -1265,53 +1356,56 @@ func file_farm_v1_farm_proto_rawDescGZIP() []byte {
 	return file_farm_v1_farm_proto_rawDescData
 }
 
+var file_farm_v1_farm_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_farm_v1_farm_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_farm_v1_farm_proto_goTypes = []any{
-	(*FarmAddress)(nil),           // 0: farm.v1.FarmAddress
-	(*Farm)(nil),                  // 1: farm.v1.Farm
-	(*CreateFarmAddress)(nil),     // 2: farm.v1.CreateFarmAddress
-	(*CreateFarm)(nil),            // 3: farm.v1.CreateFarm
-	(*UpdateFarmData)(nil),        // 4: farm.v1.UpdateFarmData
-	(*UpdateFarmAddressData)(nil), // 5: farm.v1.UpdateFarmAddressData
-	(*CreateFarmRequest)(nil),     // 6: farm.v1.CreateFarmRequest
-	(*CreateFarmResponse)(nil),    // 7: farm.v1.CreateFarmResponse
-	(*GetFarmByIDRequest)(nil),    // 8: farm.v1.GetFarmByIDRequest
-	(*GetFarmByIDResponse)(nil),   // 9: farm.v1.GetFarmByIDResponse
-	(*GetFarmListRequest)(nil),    // 10: farm.v1.GetFarmListRequest
-	(*GetFarmListResponse)(nil),   // 11: farm.v1.GetFarmListResponse
-	(*UpdateFarmsRequest)(nil),    // 12: farm.v1.UpdateFarmsRequest
-	(*UpdateFarmsResponse)(nil),   // 13: farm.v1.UpdateFarmsResponse
-	(*DeleteFarmRequest)(nil),     // 14: farm.v1.DeleteFarmRequest
-	(*DeleteFarmResponse)(nil),    // 15: farm.v1.DeleteFarmResponse
-	(*timestamppb.Timestamp)(nil), // 16: google.protobuf.Timestamp
+	(SortOrder)(0),                // 0: farm.v1.SortOrder
+	(*FarmAddress)(nil),           // 1: farm.v1.FarmAddress
+	(*Farm)(nil),                  // 2: farm.v1.Farm
+	(*CreateFarmAddress)(nil),     // 3: farm.v1.CreateFarmAddress
+	(*CreateFarm)(nil),            // 4: farm.v1.CreateFarm
+	(*UpdateFarmData)(nil),        // 5: farm.v1.UpdateFarmData
+	(*UpdateFarmAddressData)(nil), // 6: farm.v1.UpdateFarmAddressData
+	(*CreateFarmRequest)(nil),     // 7: farm.v1.CreateFarmRequest
+	(*CreateFarmResponse)(nil),    // 8: farm.v1.CreateFarmResponse
+	(*GetFarmByIDRequest)(nil),    // 9: farm.v1.GetFarmByIDRequest
+	(*GetFarmByIDResponse)(nil),   // 10: farm.v1.GetFarmByIDResponse
+	(*GetFarmListRequest)(nil),    // 11: farm.v1.GetFarmListRequest
+	(*GetFarmListResponse)(nil),   // 12: farm.v1.GetFarmListResponse
+	(*UpdateFarmsRequest)(nil),    // 13: farm.v1.UpdateFarmsRequest
+	(*UpdateFarmsResponse)(nil),   // 14: farm.v1.UpdateFarmsResponse
+	(*DeleteFarmRequest)(nil),     // 15: farm.v1.DeleteFarmRequest
+	(*DeleteFarmResponse)(nil),    // 16: farm.v1.DeleteFarmResponse
+	(*timestamppb.Timestamp)(nil), // 17: google.protobuf.Timestamp
 }
 var file_farm_v1_farm_proto_depIdxs = []int32{
-	16, // 0: farm.v1.FarmAddress.created_at:type_name -> google.protobuf.Timestamp
-	16, // 1: farm.v1.FarmAddress.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: farm.v1.Farm.address:type_name -> farm.v1.FarmAddress
-	16, // 3: farm.v1.Farm.created_at:type_name -> google.protobuf.Timestamp
-	16, // 4: farm.v1.Farm.updated_at:type_name -> google.protobuf.Timestamp
-	3,  // 5: farm.v1.CreateFarmRequest.farm:type_name -> farm.v1.CreateFarm
-	2,  // 6: farm.v1.CreateFarmRequest.address:type_name -> farm.v1.CreateFarmAddress
-	1,  // 7: farm.v1.GetFarmByIDResponse.farm:type_name -> farm.v1.Farm
-	1,  // 8: farm.v1.GetFarmListResponse.farms:type_name -> farm.v1.Farm
-	4,  // 9: farm.v1.UpdateFarmsRequest.farm:type_name -> farm.v1.UpdateFarmData
-	5,  // 10: farm.v1.UpdateFarmsRequest.address:type_name -> farm.v1.UpdateFarmAddressData
-	6,  // 11: farm.v1.FarmService.CreateFarm:input_type -> farm.v1.CreateFarmRequest
-	8,  // 12: farm.v1.FarmService.GetFarmByID:input_type -> farm.v1.GetFarmByIDRequest
-	10, // 13: farm.v1.FarmService.GetFarmList:input_type -> farm.v1.GetFarmListRequest
-	12, // 14: farm.v1.FarmService.UpdateFarms:input_type -> farm.v1.UpdateFarmsRequest
-	14, // 15: farm.v1.FarmService.DeleteFarm:input_type -> farm.v1.DeleteFarmRequest
-	7,  // 16: farm.v1.FarmService.CreateFarm:output_type -> farm.v1.CreateFarmResponse
-	9,  // 17: farm.v1.FarmService.GetFarmByID:output_type -> farm.v1.GetFarmByIDResponse
-	11, // 18: farm.v1.FarmService.GetFarmList:output_type -> farm.v1.GetFarmListResponse
-	13, // 19: farm.v1.FarmService.UpdateFarms:output_type -> farm.v1.UpdateFarmsResponse
-	15, // 20: farm.v1.FarmService.DeleteFarm:output_type -> farm.v1.DeleteFarmResponse
-	16, // [16:21] is the sub-list for method output_type
-	11, // [11:16] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	17, // 0: farm.v1.FarmAddress.created_at:type_name -> google.protobuf.Timestamp
+	17, // 1: farm.v1.FarmAddress.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 2: farm.v1.Farm.address:type_name -> farm.v1.FarmAddress
+	17, // 3: farm.v1.Farm.created_at:type_name -> google.protobuf.Timestamp
+	17, // 4: farm.v1.Farm.updated_at:type_name -> google.protobuf.Timestamp
+	4,  // 5: farm.v1.CreateFarmRequest.farm:type_name -> farm.v1.CreateFarm
+	3,  // 6: farm.v1.CreateFarmRequest.address:type_name -> farm.v1.CreateFarmAddress
+	2,  // 7: farm.v1.GetFarmByIDResponse.farm:type_name -> farm.v1.Farm
+	0,  // 8: farm.v1.GetFarmListRequest.sort_order:type_name -> farm.v1.SortOrder
+	2,  // 9: farm.v1.GetFarmListResponse.farms:type_name -> farm.v1.Farm
+	5,  // 10: farm.v1.UpdateFarmsRequest.farm:type_name -> farm.v1.UpdateFarmData
+	6,  // 11: farm.v1.UpdateFarmsRequest.address:type_name -> farm.v1.UpdateFarmAddressData
+	7,  // 12: farm.v1.FarmService.CreateFarm:input_type -> farm.v1.CreateFarmRequest
+	9,  // 13: farm.v1.FarmService.GetFarmByID:input_type -> farm.v1.GetFarmByIDRequest
+	11, // 14: farm.v1.FarmService.GetFarmList:input_type -> farm.v1.GetFarmListRequest
+	13, // 15: farm.v1.FarmService.UpdateFarms:input_type -> farm.v1.UpdateFarmsRequest
+	15, // 16: farm.v1.FarmService.DeleteFarm:input_type -> farm.v1.DeleteFarmRequest
+	8,  // 17: farm.v1.FarmService.CreateFarm:output_type -> farm.v1.CreateFarmResponse
+	10, // 18: farm.v1.FarmService.GetFarmByID:output_type -> farm.v1.GetFarmByIDResponse
+	12, // 19: farm.v1.FarmService.GetFarmList:output_type -> farm.v1.GetFarmListResponse
+	14, // 20: farm.v1.FarmService.UpdateFarms:output_type -> farm.v1.UpdateFarmsResponse
+	16, // 21: farm.v1.FarmService.DeleteFarm:output_type -> farm.v1.DeleteFarmResponse
+	17, // [17:22] is the sub-list for method output_type
+	12, // [12:17] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_farm_v1_farm_proto_init() }
@@ -1326,13 +1420,14 @@ func file_farm_v1_farm_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_farm_v1_farm_proto_rawDesc), len(file_farm_v1_farm_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_farm_v1_farm_proto_goTypes,
 		DependencyIndexes: file_farm_v1_farm_proto_depIdxs,
+		EnumInfos:         file_farm_v1_farm_proto_enumTypes,
 		MessageInfos:      file_farm_v1_farm_proto_msgTypes,
 	}.Build()
 	File_farm_v1_farm_proto = out.File

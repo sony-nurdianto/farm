@@ -8,6 +8,7 @@ import (
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/concurent"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/constants"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
+	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/pbgen"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
 )
@@ -15,6 +16,8 @@ import (
 type FarmRepo interface {
 	CreateFarm(ctx context.Context, opts pkg.TxOpts, farm models.Farm, farmAddr models.FarmAddress) (models.FarmWithAddress, error)
 	UpdateFarm(ctx context.Context, opts *pkg.TxOpts, farm *models.UpdateFarm, address *models.UpdateFarmAddress) (*models.Farm, *models.FarmAddress, error)
+	GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error)
+	GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (res []models.FarmWithAddress, _ error)
 }
 
 type farmRepo struct {
@@ -25,9 +28,15 @@ type farmRepo struct {
 const (
 	CreateFarmStmtType        string = "CreateFarmStmtType"
 	CreateFarmAddressStmtType string = "CreateFarmAddressStmtType"
+
 	UpdateFarmStmtType        string = "UpdateFarmStmtType"
 	UpdateFarmAddressStmtType string = "UpdateFarmAddressStmtType"
-	DeleteFarmStmtType        string = "DeleteFarmStmtType"
+
+	GetFarmsStmtDescType   string = "GetFarmsStmtDescType"
+	GetFarmsStmtAscType    string = "GetFarmsStmtAscType"
+	TotalFarmsDataStmtType string = "TotalFarmsDataStmtType"
+
+	DeleteFarmStmtType string = "DeleteFarmStmtType"
 )
 
 type farmStmt struct {
@@ -39,9 +48,16 @@ type farmDB struct {
 	db                    pkg.PostgresDatabase
 	createFarmStmt        pkg.Stmt
 	createFarmAddressStmt pkg.Stmt
-	updateFarmStmt        pkg.Stmt
-	updateFarmAddresStmt  pkg.Stmt
-	deleteFarmStmt        pkg.Stmt
+
+	updateFarmStmt       pkg.Stmt
+	updateFarmAddresStmt pkg.Stmt
+
+	getFarmsAscStmt  pkg.Stmt
+	getFarmsDescStmt pkg.Stmt
+
+	totalFarmsData pkg.Stmt
+
+	deleteFarmStmt pkg.Stmt
 }
 
 func initPostgresDB(
@@ -119,8 +135,14 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 		chs := []<-chan any{
 			prepareStmt(ctx, db.Value, constants.QueryInsertFarm, CreateFarmStmtType),
 			prepareStmt(ctx, db.Value, constants.QueryInsertFarmAddress, CreateFarmAddressStmtType),
+
 			prepareStmt(ctx, db.Value, constants.QueryUpdateFarm, UpdateFarmStmtType),
 			prepareStmt(ctx, db.Value, constants.QueryUpdateFarmAddress, UpdateFarmAddressStmtType),
+
+			prepareStmt(ctx, db.Value, constants.QueryGetFarmAsc, GetFarmsStmtAscType),
+			prepareStmt(ctx, db.Value, constants.QueryGetFarmDesc, GetFarmsStmtDescType),
+			prepareStmt(ctx, db.Value, constants.QueryTotalFarm, TotalFarmsDataStmtType),
+
 			prepareStmt(ctx, db.Value, constants.QueryDeleteFarm, DeleteFarmStmtType),
 		}
 
@@ -151,6 +173,12 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 				dbFarm.updateFarmStmt = vRes.Value.stmt
 			case UpdateFarmAddressStmtType:
 				dbFarm.updateFarmAddresStmt = vRes.Value.stmt
+			case GetFarmsStmtAscType:
+				dbFarm.getFarmsAscStmt = vRes.Value.stmt
+			case GetFarmsStmtDescType:
+				dbFarm.getFarmsDescStmt = vRes.Value.stmt
+			case TotalFarmsDataStmtType:
+				dbFarm.totalFarmsData = vRes.Value.stmt
 			case DeleteFarmStmtType:
 				dbFarm.deleteFarmStmt = vRes.Value.stmt
 			}
@@ -171,13 +199,13 @@ func prepareFarmCache(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 
 		rdb := redis.NewRedisDB(rdi)
 		rdc, err := rdb.InitRedisClient(ctx, &redis.FailoverOptions{
-			MasterName: os.Getenv("FARMER_REDIS_MASTER_NAME"),
+			MasterName: os.Getenv("FARM_REDIS_MASTER_NAME"),
 			SentinelAddrs: []string{
-				os.Getenv("SENTINEL_FARMER_REDIS_ADDR"),
-				os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2"),
+				os.Getenv("SENTINEL_FARM_REDIS_ADDR"),
+				os.Getenv("SENTINEL_FARM_REDIS_ADDR_2"),
 			},
-			Username: os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
-			Password: os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
+			Username: os.Getenv("FARM_REDIS_MASTER_USER_NAME"),
+			Password: os.Getenv("FARM_REDIS_MASTER_PASSWORD"),
 			DB:       0,
 		})
 		if err != nil {
