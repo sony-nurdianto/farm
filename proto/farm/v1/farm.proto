@@ -109,7 +109,7 @@ message GetFarmListRequest {
 
 message GetFarmListResponse {
   Farm farms = 1;
-  int32 total = 2;
+  optional int32 total = 2;
 }
 
 message UpdateFarmsRequest {

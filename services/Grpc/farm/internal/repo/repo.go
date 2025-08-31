@@ -18,6 +18,7 @@ type FarmRepo interface {
 	UpdateFarm(ctx context.Context, opts *pkg.TxOpts, farm *models.UpdateFarm, address *models.UpdateFarmAddress) (*models.Farm, *models.FarmAddress, error)
 	GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error)
 	GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (res []models.FarmWithAddress, _ error)
+	GetFarmByID(ctx context.Context, id string) (res models.FarmWithAddress, _ error)
 }
 
 type farmRepo struct {
@@ -35,6 +36,8 @@ const (
 	GetFarmsStmtDescType   string = "GetFarmsStmtDescType"
 	GetFarmsStmtAscType    string = "GetFarmsStmtAscType"
 	TotalFarmsDataStmtType string = "TotalFarmsDataStmtType"
+
+	GetFarmByIDType string = "GetFarmByIDType"
 
 	DeleteFarmStmtType string = "DeleteFarmStmtType"
 )
@@ -54,8 +57,9 @@ type farmDB struct {
 
 	getFarmsAscStmt  pkg.Stmt
 	getFarmsDescStmt pkg.Stmt
+	totalFarmsData   pkg.Stmt
 
-	totalFarmsData pkg.Stmt
+	getFarmByIDStmt pkg.Stmt
 
 	deleteFarmStmt pkg.Stmt
 }
@@ -143,6 +147,8 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 			prepareStmt(ctx, db.Value, constants.QueryGetFarmDesc, GetFarmsStmtDescType),
 			prepareStmt(ctx, db.Value, constants.QueryTotalFarm, TotalFarmsDataStmtType),
 
+			prepareStmt(ctx, db.Value, constants.QueryGetFarmByID, GetFarmByIDType),
+
 			prepareStmt(ctx, db.Value, constants.QueryDeleteFarm, DeleteFarmStmtType),
 		}
 
@@ -179,6 +185,8 @@ func prepareFarmDB(ctx context.Context, dbChan <-chan any) <-chan any {
 				dbFarm.getFarmsDescStmt = vRes.Value.stmt
 			case TotalFarmsDataStmtType:
 				dbFarm.totalFarmsData = vRes.Value.stmt
+			case GetFarmByIDType:
+				dbFarm.getFarmByIDStmt = vRes.Value.stmt
 			case DeleteFarmStmtType:
 				dbFarm.deleteFarmStmt = vRes.Value.stmt
 			}

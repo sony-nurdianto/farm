@@ -934,7 +934,7 @@ func (x *GetFarmListRequest) GetOffset() int32 {
 type GetFarmListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Farms         *Farm                  `protobuf:"bytes,1,opt,name=farms,proto3" json:"farms,omitempty"`
-	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Total         *int32                 `protobuf:"varint,2,opt,name=total,proto3,oneof" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -977,8 +977,8 @@ func (x *GetFarmListResponse) GetFarms() *Farm {
 }
 
 func (x *GetFarmListResponse) GetTotal() int32 {
-	if x != nil {
-		return x.Total
+	if x != nil && x.Total != nil {
+		return *x.Total
 	}
 	return 0
 }
@@ -1303,10 +1303,11 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"\n" +
 	"sort_order\x18\x03 \x01(\x0e2\x12.farm.v1.SortOrderR\tsortOrder\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x05 \x01(\x05R\x06offset\"P\n" +
+	"\x06offset\x18\x05 \x01(\x05R\x06offset\"_\n" +
 	"\x13GetFarmListResponse\x12#\n" +
-	"\x05farms\x18\x01 \x01(\v2\r.farm.v1.FarmR\x05farms\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\x9a\x01\n" +
+	"\x05farms\x18\x01 \x01(\v2\r.farm.v1.FarmR\x05farms\x12\x19\n" +
+	"\x05total\x18\x02 \x01(\x05H\x00R\x05total\x88\x01\x01B\b\n" +
+	"\x06_total\"\x9a\x01\n" +
 	"\x12UpdateFarmsRequest\x120\n" +
 	"\x04farm\x18\x01 \x01(\v2\x17.farm.v1.UpdateFarmDataH\x00R\x04farm\x88\x01\x01\x12=\n" +
 	"\aaddress\x18\x02 \x01(\v2\x1e.farm.v1.UpdateFarmAddressDataH\x01R\aaddress\x88\x01\x01B\a\n" +
@@ -1413,6 +1414,7 @@ func file_farm_v1_farm_proto_init() {
 	if File_farm_v1_farm_proto != nil {
 		return
 	}
+	file_farm_v1_farm_proto_msgTypes[11].OneofWrappers = []any{}
 	file_farm_v1_farm_proto_msgTypes[12].OneofWrappers = []any{}
 	file_farm_v1_farm_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}

@@ -18,7 +18,9 @@ func (fh farmHandler) CreateFarm(c *fiber.Ctx) error {
 		)
 	}
 
-	var farm []models.CreateFarm
+	farm := struct {
+		Data []models.CreateFarm `json:"data"`
+	}{}
 
 	if err := c.BodyParser(&farm); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(
@@ -28,11 +30,11 @@ func (fh farmHandler) CreateFarm(c *fiber.Ctx) error {
 		)
 	}
 
-	for i := range len(farm) {
-		farm[i].FarmerID = id
+	for i := range farm.Data {
+		farm.Data[i].FarmerID = id
 	}
 
-	res, err := fh.grpcFarmSvc.CreateFarm(c.UserContext(), farm)
+	res, err := fh.grpcFarmSvc.CreateFarm(c.UserContext(), farm.Data)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{

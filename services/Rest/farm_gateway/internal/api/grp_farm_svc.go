@@ -10,6 +10,7 @@ import (
 type GrpcFarmService interface {
 	CreateFarm(ctx context.Context, dataRequest []models.CreateFarm) ([]*pbgen.CreateFarmResponse, error)
 	UpdateFarmOrAddress(ctx context.Context, data []models.UpdateFarmWithAddr) ([]*pbgen.UpdateFarmsResponse, error)
+	GetFarms(ctx context.Context, farmerID string, dataRequest models.GetFarmsRequest) (res models.GetFarmsResponse, _ error)
 }
 
 type grpcFarmService struct {

@@ -1,6 +1,6 @@
 package models
 
-type FarmAddress struct {
+type CreateFarmAddress struct {
 	Street      string `json:"street"`
 	Village     string `json:"village"`
 	SubDistrict string `json:"sub_district"`
@@ -16,5 +16,5 @@ type CreateFarm struct {
 	FarmSize    float64 `json:"farm_size"`
 	FarmStatus  string  `json:"farm_status"`
 	Description string  `json:"description"`
-	Address     FarmAddress
+	Address     CreateFarmAddress
 }

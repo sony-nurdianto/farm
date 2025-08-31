@@ -17,6 +17,7 @@ type FarmUsecase interface {
 	UpdateUsers(ctx context.Context, req *pbgen.UpdateFarmsRequest) *pbgen.UpdateFarmsResponse
 	GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error)
 	GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) ([]*pbgen.GetFarmListResponse, error)
+	GetFarmByID(ctx context.Context, req *pbgen.GetFarmByIDRequest) (*pbgen.GetFarmByIDResponse, error)
 }
 
 type farmUsecase struct {
@@ -174,6 +175,38 @@ func (fu farmUsecase) GetFarms(ctx context.Context, req *pbgen.GetFarmListReques
 		}
 
 		res = append(res, farm)
+	}
+
+	return res, nil
+}
+
+func (fu farmUsecase) GetFarmByID(ctx context.Context, req *pbgen.GetFarmByIDRequest) (*pbgen.GetFarmByIDResponse, error) {
+	farm, err := fu.repo.GetFarmByID(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	res := &pbgen.GetFarmByIDResponse{
+		Farm: &pbgen.Farm{
+			Id:          farm.Farm.ID,
+			FarmerId:    farm.FarmerID,
+			FarmName:    farm.FarmName,
+			FarmType:    farm.FarmType,
+			FarmSize:    farm.FarmSize,
+			FarmStatus:  farm.FarmStatus,
+			Description: farm.Description,
+			Address: &pbgen.FarmAddress{
+				Id:          farm.FarmAddress.ID,
+				Street:      farm.Street,
+				Village:     farm.Village,
+				SubDistrict: farm.SubDistrict,
+				City:        farm.City,
+				Province:    farm.Province,
+				PostalCode:  farm.PostalCode,
+			},
+			CreatedAt: timestamppb.New(farm.Farm.CreatedAt),
+			UpdatedAt: timestamppb.New(farm.Farm.UpdatedAt),
+		},
 	}
 
 	return res, nil

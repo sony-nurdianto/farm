@@ -50,7 +50,12 @@ func (fss FarmServiceServer) CreateFarm(stream pbgen.FarmService_CreateFarmServe
 }
 
 func (fss FarmServiceServer) GetFarmByID(ctx context.Context, in *pbgen.GetFarmByIDRequest) (*pbgen.GetFarmByIDResponse, error) {
-	return nil, nil
+	res, err := fss.farmUc.GetFarmByID(ctx, in)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return res, nil
 }
 
 func (fss FarmServiceServer) GetFarmList(in *pbgen.GetFarmListRequest, stream pbgen.FarmService_GetFarmListServer) error {
@@ -61,8 +66,10 @@ func (fss FarmServiceServer) GetFarmList(in *pbgen.GetFarmListRequest, stream pb
 		return status.Error(codes.Internal, err.Error())
 	}
 
+	total := int32(totalFarm)
+
 	err = stream.Send(&pbgen.GetFarmListResponse{
-		Total: int32(totalFarm),
+		Total: &total,
 	})
 	if err != nil {
 		return status.Error(codes.Internal, err.Error())

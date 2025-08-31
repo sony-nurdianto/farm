@@ -6,9 +6,11 @@ import (
 )
 
 func (fh farmHandler) UpdateFarm(c *fiber.Ctx) error {
-	var farmWitdhAddr []models.UpdateFarmWithAddr
+	farmWithAddr := struct {
+		Data []models.UpdateFarmWithAddr `json:"data"`
+	}{}
 
-	if err := c.BodyParser(&farmWitdhAddr); err != nil {
+	if err := c.BodyParser(&farmWithAddr); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(
 			fiber.Map{
 				"error": err.Error(),
@@ -16,7 +18,7 @@ func (fh farmHandler) UpdateFarm(c *fiber.Ctx) error {
 		)
 	}
 
-	res, err := fh.grpcFarmSvc.UpdateFarmOrAddress(c.UserContext(), farmWitdhAddr)
+	res, err := fh.grpcFarmSvc.UpdateFarmOrAddress(c.UserContext(), farmWithAddr.Data)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{
