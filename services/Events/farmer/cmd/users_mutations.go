@@ -163,13 +163,13 @@ func main() {
 
 	cfgFarmer := map[kev.ConfigKeyKafka]string{
 		kev.BOOTSTRAP_SERVERS:             os.Getenv("KAKFKABROKER"),
-		kev.GROUP_ID:                      "auth-event",
+		kev.GROUP_ID:                      "farmer-event",
 		kev.AUTO_OFFSET_RESET:             "earliest",
 		kev.ENABLE_AUTO_COMMIT:            "false",
 		kev.PARTITION_ASSIGNMENT_STRATEGY: "cooperative-sticky",
 	}
 
-	farmerSvcRepo, err := repo.NewAuthRepo(
+	farmerSvcRepo, err := repo.NewFarmerRepo(
 		schrgs.NewRegistery(),
 		avr.NewAvrSerdeInstance(),
 		kev.NewKafka(),

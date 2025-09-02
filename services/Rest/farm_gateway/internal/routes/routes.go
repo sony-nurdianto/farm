@@ -56,11 +56,13 @@ func (r *Routes) Build() {
 	farmHandler := farmh.NewFarmHandler(r.farmSvc)
 	farmCreateFarmHandler := NewRouterHandlers("/create", http.MethodPost, authHandler.AuthTokenBaseValidate, farmHandler.CreateFarm)
 	farmUpdateHandler := NewRouterHandlers("/update", http.MethodPatch, authHandler.AuthTokenBaseValidate, farmHandler.UpdateFarm)
-	farmGetFarmsHandler := NewRouterHandlers("/farms", http.MethodPost, authHandler.AuthTokenBaseValidate, farmHandler.GetFarms)
+	farmGetFarmsHandler := NewRouterHandlers("/list", http.MethodPost, authHandler.AuthTokenBaseValidate, farmHandler.GetFarms)
+	farmGetByIDHandler := NewRouterHandlers("", http.MethodPost, authHandler.AuthTokenBaseValidate, farmHandler.GetFarmByID)
 	farmRouter := NewRouter(
 		farmCreateFarmHandler,
 		farmUpdateHandler,
 		farmGetFarmsHandler,
+		farmGetByIDHandler,
 	)
 
 	r.app.Route("/farm", farmRouter.Builder)

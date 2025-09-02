@@ -10,4 +10,6 @@ type (
 	IntCmd             = redis.IntCmd
 	StringCmd          = redis.StringCmd
 	MapStringStringCmd = redis.MapStringStringCmd
+	BoolCmd            = redis.BoolCmd
+	Pipeliner          = redis.Pipeliner
 )

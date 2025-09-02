@@ -108,23 +108,46 @@ func prepareFarmerStmt(ctx context.Context, dbChan <-chan any) <-chan any {
 	return out
 }
 
+func redisClientConn(ctx context.Context, rdi redis.RedisInstance) (redis.RedisClient, error) {
+	count := 0
+	rdb := redis.NewRedisDB(rdi)
+	var errConn error
+
+	for range 5 {
+
+		count++
+		rdc, err := rdb.InitRedisClient(
+			ctx,
+			&redis.FailoverOptions{
+				MasterName: os.Getenv("FARM_REDIS_MASTER_NAME"),
+				SentinelAddrs: []string{
+					os.Getenv("SENTINEL_FARM_REDIS_ADDR"),
+					os.Getenv("SENTINEL_FARM_REDIS_ADDR_2"),
+				},
+				Username: os.Getenv("FARM_REDIS_MASTER_USER_NAME"),
+				Password: os.Getenv("FARM_REDIS_MASTER_PASSWORD"),
+				DB:       0,
+			},
+		)
+
+		if err == nil {
+			return rdc, nil
+		}
+
+		errConn = err
+		time.Sleep(time.Second * 2)
+	}
+
+	return nil, fmt.Errorf("connection failed after %d attempt: %w", count, errConn)
+}
+
 func initRedisDatabae(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 	out := make(chan any, 1)
 	go func() {
 		defer close(out)
 		var res concurent.Result[redis.RedisClient]
 
-		rdb := redis.NewRedisDB(rdi)
-		rdc, err := rdb.InitRedisClient(context.Background(), &redis.FailoverOptions{
-			MasterName: os.Getenv("FARMER_REDIS_MASTER_NAME"),
-			SentinelAddrs: []string{
-				os.Getenv("SENTINEL_FARMER_REDIS_ADDR"),
-				os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2"),
-			},
-			Username: os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
-			Password: os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
-			DB:       0,
-		})
+		rdc, err := redisClientConn(ctx, rdi)
 		if err != nil {
 			res.Error = err
 			send(ctx, out, res)

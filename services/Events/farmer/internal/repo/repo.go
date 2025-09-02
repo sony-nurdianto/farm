@@ -27,7 +27,7 @@ type authDB struct {
 	updateEmailStmt pkg.Stmt
 }
 
-func NewAuthRepo(
+func NewFarmerRepo(
 	sri schrgs.SchemaRegisteryInstance,
 	avri avr.AvrSerdeInstance,
 	kv kev.Kafka,

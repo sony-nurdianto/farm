@@ -2,6 +2,8 @@ package repo
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/pbgen"
@@ -92,6 +94,12 @@ func (fr farmRepo) GetFarmByID(
 	ctx context.Context,
 	id string,
 ) (res models.FarmWithAddress, _ error) {
+	cache, err := fr.getFarmCache(ctx, id)
+	if err == nil {
+		log.Println("Return From Cache")
+		return cache, nil
+	}
+
 	row := fr.farmDB.getFarmByIDStmt.QueryRowContext(ctx, id)
 
 	if err := row.Scan(
@@ -114,6 +122,18 @@ func (fr farmRepo) GetFarmByID(
 	); err != nil {
 		return res, err
 	}
+
+	res.AddressesID = res.FarmAddress.ID
+
+	go func(f models.Farm, a models.FarmAddress) {
+		cacheCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
+		if err := fr.insertFarmCache(cacheCtx, f, a); err != nil {
+			log.Println(err)
+		}
+	}(res.Farm, res.FarmAddress)
+
+	log.Println("Return From Database")
 
 	return res, nil
 }

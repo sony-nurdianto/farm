@@ -252,7 +252,6 @@ func (fs farmerService) SyncUserCache(
 					attribute.String("status", "success"),
 				))
 
-				// Fix: Record dengan operation yang benar
 				cacheOperationDuration.Record(cacheCtx, cacheDuration.Seconds(),
 					metric.WithAttributes(
 						attribute.String("cache.operation", "delete"),

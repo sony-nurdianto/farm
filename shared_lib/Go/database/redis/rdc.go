@@ -2,13 +2,18 @@ package redis
 
 import (
 	"context"
+	"time"
 )
 
 type RedisClient interface {
 	HSet(ctx context.Context, key string, values ...any) *IntCmd
 	HGet(ctx context.Context, key string, field string) *StringCmd
 	HGetAll(ctx context.Context, key string) *MapStringStringCmd
+	Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
+	TxPipeline() Pipeliner
+	Del(ctx context.Context, keys ...string) *IntCmd
 	Ping(ctx context.Context) StatusCmd
+	Close() error
 }
 
 type rdc struct {
@@ -35,4 +40,20 @@ func (c *rdc) HGet(ctx context.Context, key string, field string) *StringCmd {
 
 func (c *rdc) HGetAll(ctx context.Context, key string) *MapStringStringCmd {
 	return c.client.HGetAll(ctx, key)
+}
+
+func (c *rdc) Del(ctx context.Context, keys ...string) *IntCmd {
+	return c.client.Del(ctx, keys...)
+}
+
+func (c *rdc) Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd {
+	return c.client.Expire(ctx, key, expiration)
+}
+
+func (c *rdc) TxPipeline() Pipeliner {
+	return c.client.TxPipeline()
+}
+
+func (c *rdc) Close() error {
+	return c.client.Close()
 }

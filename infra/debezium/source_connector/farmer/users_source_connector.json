@@ -11,7 +11,7 @@
         "plugin.name": "pgoutput",
         "slot.name": "farmer_debezium_slot_avro",
         "publication.name": "farmer_debezium_pub_avro",
-        "table.include.list": "public.users,public.users_p0,public.users_p1,public.users_p2,public.users_p3",
+        "table.include.list": "public.users_p0,public.users_p1,public.users_p2,public.users_p3",
         "snapshot.mode": "initial",
         "snapshot.locking.mode": "none",
         "key.enforce.uniqueness": "false",

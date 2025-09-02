@@ -8,6 +8,42 @@ import (
 	"github.com/sony-nurdianto/farm/services/Rest/farm_gateway/farm_gateway/internal/pbgen"
 )
 
+func (s grpcFarmService) GetFarmByID(
+	ctx context.Context,
+	farmID string,
+) (res models.Farm, _ error) {
+	req := &pbgen.GetFarmByIDRequest{
+		Id: farmID,
+	}
+
+	farm, err := s.farmSvc.GetFarmByID(ctx, req)
+	if err != nil {
+		return res, err
+	}
+	res = models.Farm{
+		ID:          farm.Farm.Id,
+		FarmerID:    farm.Farm.FarmerId,
+		FarmName:    farm.Farm.FarmName,
+		FarmType:    farm.Farm.FarmType,
+		FarmSize:    farm.Farm.FarmSize,
+		FarmStatus:  farm.Farm.FarmStatus,
+		Description: farm.Farm.Description,
+		Addresses: models.FarmAddress{
+			ID:          farm.Farm.Address.Id,
+			Street:      farm.Farm.Address.Street,
+			Village:     farm.Farm.Address.Village,
+			SubDistrict: farm.Farm.Address.SubDistrict,
+			City:        farm.Farm.Address.City,
+			Province:    farm.Farm.Address.Province,
+			PostalCode:  farm.Farm.Address.PostalCode,
+		},
+		CreatedAt: farm.Farm.CreatedAt.AsTime().UTC(),
+		UpdatedAt: farm.Farm.UpdatedAt.AsTime().UTC(),
+	}
+
+	return res, nil
+}
+
 func (s grpcFarmService) GetFarms(
 	ctx context.Context,
 	farmerID string,
