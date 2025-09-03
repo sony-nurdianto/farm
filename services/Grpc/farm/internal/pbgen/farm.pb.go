@@ -770,6 +770,7 @@ func (x *CreateFarmResponse) GetMsg() string {
 type GetFarmByIDRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FarmerId      string                 `protobuf:"bytes,2,opt,name=farmer_id,json=farmerId,proto3" json:"farmer_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -807,6 +808,13 @@ func (*GetFarmByIDRequest) Descriptor() ([]byte, []int) {
 func (x *GetFarmByIDRequest) GetId() string {
 	if x != nil {
 		return x.Id
+	}
+	return ""
+}
+
+func (x *GetFarmByIDRequest) GetFarmerId() string {
+	if x != nil {
+		return x.FarmerId
 	}
 	return ""
 }
@@ -1291,9 +1299,10 @@ const file_farm_v1_farm_proto_rawDesc = "" +
 	"\n" +
 	"address_id\x18\x03 \x01(\tR\taddressId\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x10\n" +
-	"\x03msg\x18\x05 \x01(\tR\x03msg\"$\n" +
+	"\x03msg\x18\x05 \x01(\tR\x03msg\"A\n" +
 	"\x12GetFarmByIDRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
+	"\tfarmer_id\x18\x02 \x01(\tR\bfarmerId\"8\n" +
 	"\x13GetFarmByIDResponse\x12!\n" +
 	"\x04farm\x18\x01 \x01(\v2\r.farm.v1.FarmR\x04farm\"\xb3\x01\n" +
 	"\x12GetFarmListRequest\x12\x1b\n" +

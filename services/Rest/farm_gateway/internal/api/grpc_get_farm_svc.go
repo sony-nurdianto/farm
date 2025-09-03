@@ -11,9 +11,11 @@ import (
 func (s grpcFarmService) GetFarmByID(
 	ctx context.Context,
 	farmID string,
+	farmerID string,
 ) (res models.Farm, _ error) {
 	req := &pbgen.GetFarmByIDRequest{
-		Id: farmID,
+		Id:       farmID,
+		FarmerId: farmerID,
 	}
 
 	farm, err := s.farmSvc.GetFarmByID(ctx, req)

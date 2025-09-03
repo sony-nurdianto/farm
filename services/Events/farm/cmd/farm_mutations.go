@@ -56,8 +56,11 @@ func main() {
 		}
 	}(ctx, farmService)
 
-	go func(fs services.FarmService) {
-	}(farmService)
+	go func(c context.Context, fs services.FarmService) {
+		if err := fs.SyncFarmAddressCache(c, "farm-db.public.addresses_all_partitions"); err != nil {
+			log.Fatalln(err)
+		}
+	}(ctx, farmService)
 
 	var once sync.Once
 

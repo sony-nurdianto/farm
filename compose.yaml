@@ -429,6 +429,24 @@ services:
       sentinel-farmer:
         condition: service_healthy
 
+  events-farm-mutations:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/events/farm_mutations_service.dockerfile
+    env_file:
+      - ./services/Events/farm/.env
+    volumes: 
+      - ./services/Events/farm/state:/services/state:z
+    depends_on:
+      redis-farmer-master:
+        condition: service_healthy
+      redis-farmer-slave-1:  
+        condition: service_healthy
+      sentinel-farmer:
+        condition: service_healthy
+
+
+
 # Service
   grpc-auth-service:
     build:
@@ -469,7 +487,7 @@ services:
       postgres:
         condition: service_healthy
 
-        
+
   rest-farm-gateway:
     build:
       context: .

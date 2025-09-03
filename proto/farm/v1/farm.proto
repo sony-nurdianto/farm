@@ -85,6 +85,7 @@ message CreateFarmResponse {
 
 message GetFarmByIDRequest {
   string id = 1;
+  string farmer_id = 2;
 }
 
 

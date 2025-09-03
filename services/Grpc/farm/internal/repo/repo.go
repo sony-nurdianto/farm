@@ -19,7 +19,7 @@ type FarmRepo interface {
 	UpdateFarm(ctx context.Context, opts *pkg.TxOpts, farm *models.UpdateFarm, address *models.UpdateFarmAddress) (*models.Farm, *models.FarmAddress, error)
 	GetTotalFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (int, error)
 	GetFarms(ctx context.Context, req *pbgen.GetFarmListRequest) (res []models.FarmWithAddress, _ error)
-	GetFarmByID(ctx context.Context, id string) (res models.FarmWithAddress, _ error)
+	GetFarmByID(ctx context.Context, id string, farmerID string) (res models.FarmWithAddress, _ error)
 }
 
 type farmRepo struct {

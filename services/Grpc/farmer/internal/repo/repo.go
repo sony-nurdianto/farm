@@ -119,13 +119,13 @@ func redisClientConn(ctx context.Context, rdi redis.RedisInstance) (redis.RedisC
 		rdc, err := rdb.InitRedisClient(
 			ctx,
 			&redis.FailoverOptions{
-				MasterName: os.Getenv("FARM_REDIS_MASTER_NAME"),
+				MasterName: os.Getenv("FARMER_REDIS_MASTER_NAME"),
 				SentinelAddrs: []string{
-					os.Getenv("SENTINEL_FARM_REDIS_ADDR"),
-					os.Getenv("SENTINEL_FARM_REDIS_ADDR_2"),
+					os.Getenv("SENTINEL_FARMER_REDIS_ADDR"),
+					os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2"),
 				},
-				Username: os.Getenv("FARM_REDIS_MASTER_USER_NAME"),
-				Password: os.Getenv("FARM_REDIS_MASTER_PASSWORD"),
+				Username: os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
+				Password: os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
 				DB:       0,
 			},
 		)

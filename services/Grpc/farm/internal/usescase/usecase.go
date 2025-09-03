@@ -181,7 +181,7 @@ func (fu farmUsecase) GetFarms(ctx context.Context, req *pbgen.GetFarmListReques
 }
 
 func (fu farmUsecase) GetFarmByID(ctx context.Context, req *pbgen.GetFarmByIDRequest) (*pbgen.GetFarmByIDResponse, error) {
-	farm, err := fu.repo.GetFarmByID(ctx, req.GetId())
+	farm, err := fu.repo.GetFarmByID(ctx, req.GetId(), req.GetFarmerId())
 	if err != nil {
 		return nil, err
 	}

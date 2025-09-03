@@ -93,8 +93,9 @@ func (fr farmRepo) GetFarms(
 func (fr farmRepo) GetFarmByID(
 	ctx context.Context,
 	id string,
+	farmerID string,
 ) (res models.FarmWithAddress, _ error) {
-	cache, err := fr.getFarmCache(ctx, id)
+	cache, err := fr.getFarmCache(ctx, id, farmerID)
 	if err == nil {
 		log.Println("Return From Cache")
 		return cache, nil

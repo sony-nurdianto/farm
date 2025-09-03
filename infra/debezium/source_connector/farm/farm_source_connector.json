@@ -1,5 +1,5 @@
 {
-    "name": "farm-addresses-postgres-avro-source-connector",
+    "name": "farm-postgres-avro-source-connector",
     "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "database.hostname": "postgres",
@@ -9,9 +9,9 @@
         "database.dbname": "farm",
         "topic.prefix": "farm-db",
         "plugin.name": "pgoutput",
-        "slot.name": "farm_addresses_debezium_slot_avro",
-        "publication.name": "farm_addresses_debezium_pub_avro",
-        "table.include.list": "public.addresses_p0,public.addresses_p1,public.addresses_p2,addresses_p3,addresses_p4,addresses_p5,addresses_p6,addresses_p7",
+        "slot.name": "farm_debezium_slot_avro",
+        "publication.name": "farm_debezium_pub_avro",
+        "table.include.list": "public.farms_p0,public.farms_p1,public.farms_p2,public.farms_p3,public.farms_p4,public.farms_p5,public.farms_p6,public.farms_p7",
         "snapshot.mode": "initial",
         "snapshot.locking.mode": "none",
         "key.enforce.uniqueness": "false",
@@ -27,10 +27,12 @@
         "value.converter.use.latest.version": "false",
         "value.converter.normalize.schemas": "false",
         "value.converter.schemas.enable": "true",
-        "transforms": "Reroute,unwrap",
+        
+        "transforms": "Reroute,unwrap,convertTimestamp",
+        
         "transforms.Reroute.type": "io.debezium.transforms.ByLogicalTableRouter",
-        "transforms.Reroute.topic.regex": "(.*)addresses_p(.*)",
-        "transforms.Reroute.topic.replacement": "$1addresses_all_partitions",
+        "transforms.Reroute.topic.regex": "(.*)farms_p(.*)",
+        "transforms.Reroute.topic.replacement": "$1farms_all_partitions",
         "transforms.Reroute.key.enforce.uniqueness": "false",
  
         "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
@@ -38,10 +40,15 @@
         "transforms.unwrap.delete.handling.mode": "drop",
         "transforms.unwrap.add.headers": "op,source.ts_ms,source.db,source.table",
         "transforms.unwrap.nullable.fields.handling": "flatten",
+        
+        "transforms.convertTimestamp.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+        "transforms.convertTimestamp.field": "created_at",
+        "transforms.convertTimestamp.target.type": "Timestamp",
+        
         "include.schema.changes": "false",
         "include.query": "false",
-        "decimal.handling.mode": "precise",
-        "time.precision.mode": "adaptive",
+        "decimal.handling.mode": "double",
+        "time.precision.mode": "adaptive_time_microseconds",
         "binary.handling.mode": "bytes",
         "tombstones.on.delete": "false"
     }

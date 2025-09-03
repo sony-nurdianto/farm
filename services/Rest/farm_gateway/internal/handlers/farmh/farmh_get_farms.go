@@ -8,6 +8,16 @@ import (
 )
 
 func (fh farmHandler) GetFarmByID(c *fiber.Ctx) error {
+	farmerID := c.Locals("user_subject")
+	id, ok := farmerID.(string)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			fiber.Map{
+				"error": errors.New("id is not string"),
+			},
+		)
+	}
+
 	req := struct {
 		ID string `json:"id"`
 	}{}
@@ -20,7 +30,7 @@ func (fh farmHandler) GetFarmByID(c *fiber.Ctx) error {
 		)
 	}
 
-	res, err := fh.grpcFarmSvc.GetFarmByID(c.UserContext(), req.ID)
+	res, err := fh.grpcFarmSvc.GetFarmByID(c.UserContext(), req.ID, id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			fiber.Map{

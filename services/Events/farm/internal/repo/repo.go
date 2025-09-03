@@ -20,23 +20,36 @@ import (
 type FarmRepo interface {
 	CloseRepo()
 	FarmConsumer() kev.KevConsumer
-	DeserializerFarm(topic string, payload []byte, data any) error
+	FarmAddrConsumer() kev.KevConsumer
+	DeserializerFarm(topic string, payload []byte) (f models.Farm, _ error)
+	DeserializerFarmAddress(topic string, payload []byte) (f models.FarmAddress, _ error)
 	UpsertFarmCache(ctx context.Context, farm models.Farm, ops string) error
 	UpsertFarmAddressCache(ctx context.Context, addr models.FarmAddress) error
 	DeleteFarmCache(ctx context.Context, farmID string, farmAddrID string, farmerID string) error
 }
 
+const (
+	ConsumerFarmsType = "ConsumerFarmsType"
+	ConsumerAddrType  = "ConsumerAddrType"
+)
+
 type farmRepo struct {
-	srcClient       schrgs.SchrgsClient
-	avrDeserializer avr.AvrDeserializer
-	farmConsumer    kev.KevConsumer
-	farmCache       redis.RedisClient
-	stateDB         *pebble.DB
+	srcClient        schrgs.SchrgsClient
+	avrDeserializer  avr.AvrDeserializer
+	farmConsumer     kev.KevConsumer
+	farmAddrConsumer kev.KevConsumer
+	farmCache        redis.RedisClient
+	stateDB          *pebble.DB
 }
 
 type srcAvr struct {
 	srClient     schrgs.SchrgsClient
 	deserializer avr.AvrDeserializer
+}
+
+type farmConsumers struct {
+	consumerType string
+	consumer     kev.KevConsumer
 }
 
 func initSchemaRegistery(
@@ -160,17 +173,46 @@ func initFarmCache(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 	return out
 }
 
-func initKafkaConsumer(ctx context.Context, kv kev.Kafka) <-chan any {
+func initKafkaFarmConsumer(ctx context.Context, kv kev.Kafka) <-chan any {
 	out := make(chan any, 1)
 	go func() {
 		defer close(out)
-		var res concurrent.Result[kev.KevConsumer]
+		var res concurrent.Result[farmConsumers]
 
 		pool := kev.NewKafkaConsumerPool(kv)
 
 		cfgFarm := map[kev.ConfigKeyKafka]string{
 			kev.BOOTSTRAP_SERVERS:             os.Getenv("KAKFKABROKER"),
-			kev.GROUP_ID:                      "farm-event",
+			kev.GROUP_ID:                      "farm-farms-sync-event",
+			kev.AUTO_OFFSET_RESET:             "earliest",
+			kev.ENABLE_AUTO_COMMIT:            "false",
+			kev.PARTITION_ASSIGNMENT_STRATEGY: "cooperative-sticky",
+		}
+
+		consumer, err := pool.Consumer(cfgFarm)
+		if err != nil {
+			res.Error = err
+			concurrent.SendResult(ctx, out, res)
+			return
+		}
+		res.Value.consumerType = ConsumerFarmsType
+		res.Value.consumer = consumer
+		concurrent.SendResult(ctx, out, res)
+	}()
+	return out
+}
+
+func initKafkaFarmAddrConsumer(ctx context.Context, kv kev.Kafka) <-chan any {
+	out := make(chan any, 1)
+	go func() {
+		defer close(out)
+		var res concurrent.Result[farmConsumers]
+
+		pool := kev.NewKafkaConsumerPool(kv)
+
+		cfgFarm := map[kev.ConfigKeyKafka]string{
+			kev.BOOTSTRAP_SERVERS:             os.Getenv("KAKFKABROKER"),
+			kev.GROUP_ID:                      "farm-address-sync-event",
 			kev.AUTO_OFFSET_RESET:             "earliest",
 			kev.ENABLE_AUTO_COMMIT:            "false",
 			kev.PARTITION_ASSIGNMENT_STRATEGY: "cooperative-sticky",
@@ -183,7 +225,8 @@ func initKafkaConsumer(ctx context.Context, kv kev.Kafka) <-chan any {
 			return
 		}
 
-		res.Value = consumer
+		res.Value.consumerType = ConsumerAddrType
+		res.Value.consumer = consumer
 		concurrent.SendResult(ctx, out, res)
 	}()
 	return out
@@ -202,7 +245,8 @@ func NewFarmRepo(
 	srCh := initSchemaRegistery(ctx, sri)
 	chs := []<-chan any{
 		initSrcClientAndAvr(ctx, avri, srCh),
-		initKafkaConsumer(ctx, kv),
+		initKafkaFarmConsumer(ctx, kv),
+		initKafkaFarmAddrConsumer(ctx, kv),
 		initFarmCache(ctx, rdi),
 	}
 
@@ -220,11 +264,16 @@ func NewFarmRepo(
 			}
 
 			fr.farmCache = res.Value
-		case concurrent.Result[kev.KevConsumer]:
+		case concurrent.Result[farmConsumers]:
 			if res.Error != nil {
 				return fr, res.Error
 			}
-			fr.farmConsumer = res.Value
+			switch res.Value.consumerType {
+			case ConsumerFarmsType:
+				fr.farmConsumer = res.Value.consumer
+			case ConsumerAddrType:
+				fr.farmAddrConsumer = res.Value.consumer
+			}
 		}
 	}
 
@@ -242,12 +291,26 @@ func (fr farmRepo) FarmConsumer() kev.KevConsumer {
 	return fr.farmConsumer
 }
 
-func (fr farmRepo) DeserializerFarm(topic string, payload []byte, data any) error {
-	if err := fr.avrDeserializer.DeserializeInto(topic, payload, &data); err != nil {
-		return err
+func (fr farmRepo) FarmAddrConsumer() kev.KevConsumer {
+	return fr.farmAddrConsumer
+}
+
+func (fr farmRepo) DeserializerFarm(topic string, payload []byte) (f models.Farm, _ error) {
+	if err := fr.avrDeserializer.DeserializeInto(topic, payload, &f); err != nil {
+		log.Println(err)
+		return f, err
 	}
 
-	return nil
+	return f, nil
+}
+
+func (fr farmRepo) DeserializerFarmAddress(topic string, payload []byte) (f models.FarmAddress, _ error) {
+	if err := fr.avrDeserializer.DeserializeInto(topic, payload, &f); err != nil {
+		log.Println(err)
+		return f, err
+	}
+
+	return f, nil
 }
 
 func (fr farmRepo) UpsertFarmCache(
@@ -274,15 +337,14 @@ func (fr farmRepo) UpsertFarmCache(
 	}
 
 	if ops != "u" {
-		go func(key string, value string) {
+		go func() {
 			_, cancel := context.WithTimeout(context.Background(), time.Second*5)
 			defer cancel()
-
-			if err := fr.stateDB.Set([]byte(key), []byte(value), pebble.Sync); err != nil {
+			if err := fr.stateDB.Set([]byte(farm.AddressID), []byte(farm.ID), pebble.Sync); err != nil {
 				log.Println(err)
 				return
 			}
-		}(farm.AddressesID, farm.ID)
+		}()
 	}
 
 	return nil
@@ -292,17 +354,18 @@ func (fr farmRepo) UpsertFarmAddressCache(ctx context.Context, addr models.FarmA
 	var key string
 
 	dataFarmID, closer, err := fr.stateDB.Get([]byte(addr.ID))
-	if errors.Is(err, pebble.ErrNotFound) {
+	switch {
+	case errors.Is(err, pebble.ErrNotFound):
 		key = fmt.Sprintf("farm_address:%s:*", addr.ID)
-	} else {
+	case err != nil:
 		return err
+	default:
+		defer closer.Close()
 	}
 
 	if len(key) <= 0 {
-		key = fmt.Sprintf("farm_address:%s:%s", addr.ID, dataFarmID)
+		key = fmt.Sprintf("farm_address:%s:%s", addr.ID, string(dataFarmID))
 	}
-
-	closer.Close()
 
 	if err := fr.stateDB.Delete([]byte(addr.ID), pebble.Sync); err != nil {
 		return err

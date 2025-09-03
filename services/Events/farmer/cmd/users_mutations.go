@@ -51,13 +51,17 @@ func redisConnection(
 		attemptSpan := trace.SpanFromContext(rdCtx)
 		attemptSpan.SetAttributes(attribute.Int("retry.attempt", count))
 
-		rdb := redis.NewFailoverClient(&redis.FailoverOptions{
-			MasterName:    os.Getenv("FARMER_REDIS_MASTER_NAME"),
-			SentinelAddrs: []string{os.Getenv("SENTINEL_FARMER_REDIS_ADDR"), os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2")},
-			Username:      os.Getenv("FARMER_REDIS_MASTER_USERNAME"),
-			Password:      os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
-			DB:            0,
-		})
+		rdb := redis.NewFailoverClient(
+			&redis.FailoverOptions{
+				MasterName: os.Getenv("FARMER_REDIS_MASTER_NAME"),
+				SentinelAddrs: []string{
+					os.Getenv("SENTINEL_FARMER_REDIS_ADDR"),
+					os.Getenv("SENTINEL_FARMER_REDIS_ADDR_2"),
+				},
+				Username: os.Getenv("FARMER_REDIS_MASTER_USER_NAME"),
+				Password: os.Getenv("FARMER_REDIS_MASTER_PASSWORD"),
+				DB:       0,
+			})
 
 		_, err = rdb.Ping(context.Background()).Result()
 		if err == nil {

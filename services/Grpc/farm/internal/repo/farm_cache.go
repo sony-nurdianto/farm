@@ -14,11 +14,11 @@ var (
 	ErrFarmAddressNotExsist = errors.New("farm address data not found in cache")
 )
 
-func (fr farmRepo) getFarmCache(ctx context.Context, key string) (res models.FarmWithAddress, _ error) {
+func (fr farmRepo) getFarmCache(ctx context.Context, key string, farmerID string) (res models.FarmWithAddress, _ error) {
 	var farm models.Farm
 	var addr models.FarmAddress
 
-	if err := fr.farmCache.HGetAll(ctx, fmt.Sprintf("farm:%s:*", key)).Scan(&farm); err != nil {
+	if err := fr.farmCache.HGetAll(ctx, fmt.Sprintf("farm:%s:%s", key, farmerID)).Scan(&farm); err != nil {
 		return res, err
 	}
 

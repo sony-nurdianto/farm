@@ -2,19 +2,18 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"strings"
 	"time"
 
-	"github.com/sony-nurdianto/farm/services/Events/farm/internal/models"
 	"github.com/sony-nurdianto/farm/services/Events/farm/internal/repo"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
 )
 
 type FarmService interface {
-	SyncFarmCache(
-		ctx context.Context,
-		topic string,
-	) error
+	SyncFarmCache(ctx context.Context, topic string) error
+	SyncFarmAddressCache(ctx context.Context, topic string) error
 }
 
 type farmService struct {
@@ -31,8 +30,11 @@ func (fs farmService) SyncFarmAddressCache(
 	ctx context.Context,
 	topic string,
 ) error {
-	consumer := fs.repo.FarmConsumer()
-	consumer.SubscribeTopics([]string{topic}, kev.RebalanceCbCooperativeSticky)
+	consumer := fs.repo.FarmAddrConsumer()
+	err := consumer.SubscribeTopics([]string{topic}, kev.RebalanceCbCooperativeSticky)
+	if err != nil {
+		return err
+	}
 
 	for {
 		select {
@@ -47,9 +49,7 @@ func (fs farmService) SyncFarmAddressCache(
 				return err
 			}
 
-			var farmAddr models.FarmAddress
-
-			err = fs.repo.DeserializerFarm(topic, msg.Value, &farmAddr)
+			farmAddr, err := fs.repo.DeserializerFarmAddress(topic, msg.Value)
 			if err != nil {
 				continue
 			}
@@ -72,6 +72,11 @@ func (fs farmService) SyncFarmAddressCache(
 				continue
 			}
 
+			if _, err := consumer.CommitMessage(msg); err != nil {
+				fmt.Printf("Error committing message: %v\n", err)
+				continue
+			}
+
 		}
 	}
 }
@@ -81,7 +86,9 @@ func (fs farmService) SyncFarmCache(
 	topic string,
 ) error {
 	consumer := fs.repo.FarmConsumer()
-	consumer.SubscribeTopics([]string{topic}, kev.RebalanceCbCooperativeSticky)
+	if err := consumer.SubscribeTopics([]string{topic}, kev.RebalanceCbCooperativeSticky); err != nil {
+		return err
+	}
 
 	for {
 		select {
@@ -93,13 +100,13 @@ func (fs farmService) SyncFarmCache(
 				if _, ok := err.(kev.KevError); ok {
 					continue
 				}
+
 				return err
 			}
 
-			var farm models.Farm
-
-			err = fs.repo.DeserializerFarm(topic, msg.Value, &farm)
+			farm, err := fs.repo.DeserializerFarm(topic, msg.Value)
 			if err != nil {
+				log.Println(err)
 				continue
 			}
 
@@ -115,14 +122,20 @@ func (fs farmService) SyncFarmCache(
 			switch op {
 			case "c", "u", "r":
 				if err := fs.repo.UpsertFarmCache(ctx, farm, op); err != nil {
+					log.Println(err)
 					continue
 				}
 			case "d":
-				if err := fs.repo.DeleteFarmCache(ctx, farm.ID, farm.AddressesID, farm.FarmerID); err != nil {
+				if err := fs.repo.DeleteFarmCache(ctx, farm.ID, farm.AddressID, farm.FarmerID); err != nil {
+					log.Println(err)
 					continue
 				}
 			}
 
+			if _, err := consumer.CommitMessage(msg); err != nil {
+				fmt.Printf("Error committing message: %v\n", err)
+				continue
+			}
 		}
 	}
 }
