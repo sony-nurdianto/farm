@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/pebble"
@@ -25,7 +26,7 @@ type FarmRepo interface {
 	DeserializerFarmAddress(topic string, payload []byte) (f models.FarmAddress, _ error)
 	UpsertFarmCache(ctx context.Context, farm models.Farm, ops string) error
 	UpsertFarmAddressCache(ctx context.Context, addr models.FarmAddress) error
-	DeleteFarmCache(ctx context.Context, farmID string, farmAddrID string, farmerID string) error
+	DeleteFarmCache(ctx context.Context, farmID string, farmerID string) error
 }
 
 const (
@@ -336,74 +337,57 @@ func (fr farmRepo) UpsertFarmCache(
 		return err
 	}
 
-	if ops != "u" {
-		go func() {
-			_, cancel := context.WithTimeout(context.Background(), time.Second*5)
-			defer cancel()
-			if err := fr.stateDB.Set([]byte(farm.AddressID), []byte(farm.ID), pebble.Sync); err != nil {
-				log.Println(err)
-				return
-			}
-		}()
+	stateValue := fmt.Sprintf("%s:%s", farm.ID, farm.FarmerID)
+	if err := fr.stateDB.Set([]byte(farm.AddressID), []byte(stateValue), pebble.Sync); err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (fr farmRepo) UpsertFarmAddressCache(ctx context.Context, addr models.FarmAddress) error {
-	var key string
+	var farmID string
+	var farmerID string
 
-	dataFarmID, closer, err := fr.stateDB.Get([]byte(addr.ID))
-	switch {
-	case errors.Is(err, pebble.ErrNotFound):
-		key = fmt.Sprintf("farm_address:%s:*", addr.ID)
-	case err != nil:
+	for range 5 {
+		ids, closer, err := fr.stateDB.Get([]byte(addr.ID))
+		if err == nil {
+			data := strings.Split(string(ids), ":")
+			farmID = data[0]
+			farmerID = data[1]
+			closer.Close()
+			break
+		}
+
+		if errors.Is(err, pebble.ErrNotFound) {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+
 		return err
-	default:
-		defer closer.Close()
+
 	}
 
-	if len(key) <= 0 {
-		key = fmt.Sprintf("farm_address:%s:%s", addr.ID, string(dataFarmID))
-	}
-
-	if err := fr.stateDB.Delete([]byte(addr.ID), pebble.Sync); err != nil {
-		return err
-	}
-
-	pipe := fr.farmCache.TxPipeline()
-
-	hset := pipe.HSet(ctx, key, addr)
+	key := fmt.Sprintf("farm:%s:%s", farmID, farmerID)
+	hset := fr.farmCache.HSet(ctx, key, addr)
 	if hset.Err() != nil {
 		return hset.Err()
 	}
 
-	expire := pipe.Expire(ctx, key, time.Hour*24)
-	if expire.Err() != nil {
-		return expire.Err()
-	}
-
-	if _, err := pipe.Exec(ctx); err != nil {
+	if err := fr.stateDB.Delete([]byte(addr.ID), pebble.Sync); err != nil {
+		log.Println(err)
 		return err
 	}
 
 	return nil
 }
 
-func (fr farmRepo) DeleteFarmCache(ctx context.Context, farmID string, farmAddrID string, farmerID string) error {
+func (fr farmRepo) DeleteFarmCache(ctx context.Context, farmID string, farmerID string) error {
 	keyFarm := fmt.Sprintf("farm:%s:%s", farmID, farmerID)
-	keyFarmAddr := fmt.Sprintf("farm_address:%s:%s", farmAddrID, farmID)
 
-	pipe := fr.farmCache.TxPipeline()
-
-	delFarm := pipe.Del(ctx, keyFarm)
-	if delFarm.Err() != nil {
-		return delFarm.Err()
-	}
-
-	delFarmAddr := pipe.Del(ctx, keyFarmAddr)
-	if delFarmAddr.Err() != nil {
-		return delFarm.Err()
+	hset := fr.farmCache.Del(ctx, keyFarm)
+	if hset.Err() != nil {
+		return hset.Err()
 	}
 
 	return nil

@@ -12,4 +12,5 @@ type (
 	MapStringStringCmd = redis.MapStringStringCmd
 	BoolCmd            = redis.BoolCmd
 	Pipeliner          = redis.Pipeliner
+	RedisCmd           = redis.Cmd
 )

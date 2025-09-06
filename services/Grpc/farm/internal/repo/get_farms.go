@@ -2,8 +2,6 @@ package repo
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/models"
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/pbgen"
@@ -95,11 +93,11 @@ func (fr farmRepo) GetFarmByID(
 	id string,
 	farmerID string,
 ) (res models.FarmWithAddress, _ error) {
-	cache, err := fr.getFarmCache(ctx, id, farmerID)
-	if err == nil {
-		log.Println("Return From Cache")
-		return cache, nil
-	}
+	// cache, err := fr.getFarmCache(ctx, id, farmerID)
+	// if err == nil {
+	// 	log.Println("Return From Cache")
+	// 	return cache, nil
+	// }
 
 	row := fr.farmDB.getFarmByIDStmt.QueryRowContext(ctx, id)
 
@@ -126,15 +124,13 @@ func (fr farmRepo) GetFarmByID(
 
 	res.AddressesID = res.FarmAddress.ID
 
-	go func(f models.Farm, a models.FarmAddress) {
-		cacheCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-		defer cancel()
-		if err := fr.insertFarmCache(cacheCtx, f, a); err != nil {
-			log.Println(err)
-		}
-	}(res.Farm, res.FarmAddress)
-
-	log.Println("Return From Database")
+	// go func(f models.Farm, a models.FarmAddress) {
+	// 	cacheCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	// 	defer cancel()
+	// 	if err := fr.insertFarmCache(cacheCtx, f, a); err != nil {
+	// 		log.Println(err)
+	// 	}
+	// }(res.Farm, res.FarmAddress)
 
 	return res, nil
 }

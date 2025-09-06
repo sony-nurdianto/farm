@@ -46,6 +46,10 @@ func (c *rdc) Del(ctx context.Context, keys ...string) *IntCmd {
 	return c.client.Del(ctx, keys...)
 }
 
+func (c *rdc) Do(ctx context.Context, args ...any) *RedisCmd {
+	return c.client.Do(ctx, args...)
+}
+
 func (c *rdc) Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd {
 	return c.client.Expire(ctx, key, expiration)
 }

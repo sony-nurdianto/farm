@@ -126,7 +126,7 @@ func (fs farmService) SyncFarmCache(
 					continue
 				}
 			case "d":
-				if err := fs.repo.DeleteFarmCache(ctx, farm.ID, farm.AddressID, farm.FarmerID); err != nil {
+				if err := fs.repo.DeleteFarmCache(ctx, farm.ID, farm.FarmerID); err != nil {
 					log.Println(err)
 					continue
 				}
