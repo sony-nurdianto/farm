@@ -11,6 +11,9 @@ type RedisClient interface {
 	HGetAll(ctx context.Context, key string) *MapStringStringCmd
 	Expire(ctx context.Context, key string, expiration time.Duration) *BoolCmd
 	TxPipeline() Pipeliner
+	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) StatusCmd
+	FTSearch(ctx context.Context, index string, query string) *FTSearchCmd
+	FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd
 	Del(ctx context.Context, keys ...string) *IntCmd
 	Ping(ctx context.Context) StatusCmd
 	Close() error
@@ -56,6 +59,18 @@ func (c *rdc) Expire(ctx context.Context, key string, expiration time.Duration) 
 
 func (c *rdc) TxPipeline() Pipeliner {
 	return c.client.TxPipeline()
+}
+
+func (c *rdc) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) StatusCmd {
+	return c.client.FTCreate(ctx, index, options, schema...)
+}
+
+func (c *rdc) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd {
+	return c.client.FTSearch(ctx, index, query)
+}
+
+func (c *rdc) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
+	return c.client.FTSearchWithArgs(ctx, index, query, options)
 }
 
 func (c *rdc) Close() error {

@@ -4,6 +4,7 @@ import "github.com/redis/go-redis/v9"
 
 type StatusCmd interface {
 	Result() (string, error)
+	Err() error
 }
 
 type stsCmd struct {
@@ -16,4 +17,8 @@ func NewStatusCmd(sts *redis.StatusCmd) *stsCmd {
 
 func (s *stsCmd) Result() (string, error) {
 	return s.sts.Result()
+}
+
+func (s *stsCmd) Err() error {
+	return s.sts.Err()
 }

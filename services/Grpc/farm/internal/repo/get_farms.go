@@ -93,12 +93,6 @@ func (fr farmRepo) GetFarmByID(
 	id string,
 	farmerID string,
 ) (res models.FarmWithAddress, _ error) {
-	// cache, err := fr.getFarmCache(ctx, id, farmerID)
-	// if err == nil {
-	// 	log.Println("Return From Cache")
-	// 	return cache, nil
-	// }
-
 	row := fr.farmDB.getFarmByIDStmt.QueryRowContext(ctx, id)
 
 	if err := row.Scan(
@@ -123,14 +117,6 @@ func (fr farmRepo) GetFarmByID(
 	}
 
 	res.AddressesID = res.FarmAddress.ID
-
-	// go func(f models.Farm, a models.FarmAddress) {
-	// 	cacheCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	// 	defer cancel()
-	// 	if err := fr.insertFarmCache(cacheCtx, f, a); err != nil {
-	// 		log.Println(err)
-	// 	}
-	// }(res.Farm, res.FarmAddress)
 
 	return res, nil
 }

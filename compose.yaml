@@ -445,6 +445,21 @@ services:
       sentinel-farmer:
         condition: service_healthy
 
+  events-insert-farm-cache:
+    build:
+      context: .
+      dockerfile: ./scripts/dockerfile/services/events/insert_farm_cache.dockerfile
+    env_file:
+      - ./services/Events/farm/.env
+    depends_on:
+      redis-farmer-master:
+        condition: service_healthy
+      redis-farmer-slave-1:  
+        condition: service_healthy
+      sentinel-farmer:
+        condition: service_healthy
+
+
 
 
 # Service
