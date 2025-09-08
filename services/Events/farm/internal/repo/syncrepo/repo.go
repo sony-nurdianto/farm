@@ -23,10 +23,10 @@ type SyncFarmRepo interface {
 	CloseRepo()
 	FarmConsumer() kev.KevConsumer
 	FarmAddrConsumer() kev.KevConsumer
-	DeserializerFarm(topic string, payload []byte) (f models.Farm, _ error)
-	DeserializerFarmAddress(topic string, payload []byte) (f models.FarmAddress, _ error)
-	UpsertFarmCache(ctx context.Context, farm models.Farm, ops string) error
-	UpsertFarmAddressCache(ctx context.Context, addr models.FarmAddress) error
+	DeserializerFarm(topic string, payload []byte) (f models.AvrFarm, _ error)
+	DeserializerFarmAddress(topic string, payload []byte) (f models.AvrFarmAddress, _ error)
+	UpsertFarmCache(ctx context.Context, farm models.AvrFarm, ops string) error
+	UpsertFarmAddressCache(ctx context.Context, addr models.AvrFarmAddress) error
 	DeleteFarmCache(ctx context.Context, farmID string, farmerID string) error
 }
 
@@ -223,7 +223,7 @@ func (fr syncFarmRepo) FarmAddrConsumer() kev.KevConsumer {
 	return fr.farmAddrConsumer
 }
 
-func (fr syncFarmRepo) DeserializerFarm(topic string, payload []byte) (f models.Farm, _ error) {
+func (fr syncFarmRepo) DeserializerFarm(topic string, payload []byte) (f models.AvrFarm, _ error) {
 	if err := fr.avrDeserializer.DeserializeInto(topic, payload, &f); err != nil {
 		log.Println(err)
 		return f, err
@@ -232,7 +232,7 @@ func (fr syncFarmRepo) DeserializerFarm(topic string, payload []byte) (f models.
 	return f, nil
 }
 
-func (fr syncFarmRepo) DeserializerFarmAddress(topic string, payload []byte) (f models.FarmAddress, _ error) {
+func (fr syncFarmRepo) DeserializerFarmAddress(topic string, payload []byte) (f models.AvrFarmAddress, _ error) {
 	if err := fr.avrDeserializer.DeserializeInto(topic, payload, &f); err != nil {
 		log.Println(err)
 		return f, err
@@ -243,14 +243,14 @@ func (fr syncFarmRepo) DeserializerFarmAddress(topic string, payload []byte) (f 
 
 func (fr syncFarmRepo) UpsertFarmCache(
 	ctx context.Context,
-	farm models.Farm,
+	farm models.AvrFarm,
 	ops string,
 ) error {
 	key := fmt.Sprintf("farm:%s:%s", farm.ID, farm.FarmerID)
 
 	pipe := fr.farmCache.TxPipeline()
 
-	hset := pipe.HSet(ctx, key, farm)
+	hset := pipe.HSet(ctx, key, farm.ToFarm())
 	if hset.Err() != nil {
 		return hset.Err()
 	}
@@ -272,7 +272,7 @@ func (fr syncFarmRepo) UpsertFarmCache(
 	return nil
 }
 
-func (fr syncFarmRepo) UpsertFarmAddressCache(ctx context.Context, addr models.FarmAddress) error {
+func (fr syncFarmRepo) UpsertFarmAddressCache(ctx context.Context, addr models.AvrFarmAddress) error {
 	var farmID string
 	var farmerID string
 
@@ -296,7 +296,7 @@ func (fr syncFarmRepo) UpsertFarmAddressCache(ctx context.Context, addr models.F
 	}
 
 	key := fmt.Sprintf("farm:%s:%s", farmID, farmerID)
-	hset := fr.farmCache.HSet(ctx, key, addr)
+	hset := fr.farmCache.HSet(ctx, key, addr.ToFarmAddress())
 	if hset.Err() != nil {
 		return hset.Err()
 	}

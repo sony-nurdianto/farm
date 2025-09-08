@@ -1,8 +1,9 @@
-FROM alpine:3.22.1
+FROM golang:1.24.4-bookworm
 
-RUN apk --no-cache add ca-certificates
 
-COPY  services/Grpc/farm/build/farm_service /bin/farm_service
+COPY  services/Grpc/farm/build/farm_service /usr/bin/farm_service
+
 EXPOSE 50051
-CMD ["/bin/farm_service"]
+
+CMD ["farm_service"]
 

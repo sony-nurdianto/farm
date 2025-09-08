@@ -111,6 +111,7 @@ func (fr farmRepo) CreateFarm(
 	}
 
 	res.Farm = farmRes
+
 	res.FarmAddress = addrRes
 	return res, nil
 }

@@ -17,6 +17,9 @@ import (
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/usescase"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 	"google.golang.org/grpc"
 )
 
@@ -34,7 +37,13 @@ func main() {
 	// serviceName := "farm-service"
 
 	farmRepo, err := repo.NewFarmRepo(
-		ctx, pkg.NewPostgresInstance(), redis.NewRedisInstance(),
+
+		ctx,
+		schrgs.NewRegistery(),
+		avr.NewAvrSerdeInstance(),
+		kev.NewKafka(),
+		pkg.NewPostgresInstance(),
+		redis.NewRedisInstance(),
 	)
 	if err != nil {
 		log.Fatalln(err)

@@ -22,8 +22,8 @@ type InsertFarmCacheRepo interface {
 	CloseRepo()
 	Consumer() kev.KevConsumer
 	CreateFarmIndex(ctx context.Context) error
-	InsertFarmCache(ctx context.Context, farm models.FarmWithAddress) <-chan any
-	FarmDeserializer(payload []byte) (fa []models.FarmWithAddress, _ error)
+	InsertFarmCache(ctx context.Context, farm models.InsertFarm) error
+	FarmDeserializer(payload []byte) (fa models.InsertFarm, _ error)
 }
 
 type insertFarmCacheRepo struct {
@@ -165,27 +165,22 @@ func (r insertFarmCacheRepo) CreateFarmIndex(
 		{FieldName: "id", FieldType: redis.SearchFieldTypeTag},
 		{FieldName: "farmer_id", FieldType: redis.SearchFieldTypeTag},
 		{FieldName: "address_id", FieldType: redis.SearchFieldTypeTag},
-
 		{FieldName: "farm_name", FieldType: redis.SearchFieldTypeText, Weight: 2.0},
 		{FieldName: "farm_type", FieldType: redis.SearchFieldTypeText, Weight: 1.0},
 		{FieldName: "farm_status", FieldType: redis.SearchFieldTypeText, Weight: 1.0},
 		{FieldName: "description", FieldType: redis.SearchFieldTypeText, Weight: 0.5},
-
 		{FieldName: "farm_size", FieldType: redis.SearchFieldTypeNumeric},
-		{FieldName: "postal_code", FieldType: redis.SearchFieldTypeNumeric},
-
+		{FieldName: "postal_code", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "street", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "village", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "sub_district", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "city", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "province", FieldType: redis.SearchFieldTypeText},
-
 		{FieldName: "photo_url", FieldType: redis.SearchFieldTypeText},
-
-		{FieldName: "created_at", FieldType: redis.SearchFieldTypeText},
-		{FieldName: "updated_at", FieldType: redis.SearchFieldTypeText},
-		{FieldName: "address_created_at", FieldType: redis.SearchFieldTypeText},
-		{FieldName: "address_updated_at", FieldType: redis.SearchFieldTypeText},
+		{FieldName: "created_at", FieldType: redis.SearchFieldTypeNumeric},
+		{FieldName: "updated_at", FieldType: redis.SearchFieldTypeNumeric},
+		{FieldName: "address_created_at", FieldType: redis.SearchFieldTypeNumeric},
+		{FieldName: "address_updated_at", FieldType: redis.SearchFieldTypeNumeric},
 	}
 
 	createIdx := r.farmCache.FTCreate(ctx, "farm_idx", &redis.FTCreateOptions{
@@ -208,7 +203,7 @@ func (r insertFarmCacheRepo) Consumer() kev.KevConsumer {
 	return r.farmConsumer
 }
 
-func (r insertFarmCacheRepo) FarmDeserializer(payload []byte) (fa []models.FarmWithAddress, _ error) {
+func (r insertFarmCacheRepo) FarmDeserializer(payload []byte) (fa models.InsertFarm, _ error) {
 	if err := r.avrDeserializer.DeserializeInto("insert-farm-cache", payload, &fa); err != nil {
 		log.Println(err)
 		return fa, err
@@ -221,37 +216,24 @@ func (r insertFarmCacheRepo) FarmDeserializer(payload []byte) (fa []models.FarmW
 
 func (r insertFarmCacheRepo) InsertFarmCache(
 	ctx context.Context,
-	farm models.FarmWithAddress,
-) <-chan any {
-	out := make(chan any, 1)
-	go func() {
-		defer close(out)
-		var res concurrent.Result[error]
+	farm models.InsertFarm,
+) error {
+	pipe := r.farmCache.TxPipeline()
+	key := fmt.Sprintf("farm:%s:%s", farm.ID, farm.FarmerID)
 
-		pipe := r.farmCache.TxPipeline()
-		key := fmt.Sprintf("farm:%s:%s", farm.ID, farm.FarmerID)
+	hSet := pipe.HSet(ctx, key, farm)
+	if hSet.Err() != nil {
+		return hSet.Err()
+	}
 
-		hSet := pipe.HSet(ctx, key, farm)
-		if hSet.Err() != nil {
-			res.Error = hSet.Err()
-			concurrent.SendResult(ctx, out, res)
-			return
-		}
+	experied := pipe.Expire(ctx, key, time.Hour*24)
+	if experied.Err() != nil {
+		return experied.Err()
+	}
 
-		experied := pipe.Expire(ctx, key, time.Hour*24)
-		if experied.Err() != nil {
-			res.Error = experied.Err()
-			concurrent.SendResult(ctx, out, res)
-			return
-		}
+	if _, err := pipe.Exec(ctx); err != nil {
+		return err
+	}
 
-		if _, err := pipe.Exec(ctx); err != nil {
-			res.Error = err
-			concurrent.SendResult(ctx, out, res)
-			return
-		}
-
-		concurrent.SendResult(ctx, out, res)
-	}()
-	return out
+	return nil
 }

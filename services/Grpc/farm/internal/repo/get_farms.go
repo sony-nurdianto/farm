@@ -40,7 +40,7 @@ func farmWithAddressScanner(rws pkg.Rows) ([]models.FarmWithAddress, error) {
 			&farm.Description,
 			&farm.Farm.CreatedAt,
 			&farm.Farm.UpdatedAt,
-			&farm.FarmAddress.ID,
+			&farm.AddressesID,
 			&farm.Street,
 			&farm.Village,
 			&farm.SubDistrict,
@@ -62,28 +62,70 @@ func (fr farmRepo) GetFarms(
 	req *pbgen.GetFarmListRequest,
 ) (res []models.FarmWithAddress, _ error) {
 	if req.SortOrder == pbgen.SortOrder_SortOrder_ASC {
-		rows, err := fr.farmDB.getFarmsAscStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+		farmCache, err := fr.getFarmCache(
+			ctx,
+			req.SearchName,
+			req.FarmerId,
+			int(req.Limit),
+			int(req.Offset),
+			true,
+		)
 		if err != nil {
 			return res, err
 		}
 
-		res, err = farmWithAddressScanner(rows)
-		if err != nil {
-			return res, err
+		if len(farmCache) <= 0 {
+			rows, err := fr.farmDB.getFarmsAscStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+			if err != nil {
+				return res, err
+			}
+
+			res, err = farmWithAddressScanner(rows)
+			if err != nil {
+				return res, err
+			}
+
+			if err := fr.insertFarmCache(res...); err != nil {
+				return res, err
+			}
 		}
+
+		return farmCache, nil
 
 	}
 
 	if req.SortOrder == pbgen.SortOrder_SortOrder_DESC {
-		rows, err := fr.farmDB.getFarmsDescStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+		farmCache, err := fr.getFarmCache(
+			ctx,
+			req.SearchName,
+			req.FarmerId,
+			int(req.Limit),
+			int(req.Offset),
+			false,
+		)
 		if err != nil {
 			return res, err
 		}
 
-		res, err = farmWithAddressScanner(rows)
-		if err != nil {
-			return res, err
+		if len(farmCache) <= 0 {
+
+			rows, err := fr.farmDB.getFarmsDescStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+			if err != nil {
+				return res, err
+			}
+
+			res, err = farmWithAddressScanner(rows)
+			if err != nil {
+				return res, err
+			}
+
+			if err := fr.insertFarmCache(res...); err != nil {
+				return res, err
+			}
 		}
+
+		return farmCache, nil
+
 	}
 	return res, nil
 }
@@ -105,7 +147,7 @@ func (fr farmRepo) GetFarmByID(
 		&res.Description,
 		&res.Farm.CreatedAt,
 		&res.Farm.UpdatedAt,
-		&res.FarmAddress.ID,
+		&res.AddressesID,
 		&res.Street,
 		&res.Village,
 		&res.SubDistrict,
@@ -116,7 +158,7 @@ func (fr farmRepo) GetFarmByID(
 		return res, err
 	}
 
-	res.AddressesID = res.FarmAddress.ID
+	res.AddressesID = res.AddressesID
 
 	return res, nil
 }

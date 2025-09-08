@@ -2,7 +2,9 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -12,6 +14,9 @@ import (
 	"github.com/sony-nurdianto/farm/services/Grpc/farm/internal/pbgen"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/postgres/pkg"
 	"github.com/sony-nurdianto/farm/shared_lib/Go/database/redis"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/avr"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/kev"
+	"github.com/sony-nurdianto/farm/shared_lib/Go/kafkaev/schrgs"
 )
 
 type FarmRepo interface {
@@ -23,8 +28,10 @@ type FarmRepo interface {
 }
 
 type farmRepo struct {
-	farmCache redis.RedisClient
-	farmDB    farmDB
+	farmCache     redis.RedisClient
+	farmDB        farmDB
+	avrSerializer avr.AvrSerializer
+	farmProducer  kev.KevProducer
 }
 
 const (
@@ -215,9 +222,11 @@ func redisClientConn(ctx context.Context, rdi redis.RedisInstance) (redis.RedisC
 					os.Getenv("SENTINEL_FARM_REDIS_ADDR"),
 					os.Getenv("SENTINEL_FARM_REDIS_ADDR_2"),
 				},
-				Username: os.Getenv("FARM_REDIS_MASTER_USER_NAME"),
-				Password: os.Getenv("FARM_REDIS_MASTER_PASSWORD"),
-				DB:       0,
+				Username:      os.Getenv("FARM_REDIS_MASTER_USER_NAME"),
+				Password:      os.Getenv("FARM_REDIS_MASTER_PASSWORD"),
+				DB:            0,
+				Protocol:      2,
+				UnstableResp3: false,
 			},
 		)
 
@@ -252,19 +261,132 @@ func prepareFarmCache(ctx context.Context, rdi redis.RedisInstance) <-chan any {
 	return out
 }
 
+func initSchemaRegistery(
+	ctx context.Context,
+	sri schrgs.SchemaRegisteryInstance,
+) <-chan any {
+	out := make(chan any, 1)
+	go func() {
+		defer close(out)
+		var res concurent.Result[schrgs.SchrgsClient]
+
+		client, err := sri.NewClient(
+			sri.NewConfig(
+				os.Getenv("SCHEMAREGISTERYADDR"),
+			),
+		)
+		if err != nil {
+			res.Error = err
+			concurent.SendResult(ctx, out, res)
+			return
+		}
+
+		res.Value = client
+		concurent.SendResult(ctx, out, res)
+	}()
+	return out
+}
+
+func prepareAvrSrClient(ctx context.Context, avri avr.AvrSerdeInstance, client <-chan any) <-chan any {
+	out := make(chan any, 1)
+	go func() {
+		defer close(out)
+		var res concurent.Result[avr.AvrSerializer]
+		client, ok := <-client
+		if !ok {
+			log.Println("chanel is close")
+			return
+		}
+
+		schRes, ok := client.(concurent.Result[schrgs.SchrgsClient])
+		if !ok {
+			res.Error = errors.New("wrongs data type")
+			concurent.SendResult(ctx, out, res)
+			return
+		}
+
+		if schRes.Error != nil {
+			res.Error = schRes.Error
+			concurent.SendResult(ctx, out, res)
+			return
+		}
+
+		seri, err := avri.NewGenericSerializer(
+			schRes.Value,
+			avr.ValueSerde,
+			avr.NewSerializerConfig(),
+		)
+		if err != nil {
+			res.Error = err
+			concurent.SendResult(ctx, out, res)
+			return
+		}
+
+		res.Value = seri
+		concurent.SendResult(ctx, out, res)
+	}()
+	return out
+}
+
+func initFarmProducer(ctx context.Context, kv kev.Kafka) <-chan any {
+	out := make(chan any, 1)
+	go func() {
+		defer close(out)
+		var res concurent.Result[kev.KevProducer]
+
+		pool := kev.NewKafkaProducerPool(kv)
+		cfg := map[kev.ConfigKeyKafka]string{
+			kev.BOOTSTRAP_SERVERS:  os.Getenv("KAKFKABROKER"),
+			kev.ACKS:               "all",
+			kev.ENABLE_IDEMPOTENCE: "true",
+			kev.COMPRESION_TYPE:    "snappy",
+			kev.RETRIES:            "5",
+			kev.RETRY_BACKOFF_MS:   "100",
+			kev.LINGER_MS:          "5",
+			kev.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5",
+		}
+
+		producer, err := pool.Producer(cfg)
+		if err != nil {
+			res.Error = err
+			concurent.SendResult(ctx, out, res)
+			return
+		}
+		res.Value = producer
+		concurent.SendResult(ctx, out, res)
+	}()
+	return out
+}
+
 func NewFarmRepo(
 	ctx context.Context,
+	sri schrgs.SchemaRegisteryInstance,
+	avri avr.AvrSerdeInstance,
+	kv kev.Kafka,
 	pgi pkg.PostgresInstance,
 	rdi redis.RedisInstance,
 ) (fr farmRepo, _ error) {
 	dbCh := initPostgresDB(ctx, pgi, os.Getenv("FARM_DATABASE_ADDR"))
+	srCh := initSchemaRegistery(ctx, sri)
 	chs := []<-chan any{
+		prepareAvrSrClient(ctx, avri, srCh),
+		initFarmProducer(ctx, kv),
 		prepareFarmDB(ctx, dbCh),
 		prepareFarmCache(ctx, rdi),
 	}
 
 	for v := range concurent.FanIn(ctx, chs...) {
 		switch res := v.(type) {
+		case concurent.Result[avr.AvrSerializer]:
+			if res.Error != nil {
+				return fr, res.Error
+			}
+			fr.avrSerializer = res.Value
+		case concurent.Result[kev.KevProducer]:
+			if res.Error != nil {
+				return fr, res.Error
+			}
+			fr.farmProducer = res.Value
 		case concurent.Result[farmDB]:
 			if res.Error != nil {
 				return fr, res.Error
