@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -73,14 +74,12 @@ func (fr farmRepo) getFarmCache(
 	} else {
 		query = fmt.Sprintf("@farm_name:*%s* @farmer_id:{%s}", search, factoryFarmerID)
 	}
+
 	farmCache := fr.farmCache.FTSearchWithArgs(
 		ctx,
 		"farm_idx",
 		query,
 		&redis.FTSearchOptions{
-			SortBy: []redis.FTSearchSortBy{
-				{FieldName: "created_at", Asc: asc},
-			},
 			Limit:       limit,
 			LimitOffset: offset,
 		},
@@ -114,6 +113,18 @@ func (fr farmRepo) getFarmCache(
 
 		res = append(res, resCh.Value)
 	}
+
+	if asc {
+		sort.Slice(res, func(i, j int) bool {
+			return res[i].Farm.CreatedAt.Before(res[j].Farm.CreatedAt)
+		})
+
+		return res, nil
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Farm.CreatedAt.After(res[j].Farm.CreatedAt)
+	})
 
 	return res, nil
 }

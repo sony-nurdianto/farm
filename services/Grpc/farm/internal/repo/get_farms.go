@@ -74,23 +74,23 @@ func (fr farmRepo) GetFarms(
 			return res, err
 		}
 
-		if len(farmCache) <= 0 {
-			rows, err := fr.farmDB.getFarmsAscStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
-			if err != nil {
-				return res, err
-			}
-
-			res, err = farmWithAddressScanner(rows)
-			if err != nil {
-				return res, err
-			}
-
-			if err := fr.insertFarmCache(res...); err != nil {
-				return res, err
-			}
+		if len(farmCache) > 0 {
+			return farmCache, nil
 		}
 
-		return farmCache, nil
+		rows, err := fr.farmDB.getFarmsAscStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+		if err != nil {
+			return res, err
+		}
+
+		res, err = farmWithAddressScanner(rows)
+		if err != nil {
+			return res, err
+		}
+
+		if err := fr.insertFarmCache(res...); err != nil {
+			return res, err
+		}
 
 	}
 
@@ -107,24 +107,23 @@ func (fr farmRepo) GetFarms(
 			return res, err
 		}
 
-		if len(farmCache) <= 0 {
-
-			rows, err := fr.farmDB.getFarmsDescStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
-			if err != nil {
-				return res, err
-			}
-
-			res, err = farmWithAddressScanner(rows)
-			if err != nil {
-				return res, err
-			}
-
-			if err := fr.insertFarmCache(res...); err != nil {
-				return res, err
-			}
+		if len(farmCache) > 0 {
+			return farmCache, nil
 		}
 
-		return farmCache, nil
+		rows, err := fr.farmDB.getFarmsDescStmt.QueryContext(ctx, req.GetFarmerId(), req.SearchName, req.Limit, req.Offset)
+		if err != nil {
+			return res, err
+		}
+
+		res, err = farmWithAddressScanner(rows)
+		if err != nil {
+			return res, err
+		}
+
+		if err := fr.insertFarmCache(res...); err != nil {
+			return res, err
+		}
 
 	}
 	return res, nil
