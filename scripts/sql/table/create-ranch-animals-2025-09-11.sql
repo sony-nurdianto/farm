@@ -1,6 +1,6 @@
 CREATE TABLE animal (
     id UUID PRIMARY KEY,
-    farm_id UUID NOT NULL REFERENCES farm(id),
+    farm_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     species VARCHAR(100) NOT NULL,
     breed VARCHAR(100),
@@ -13,4 +13,41 @@ CREATE TABLE animal (
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
     notes TEXT
-);
+) PARTITION BY HASH (id);
+
+CREATE TABLE animal_p0 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 0);
+
+CREATE TABLE animal_p1 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 1);
+
+CREATE TABLE animal_p2 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 2);
+
+CREATE TABLE animal_p3 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 3);
+
+CREATE TABLE animal_p4 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 4);
+
+CREATE TABLE animal_p5 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 5);
+
+CREATE TABLE animal_p6 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 6);
+
+CREATE TABLE animal_p7 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 7);
+
+CREATE TABLE animal_p8 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 8);
+
+CREATE TABLE animal_p9 PARTITION OF animal
+    FOR VALUES WITH (modulus 10, remainder 9);
+
+
+CREATE INDEX idx_animal_farm_id ON animal (farm_id);
+CREATE INDEX idx_animal_species ON animal (species);
+CREATE INDEX idx_animal_health_status ON animal (health_status);
+CREATE INDEX idx_animal_registration_date ON animal (registration_date);
+
