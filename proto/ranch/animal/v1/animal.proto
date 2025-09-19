@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package ranch.animal.v1;
+
+
+import "google/protobuf/timestamp.proto";
+
+enum OriginType {
+  ORIGIN_TYPE_UNSPECIFIED = 0;
+  ORIGIN_TYPE_BORN = 1;
+  ORIGIN_TYPE_HATCHED = 2;
+  ORIGIN_TYPE_PURCHASED = 3;
+}
+
+enum GENDER {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  HEALTH_STATUS_HEALTHY = 1;
+  HEALTH_STATUS_SICK = 2;
+  HEALTH_STATUS_RECOVERED = 3;
+  HEALTH_STATUS_DEAD = 4;
+  HEALTH_STATUS_SOLD = 5;
+}
+
+
+message Animal {
+  string id = 1;
+  string farm_id = 2;
+  string name = 3;
+  string species = 4;
+  string breed = 5;
+  google.protobuf.Timestamp birth_date = 6;
+  OriginType origin_type = 7; 
+  string origin_from = 8;
+  double purchased_price  = 9;
+  GENDER gender = 10; 
+  double weight = 11;
+  google.protobuf.Timestamp registration_date = 12;
+  bool is_active = 13;
+  string notes = 14;
+}
