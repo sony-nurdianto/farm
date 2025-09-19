@@ -3,24 +3,28 @@ plugins:
   - remote: buf.build/protocolbuffers/go
     out: ../services/Grpc/ranch/internal/pbgen
     opt: 
-      - Mfarmer/v1/ranch.proto=.;pbgen
+      - Mranch/animal/v1/animal.proto=.;pbgen
+      - Mranch/v1/ranch.proto=.;pbgen
     include_imports: true
     include_wkt: false
   - remote: buf.build/grpc/go
     out: ../services/Grpc/ranch/internal/pbgen
     opt: 
-      - Mfarmer/v1/ranch.proto=.;pbgen
+      - Mranch/animal/v1/animal.proto=.;pbgen
+      - Mranch/v1/ranch.proto=.;pbgen
     include_imports: true
     include_wkt: false
   - remote: buf.build/protocolbuffers/go
     out: ../services/Rest/farm_gateway/internal/pbgen
     opt:  
-      - Mfarmer/v1/ranch.proto=.;pbgen
+      - Mranch/animal/v1/animal.proto=.;pbgen
+      - Mranch/v1/ranch.proto=.;pbgen
     include_imports: true
     include_wkt: false
   - remote: buf.build/grpc/go
     out: ../services/Rest/farm_gateway/internal/pbgen
     opt: 
-      - Mfarmer/v1/ranch.proto=.;pbgen
+      - Mranch/animal/v1/animal.proto=.;pbgen
+      - Mranch/v1/ranch.proto=.;pbgen
     include_imports: true
     include_wkt: false
