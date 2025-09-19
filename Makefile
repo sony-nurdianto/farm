@@ -12,3 +12,6 @@ gen_farmer_proto:
 
 gen_farm_proto:	
 	 cd proto && buf generate --template ./farm/buf.gen.yaml --path ./farm/v1/farm.proto
+	
+gen_ranch_proto:	
+	 cd proto && buf generate --template ./ranch/buf.gen.yaml --path ./ranch/v1/ranch.proto
