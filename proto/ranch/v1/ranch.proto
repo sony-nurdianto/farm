@@ -1,1 +1,30 @@
+syntax = "proto3";
 
+package ranch.v1;
+
+import "ranch/animal/v1/animal.proto";
+import "google/protobuf/timestamp.proto";
+
+
+message RegisterAnimalRequest {
+  string farm_id  = 1;
+  string name = 2;
+  string species = 4;
+  string breed = 5;
+  google.protobuf.Timestamp birth_date = 6;
+  ranch.animal.v1.OriginType origin_type = 7;
+  optional string origin_from = 8;
+  optional double purchased_price = 9;
+  ranch.animal.v1.GENDER gender = 10; 
+  double weight = 11;
+  optional google.protobuf.Timestamp registration_date = 12;
+  string notes = 13;
+}
+
+message RegisterAnimalResponse {
+  ranch.animal.v1.Animal animal = 1;
+}
+
+service RanchService {
+  rpc RegisterAnimal(stream RegisterAnimalRequest) returns (stream RegisterAnimalResponse);
+}
