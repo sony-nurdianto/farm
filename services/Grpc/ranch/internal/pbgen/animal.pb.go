@@ -7,13 +7,12 @@
 package pbgen
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -384,17 +383,15 @@ func file_ranch_animal_v1_animal_proto_rawDescGZIP() []byte {
 	return file_ranch_animal_v1_animal_proto_rawDescData
 }
 
-var (
-	file_ranch_animal_v1_animal_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-	file_ranch_animal_v1_animal_proto_msgTypes  = make([]protoimpl.MessageInfo, 1)
-	file_ranch_animal_v1_animal_proto_goTypes   = []any{
-		(OriginType)(0),               // 0: ranch.animal.v1.OriginType
-		(GENDER)(0),                   // 1: ranch.animal.v1.GENDER
-		(HealthStatus)(0),             // 2: ranch.animal.v1.HealthStatus
-		(*Animal)(nil),                // 3: ranch.animal.v1.Animal
-		(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
-	}
-)
+var file_ranch_animal_v1_animal_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_ranch_animal_v1_animal_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ranch_animal_v1_animal_proto_goTypes = []any{
+	(OriginType)(0),               // 0: ranch.animal.v1.OriginType
+	(GENDER)(0),                   // 1: ranch.animal.v1.GENDER
+	(HealthStatus)(0),             // 2: ranch.animal.v1.HealthStatus
+	(*Animal)(nil),                // 3: ranch.animal.v1.Animal
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+}
 var file_ranch_animal_v1_animal_proto_depIdxs = []int32{
 	4, // 0: ranch.animal.v1.Animal.birth_date:type_name -> google.protobuf.Timestamp
 	0, // 1: ranch.animal.v1.Animal.origin_type:type_name -> ranch.animal.v1.OriginType

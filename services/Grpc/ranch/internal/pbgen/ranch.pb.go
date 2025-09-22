@@ -28,13 +28,13 @@ type RegisterAnimalRequest struct {
 	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Species          string                 `protobuf:"bytes,4,opt,name=species,proto3" json:"species,omitempty"`
 	Breed            string                 `protobuf:"bytes,5,opt,name=breed,proto3" json:"breed,omitempty"`
-	BirthDate        *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
+	BirthDate        *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=birth_date,json=birthDate,proto3,oneof" json:"birth_date,omitempty"`
 	OriginType       OriginType             `protobuf:"varint,7,opt,name=origin_type,json=originType,proto3,enum=ranch.animal.v1.OriginType" json:"origin_type,omitempty"`
 	OriginFrom       *string                `protobuf:"bytes,8,opt,name=origin_from,json=originFrom,proto3,oneof" json:"origin_from,omitempty"`
 	PurchasedPrice   *float64               `protobuf:"fixed64,9,opt,name=purchased_price,json=purchasedPrice,proto3,oneof" json:"purchased_price,omitempty"`
 	Gender           GENDER                 `protobuf:"varint,10,opt,name=gender,proto3,enum=ranch.animal.v1.GENDER" json:"gender,omitempty"`
 	Weight           float64                `protobuf:"fixed64,11,opt,name=weight,proto3" json:"weight,omitempty"`
-	RegistrationDate *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=registration_date,json=registrationDate,proto3,oneof" json:"registration_date,omitempty"`
+	RegistrationDate *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=registration_date,json=registrationDate,proto3" json:"registration_date,omitempty"`
 	Notes            string                 `protobuf:"bytes,13,opt,name=notes,proto3" json:"notes,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -156,7 +156,9 @@ func (x *RegisterAnimalRequest) GetNotes() string {
 
 type RegisterAnimalResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Animal        *Animal                `protobuf:"bytes,1,opt,name=animal,proto3" json:"animal,omitempty"`
+	Msg           string                 `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Animal        *Animal                `protobuf:"bytes,3,opt,name=animal,proto3,oneof" json:"animal,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -191,6 +193,20 @@ func (*RegisterAnimalResponse) Descriptor() ([]byte, []int) {
 	return file_ranch_v1_ranch_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *RegisterAnimalResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *RegisterAnimalResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 func (x *RegisterAnimalResponse) GetAnimal() *Animal {
 	if x != nil {
 		return x.Animal
@@ -202,29 +218,32 @@ var File_ranch_v1_ranch_proto protoreflect.FileDescriptor
 
 const file_ranch_v1_ranch_proto_rawDesc = "" +
 	"\n" +
-	"\x14ranch/v1/ranch.proto\x12\branch.v1\x1a\x1cranch/animal/v1/animal.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x04\n" +
+	"\x14ranch/v1/ranch.proto\x12\branch.v1\x1a\x1cranch/animal/v1/animal.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa1\x04\n" +
 	"\x15RegisterAnimalRequest\x12\x17\n" +
 	"\afarm_id\x18\x01 \x01(\tR\x06farmId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
 	"\aspecies\x18\x04 \x01(\tR\aspecies\x12\x14\n" +
-	"\x05breed\x18\x05 \x01(\tR\x05breed\x129\n" +
+	"\x05breed\x18\x05 \x01(\tR\x05breed\x12>\n" +
 	"\n" +
-	"birth_date\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tbirthDate\x12<\n" +
+	"birth_date\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x00R\tbirthDate\x88\x01\x01\x12<\n" +
 	"\vorigin_type\x18\a \x01(\x0e2\x1b.ranch.animal.v1.OriginTypeR\n" +
 	"originType\x12$\n" +
-	"\vorigin_from\x18\b \x01(\tH\x00R\n" +
+	"\vorigin_from\x18\b \x01(\tH\x01R\n" +
 	"originFrom\x88\x01\x01\x12,\n" +
-	"\x0fpurchased_price\x18\t \x01(\x01H\x01R\x0epurchasedPrice\x88\x01\x01\x12/\n" +
+	"\x0fpurchased_price\x18\t \x01(\x01H\x02R\x0epurchasedPrice\x88\x01\x01\x12/\n" +
 	"\x06gender\x18\n" +
 	" \x01(\x0e2\x17.ranch.animal.v1.GENDERR\x06gender\x12\x16\n" +
-	"\x06weight\x18\v \x01(\x01R\x06weight\x12L\n" +
-	"\x11registration_date\x18\f \x01(\v2\x1a.google.protobuf.TimestampH\x02R\x10registrationDate\x88\x01\x01\x12\x14\n" +
-	"\x05notes\x18\r \x01(\tR\x05notesB\x0e\n" +
+	"\x06weight\x18\v \x01(\x01R\x06weight\x12G\n" +
+	"\x11registration_date\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\x10registrationDate\x12\x14\n" +
+	"\x05notes\x18\r \x01(\tR\x05notesB\r\n" +
+	"\v_birth_dateB\x0e\n" +
 	"\f_origin_fromB\x12\n" +
-	"\x10_purchased_priceB\x14\n" +
-	"\x12_registration_date\"I\n" +
-	"\x16RegisterAnimalResponse\x12/\n" +
-	"\x06animal\x18\x01 \x01(\v2\x17.ranch.animal.v1.AnimalR\x06animal2g\n" +
+	"\x10_purchased_price\"\x83\x01\n" +
+	"\x16RegisterAnimalResponse\x12\x10\n" +
+	"\x03msg\x18\x01 \x01(\tR\x03msg\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x124\n" +
+	"\x06animal\x18\x03 \x01(\v2\x17.ranch.animal.v1.AnimalH\x00R\x06animal\x88\x01\x01B\t\n" +
+	"\a_animal2g\n" +
 	"\fRanchService\x12W\n" +
 	"\x0eRegisterAnimal\x12\x1f.ranch.v1.RegisterAnimalRequest\x1a .ranch.v1.RegisterAnimalResponse(\x010\x01b\x06proto3"
 
@@ -271,6 +290,7 @@ func file_ranch_v1_ranch_proto_init() {
 	}
 	file_ranch_animal_v1_animal_proto_init()
 	file_ranch_v1_ranch_proto_msgTypes[0].OneofWrappers = []any{}
+	file_ranch_v1_ranch_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

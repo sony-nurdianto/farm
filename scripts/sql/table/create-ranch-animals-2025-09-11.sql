@@ -13,6 +13,7 @@ CREATE TABLE animal (
     weight_kg DECIMAL(8,2) NULL,
     health_status TEXT CHECK (health_status IN ('healthy','sick','recovered','dead','sold')) DEFAULT 'healthy',
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
     notes TEXT
 ) PARTITION BY HASH (id);

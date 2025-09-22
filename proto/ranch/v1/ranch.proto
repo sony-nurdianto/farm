@@ -11,18 +11,20 @@ message RegisterAnimalRequest {
   string name = 2;
   string species = 4;
   string breed = 5;
-  google.protobuf.Timestamp birth_date = 6;
+  optional google.protobuf.Timestamp birth_date = 6;
   ranch.animal.v1.OriginType origin_type = 7;
   optional string origin_from = 8;
   optional double purchased_price = 9;
   ranch.animal.v1.GENDER gender = 10; 
   double weight = 11;
-  optional google.protobuf.Timestamp registration_date = 12;
+  google.protobuf.Timestamp registration_date = 12;
   string notes = 13;
 }
 
 message RegisterAnimalResponse {
-  ranch.animal.v1.Animal animal = 1;
+  string msg = 1;
+  string status = 2;
+  optional ranch.animal.v1.Animal animal = 3;
 }
 
 service RanchService {
